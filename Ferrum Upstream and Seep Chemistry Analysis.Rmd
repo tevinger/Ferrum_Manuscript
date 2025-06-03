@@ -1,0 +1,1491 @@
+---
+title: "Upstream and Seep Chemistry"
+output: html_document
+date: "2025-04-08"
+editor_options: 
+  chunk_output_type: console
+---
+
+# Load Packages
+```{r}
+library(tidyverse)
+library(cowplot)
+library(ggplot2)
+library(PLS205)
+library(lubridate)
+library(emmeans)
+library(lme4)
+library(ggeasy)
+library(lattice)
+library(rstatix)
+library(ggsignif)
+library(outliers)
+library(ggpmisc)
+library(ggpubr)
+library(r2symbols)
+library(stargazer)
+library(ggbreak)
+library(writexl)
+library(ggrepel)
+library(stringr)
+library(ggthemes)
+library(reshape)
+library(RColorBrewer)
+library(readxl)
+library(dplyr)
+library(gridExtra)
+library(scales)
+library(dbscan)
+library(mclust)
+library(devtools)
+library(factoextra)
+library(corrplot)
+library(ggbiplot)
+library(ggcorrplot)
+library(GGally)
+library(Hmisc)
+library(ggbiplot)
+library(ggfortify)
+library(emmeans)
+library(lme4)
+library(lmerTest)
+library(multcomp)
+library(PLS205)
+library(readxl)
+library(learnr)
+library(scatterplot3d)
+library(vegan)
+library(ggtern)
+library(plotrix)
+library(smwrBase)
+library(smwrData)
+library(smwrGraphs)
+library(colorBlindness)
+library(flextable)
+library(officer)
+library(dunn.test)
+library(multcompView)
+library(patchwork)
+library(ggbreak)
+library(ggpattern) #need to install rlang package I think for ggpattern to be able to load
+```
+
+# Load Data
+```{r}
+# Use this if it's been previously loaded 
+#working_Ferrum_data <- final_working_Ferrum_Manuscript_df
+
+#view(working_Ferrum_data)
+
+# Use this if need to reload to R from files
+working_Ferrum_data <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Final Ferrum Manuscript Data Sheet_V2.xlsx")
+
+working_Ferrum_data <- working_Ferrum_data %>%
+  dplyr::select(ParkID,
+                Watershed,
+                Subcatchment,
+                New_Groups,
+                New_Grouping,
+                `Field label`,
+                Latitude,
+                Longitude,
+                sample_collection_date_mm_dd_yy,
+                sample_time_h_mm,
+                SamplingEventID,
+                VisualDescription,
+                Site_Classification,
+                #Hyd_Site_Classification,
+                Hyd_Classification,
+                Distance_km,
+                Elevation_ft,
+                Watershed_Area,
+                Relative_MS_Watershed_Area,
+                pH,
+                Temp_deg_celsius,
+                Diss_oxy_mg_per_l,
+                Diss_oxy_percent_sat,
+                Spec_Cond_microS_per_cm,
+                TOC_mgC_per_l,
+                f_NH3_mgN_per_l,
+                f_PO4_mgP_per_l,
+                TDN_mgN_per_l,
+                TDP_mgP_per_l,
+                DIC_mgC_per_l,
+                Alk_mgCaCO3_per_l,
+                DOC_mgC_per_l,
+                f_Cl_mg_per_l,
+                f_NO3_mgN_per_l,
+                f_SO4_mg_per_l,
+                f_Ca_mg_l,
+                f_Mg_mg_l,
+                f_Na_mg_l,
+                f_K_mg_l,
+                f_Al_mcg_per_l,	
+                p_Al_mcg_per_l,	
+                f_As_mcg_per_l,	
+                p_As_mcg_per_l,	
+                f_Ba_mcg_per_l,
+                p_Ba_mcg_per_l,
+                f_Cd_mcg_per_l,	
+                p_Cd_mcg_per_l,	
+                f_Ce_mcg_per_l,
+                p_Ce_mcg_per_l,	
+                f_Co_mcg_per_l,	
+                p_Co_mcg_per_l,	
+                f_Cr_mcg_per_l,	
+                p_Cr_mcg_per_l,	
+                f_Cu_mcg_per_l,	
+                p_Cu_mcg_per_l,	
+                f_Fe_mcg_per_l,	
+                p_Fe_mcg_per_l,	
+                f_Mn_mcg_per_l,	
+                p_Mn_mcg_per_l,
+                f_Ni_mcg_per_l,
+                p_Ni_mcg_per_l,
+                f_Se_mcg_per_l,
+                p_Se_mcg_per_l,
+                f_Zn_mcg_per_l,
+                p_Zn_mcg_per_l,
+                f_Y_mcg_per_l,
+                p_Y_mcg_per_l,
+                f_La_mcg_per_l,
+                p_La_mcg_per_l,
+                f_Dy_mcg_per_l,
+                p_Dy_mcg_per_l,
+                f_Nd_mcg_per_l,
+                p_Nd_mcg_per_l,
+                f_Pr_mcg_per_l,
+                p_Pr_mcg_per_l,
+                f_Tl_mcg_per_l,
+                p_Tl_mcg_per_l,
+                f_U_mcg_per_l,
+                p_U_mcg_per_l,
+                f_Pb_mcg_per_l,
+                p_Pb_mcg_per_l,
+                f_SiO2_mg_per_l)
+
+unique(working_Ferrum_data$Watershed)
+```
+
+## Make Upstream dataframe
+```{r}
+Upstream_df <- working_Ferrum_data %>%
+  filter(Distance_km == "0")
+
+view(Upstream_df)
+```
+
+```{r}
+Downstream_df <- working_Ferrum_data %>%
+  filter(New_Grouping == "Downstream MS")
+
+view(Downstream_df)
+```
+
+
+#1. Summary Stats
+##1.1 Summary Stats Loop
+```{r}
+# order for columns
+column_order <- c(
+  "pH_Mean", "pH_SD", "pH_Count",
+  "Temp_Mean", "Temp_SD", "Temp_Count",
+  "Diss_oxy_Mean", "Diss_oxy_SD", "Diss_oxy_Count",
+  "Diss_oxy_percent_sat_Mean", "Diss_oxy_percent_sat_SD", "Diss_oxy_percent_sat_Count",
+  "Spec_Cond_Mean", "Spec_Cond_SD", "Spec_Cond_Count",
+  "DIC_Mean", "DIC_SD", "DIC_Count",
+  "Alk_Mean", "Alk_SD", "Alk_Count",
+  "DOC_Mean", "DOC_SD", "DOC_Count",
+  "TOC_mgC_per_l_Mean", "TOC_mgC_per_l_SD", "TOC_mgC_per_l_Count",
+  "f_NH3_mgN_per_l_Mean", "f_NH3_mgN_per_l_SD", "f_NH3_mgN_per_l_Count",
+  "f_PO4_mgP_per_l_Mean", "f_PO4_mgP_per_l_SD", "f_PO4_mgP_per_l_Count",
+  "TDN_mgN_per_l_Mean", "TDN_mgN_per_l_SD", "TDN_mgN_per_l_Count",
+  "TDP_mgP_per_l_Mean", "TDP_mgP_per_l_SD", "TDP_mgP_per_l_Count",
+  "f_Cl_Mean", "f_Cl_SD", "f_Cl_Count",
+  "f_NO3_Mean", "f_NO3_SD", "f_NO3_Count",
+  "f_SO4_Mean", "f_SO4_SD", "f_SO4_Count",
+  "f_Ca_Mean", "f_Ca_SD", "f_Ca_Count",
+  "f_Mg_Mean", "f_Mg_SD", "f_Mg_Count",
+  "f_Na_Mean", "f_Na_SD", "f_Na_Count",
+  "f_K_Mean", "f_K_SD", "f_K_Count",
+  #"f_206Pb_Mean", "f_206Pb_SD", "f_206Pb_Count",
+  #"f_207Pb_Mean", "f_207Pb_SD", "f_207Pb_Count",
+  #"f_208Pb_Mean", "f_208Pb_SD", "f_208Pb_Count",
+  "f_Pb_Mean", "f_Pb_SD", "f_Pb_Count",
+  "p_Pb_Mean", "p_Pb_SD", "p_Pb_Count",
+  "f_Al_Mean", "f_Al_SD", "f_Al_Count",
+  "p_Al_Mean", "p_Al_SD", "p_Al_Count",
+  "f_As_Mean", "f_As_SD", "f_As_Count",
+  "p_As_Mean", "p_As_SD", "p_As_Count",
+  "f_Ba_Mean", "f_Ba_SD", "f_Ba_Count",
+  "f_Be_Mean", "f_Be_SD", "f_Be_Count",
+  "p_Be_Mean", "p_Be_SD", "p_Be_Count",
+  #"f_Br_Mean", "f_Br_SD", "f_Br_Count",
+  "f_Cd_Mean", "f_Cd_SD", "f_Cd_Count",
+  "p_Cd_Mean", "p_Cd_SD", "p_Cd_Count",
+  "f_Ce_Mean", "f_Ce_SD", "f_Ce_Count",
+  "p_Ce_Mean", "p_Ce_SD", "p_Ce_Count",
+  "f_Co_Mean", "f_Co_SD", "f_Co_Count",
+  "p_Co_Mean", "p_Co_SD", "p_Co_Count",
+  "f_Cr_Mean", "f_Cr_SD", "f_Cr_Count",
+  "p_Cr_Mean", "p_Cr_SD", "p_Cr_Count",
+  "f_Cu_Mean", "f_Cu_SD", "f_Cu_Count",
+  "p_Cu_Mean", "p_Cu_SD", "p_Cu_Count",
+  "f_Dy_Mean", "f_Dy_SD", "f_Dy_Count",
+  "p_Dy_Mean", "p_Dy_SD", "p_Dy_Count",
+  "f_Fe_Mean", "f_Fe_SD", "f_Fe_Count",
+  "p_Fe_Mean", "p_Fe_SD", "p_Fe_Count",
+  "f_La_Mean", "f_La_SD", "f_La_Count",
+  "p_La_Mean", "p_La_SD", "p_La_Count",
+  "f_Mn_Mean", "f_Mn_SD", "f_Mn_Count",
+  "p_Mn_Mean", "p_Mn_SD", "p_Mn_Count",
+  "f_Nd_Mean", "f_Nd_SD", "f_Nd_Count",
+  "p_Nd_Mean", "p_Nd_SD", "p_Nd_Count",
+  "f_Ni_Mean", "f_Ni_SD", "f_Ni_Count",
+  "p_Ni_Mean", "p_Ni_SD", "p_Ni_Count",
+  "f_Pr_Mean", "f_Pr_SD", "f_Pr_Count",
+  "p_Pr_Mean", "p_Pr_SD", "p_Pr_Count",
+  "f_Se_Mean", "f_Se_SD", "f_Se_Count",
+  "p_Se_Mean", "p_Se_SD", "p_Se_Count",
+  #"f_Th_Mean", "f_Th_SD", "f_Th_Count",
+  "f_Tl_Mean", "f_Tl_SD", "f_Tl_Count",
+  "p_Tl_Mean", "p_Tl_SD", "p_Tl_Count",
+  "f_U_Mean", "f_U_SD", "f_U_Count",
+  "p_U_Mean", "p_U_SD", "p_U_Count",
+  "f_V_Mean", "f_V_SD", "f_V_Count",
+  "f_Y_Mean", "f_Y_SD", "f_Y_Count",
+  "p_Y_Mean", "p_Y_SD", "p_Y_Count",
+  "f_Zn_Mean", "f_Zn_SD", "f_Zn_Count",
+  "p_Zn_Mean", "p_Zn_SD", "p_Zn_Count",
+  "f_SiO2_Mean", "f_SiO2_SD", "f_SiO2_Count"
+  #,"f_sum_REE_Mean", "f_sum_REE_SD", "f_sum_REE_Count",
+  #"p_sum_REE_Mean", "p_sum_REE_SD", "p_sum_REE_Count"
+)
+
+```
+
+```{r}
+elements <- c("pH",
+  "Temp_deg_celsius",
+  "Diss_oxy_mg_per_l",
+  "Diss_oxy_percent_sat",
+  "Spec_Cond_microS_per_cm",
+  "DIC_mgC_per_l",
+  "Alk_mgCaCO3_per_l",
+  "DOC_mgC_per_l",
+  "TOC_mgC_per_l",
+  "f_NH3_mgN_per_l",
+  "f_PO4_mgP_per_l",
+  "TDN_mgN_per_l",
+  "TDP_mgP_per_l",
+  "f_Cl_mg_per_l",
+  "f_NO3_mgN_per_l",
+  "f_SO4_mg_per_l",
+  "f_Ca_mg_l",
+  "f_Mg_mg_l",
+  "f_Na_mg_l",
+  "f_K_mg_l",
+  "f_Al_mcg_per_l",	
+  "p_Al_mcg_per_l",	
+  "f_As_mcg_per_l",	
+  "p_As_mcg_per_l",	
+  "f_Ba_mcg_per_l",
+  "p_Ba_mcg_per_l",
+  "f_Cd_mcg_per_l",	
+  "p_Cd_mcg_per_l",	
+  "f_Ce_mcg_per_l",
+  "p_Ce_mcg_per_l",	
+  "f_Co_mcg_per_l",	
+  "p_Co_mcg_per_l",	
+  "f_Cr_mcg_per_l",	
+  "p_Cr_mcg_per_l",	
+  "f_Cu_mcg_per_l",	
+  "p_Cu_mcg_per_l",	
+  "f_Fe_mcg_per_l",	
+  "p_Fe_mcg_per_l",	
+  "f_Mn_mcg_per_l",	
+  "p_Mn_mcg_per_l",
+  "f_Ni_mcg_per_l",
+  "p_Ni_mcg_per_l",
+  "f_Se_mcg_per_l",
+  "p_Se_mcg_per_l",
+  "f_Zn_mcg_per_l",
+  "p_Zn_mcg_per_l",
+  "f_Y_mcg_per_l",
+  "p_Y_mcg_per_l",
+  "f_La_mcg_per_l",
+  "p_La_mcg_per_l",
+  "f_Dy_mcg_per_l",
+  "p_Dy_mcg_per_l",
+  "f_Nd_mcg_per_l",
+  "p_Nd_mcg_per_l",
+  "f_Pr_mcg_per_l",
+  "p_Pr_mcg_per_l",
+  "f_Tl_mcg_per_l",
+  "p_Tl_mcg_per_l",
+  "f_U_mcg_per_l",
+  "p_U_mcg_per_l",
+  "f_Pb_mcg_per_l",
+  "p_Pb_mcg_per_l",
+  "f_SiO2_mg_per_l")
+
+columns <-c("pH",
+  "Temp_deg_celsius",
+  "Diss_oxy_mg_per_l",
+  "Diss_oxy_percent_sat",
+  "Spec_Cond_microS_per_cm",
+  "DIC_mgC_per_l",
+  "Alk_mgCaCO3_per_l",
+  "DOC_mgC_per_l",
+  "TOC_mgC_per_l",
+  "f_NH3_mgN_per_l",
+  "f_PO4_mgP_per_l",
+  "TDN_mgN_per_l",
+  "TDP_mgP_per_l",
+  "f_Cl_mg_per_l",
+  "f_NO3_mgN_per_l",
+  "f_SO4_mg_per_l",
+  "f_Ca_mg_l",
+  "f_Mg_mg_l",
+  "f_Na_mg_l",
+  "f_K_mg_l",
+  "f_Al_mcg_per_l",	
+  "p_Al_mcg_per_l",	
+  "f_As_mcg_per_l",	
+  "p_As_mcg_per_l",	
+  "f_Ba_mcg_per_l",
+  "p_Ba_mcg_per_l",
+  "f_Cd_mcg_per_l",	
+  "p_Cd_mcg_per_l",	
+  "f_Ce_mcg_per_l",
+  "p_Ce_mcg_per_l",	
+  "f_Co_mcg_per_l",	
+  "p_Co_mcg_per_l",	
+  "f_Cr_mcg_per_l",	
+  "p_Cr_mcg_per_l",	
+  "f_Cu_mcg_per_l",	
+  "p_Cu_mcg_per_l",	
+  "f_Fe_mcg_per_l",	
+  "p_Fe_mcg_per_l",	
+  "f_Mn_mcg_per_l",	
+  "p_Mn_mcg_per_l",
+  "f_Ni_mcg_per_l",
+  "p_Ni_mcg_per_l",
+  "f_Se_mcg_per_l",
+  "p_Se_mcg_per_l",
+  "f_Zn_mcg_per_l",
+  "p_Zn_mcg_per_l",
+  "f_Y_mcg_per_l",
+  "p_Y_mcg_per_l",
+  "f_La_mcg_per_l",
+  "p_La_mcg_per_l",
+  "f_Dy_mcg_per_l",
+  "p_Dy_mcg_per_l",
+  "f_Nd_mcg_per_l",
+  "p_Nd_mcg_per_l",
+  "f_Pr_mcg_per_l",
+  "p_Pr_mcg_per_l",
+  "f_Tl_mcg_per_l",
+  "p_Tl_mcg_per_l",
+  "f_U_mcg_per_l",
+  "p_U_mcg_per_l",
+  "f_Pb_mcg_per_l",
+  "p_Pb_mcg_per_l",
+  "f_SiO2_mg_per_l")
+```
+
+```{r}
+# Initialize an empty list to store results
+summary_stats_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the summary operation for the current element
+  summary_stats <- working_Ferrum_data %>%
+    filter(!is.na(.data[[column]])) %>%
+    group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
+    summarise(
+      Variable = element,
+      Mean = round(mean(.data[[column]], na.rm = TRUE), 5),  
+      SD = round(sd(.data[[column]], na.rm = TRUE), 5),
+      Min = round(min(.data[[column]], na.rm = TRUE), 5),
+      Max = round(max(.data[[column]], na.rm = TRUE), 5),
+      Count = n(),
+      SE = round(SD / sqrt(Count), 5),
+    )
+  
+  # Store the result in the list with the element name as key
+  summary_stats_list[[element]] <- summary_stats
+}
+
+# Combine all individual data frames into one
+summary_stats_results <- do.call(rbind, summary_stats_list)
+
+view(summary_stats_results)
+
+#write_xlsx(summary_stats_results, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Ferrum Figures/Grouped Summary Stats.xlsx")
+
+write_xlsx(summary_stats_results, "C:/Users/tevinger/Downloads/Summary Stats for Site Groups.xlsx")
+```
+
+```{r}
+# Reshape to wide format
+summary_stats_wide <- summary_stats_results %>%
+  pivot_wider(
+    id_cols = c(Site_Group),           # Keep Site_Group fixed - so this would be whatever variable you added for grouping your data by
+    names_from = Variable,             # Create new columns from Variable values
+    values_from = c(Mean, SD, Min, Max, Count),  # Use these columns as values
+    names_glue = "{Variable}_{.value}"  # Format column names like Variable_Mean, Variable_SD, etc.
+  )
+
+# This reorders the columns according to a column order I set in the list called column_order
+summary_stats_wide <-  summary_stats_wide %>%
+  dplyr::select(Site_Group, all_of(column_order))
+
+# View the result
+view(summary_stats_wide)
+```
+
+##1.2 By Watershed
+```{r}
+library(dplyr)
+
+# Initialize an empty list to store results
+summary_stats_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the summary operation for the current element
+  summary_stats <- working_Ferrum_data %>%
+    filter(!is.na(.data[[column]])) %>%
+    group_by(New_Grouping, Watershed) %>%
+    summarise(
+      Variable = element,
+      Mean = round(mean(.data[[column]], na.rm = TRUE), 5),  
+      SD = round(sd(.data[[column]], na.rm = TRUE), 5),
+      Min = round(min(.data[[column]], na.rm = TRUE), 5),
+      Max = round(max(.data[[column]], na.rm = TRUE), 5),     
+      Count = n(),
+      SE = round(SD / sqrt(Count), 5),
+      .groups = "drop"  # Ensure ungrouped result after summarization
+    )
+  
+  # Store the result in the list with the element name as key
+  summary_stats_list[[element]] <- summary_stats
+}
+
+# Combine all individual data frames into one
+summary_stats_results <- do.call(rbind, summary_stats_list)
+
+# View the combined summary results
+view(summary_stats_results)
+
+# Group long formatted results by Watershed
+summary_stats_results <- summary_stats_results %>%
+  arrange(New_Grouping)
+
+write_xlsx(summary_stats_results, "C:/Users/tevinger/Downloads/Summary stats of site groups by watershed.xlsx")
+
+summary_stats_results_upstream <- summary_stats_results %>%
+  filter(New_Grouping == "Upstream")
+
+write_xlsx(summary_stats_results_upstream, "C:/Users/tevinger/Downloads/Upstream Summary Stats by watershed.xlsx")
+```
+
+```{r}
+#Create a df for each Watershed
+Agashashok_summary_stats <- summary_stats_results %>%
+  dplyr::filter(Watershed == "Agashashok River")
+
+Nakolikurok_summary_stats <- summary_stats_results %>%
+  dplyr::filter(Watershed == "Nakolikurok")
+
+Tukpahlearik_summary_stats <- summary_stats_results %>%
+  dplyr::filter(Watershed == "Tukpahlearik")
+
+Salmon_summary_stats <- summary_stats_results %>%
+  dplyr::filter(Watershed == "Salmon River")
+
+Kugururok_summary_stats <- summary_stats_results %>%
+  dplyr::filter(Watershed == "Kugururok River")
+
+Anaktok_summary_stats <- summary_stats_results %>%
+  dplyr::filter(Watershed == "Anaktok River")
+
+write_xlsx(Agashashok_summary_stats, "C:/Users/tayta/Downloads/Agashashok Summary Stats.xlsx")
+write_xlsx(Nakolikurok_summary_stats, "C:/Users/tayta/Downloads/Nakolikurok Summary Stats.xlsx")
+write_xlsx(Tukpahlearik_summary_stats, "C:/Users/tayta/Downloads/Tukpahlearik Summary Stats.xlsx")
+write_xlsx(Salmon_summary_stats, "C:/Users/tayta/Downloads/Salmon Summary Stats.xlsx")
+write_xlsx(Kugururok_summary_stats, "C:/Users/tayta/Downloads/Kugururok Summary Stats.xlsx")
+write_xlsx(Anaktok_summary_stats, "C:/Users/tayta/Downloads/Anaktok Summary Stats.xlsx")
+```
+
+
+
+#2. Data Analysis
+##2.1  Individual data frames
+```{r}
+Upstream_df <- Upstream_seep_df %>%
+  filter(Site_Group == "Upstream")
+
+seep_df <- Upstream_seep_df %>%
+  filter(Site_Group == "Seep")
+
+Seep_control_df <- Upstream_seep_df %>%
+  filter(Site_Group == "Seep_control")
+```
+
+##2.2 Colors
+``` {r}
+cb_palette_20 <- c(
+  "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
+  "#D55E00", "#CC79A7", "#999999", "#000000", "#E41A1C",
+  "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#A65628",
+  "#F781BF", "#999999", "#66C2A5", "#FC8D62", "#8DA0CB"
+)
+```
+
+##2.3 Boxplots
+###2.3.1 pH
+```{r}
+library(ggplot2)
+
+pH_plot <- ggplot() + 
+  
+  # Boxplot and jitter for df_1
+  geom_boxplot(data = Upstream_df, aes(x = factor(Site_Grouping), y = pH, fill = factor(Site_Group)), 
+               width = 0.75, outlier.shape = NA, alpha = 0.5) +
+  geom_jitter(data = Upstream_df, aes(x = factor(Site_Grouping), y = pH, fill = Watershed), 
+              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
+
+  # Boxplot and jitter for seep_df
+  geom_boxplot(data = seep_df, aes(x = factor(Site_Grouping), y = pH, fill = factor(Site_Group)), 
+               width = 0.75, outlier.shape = NA, alpha = 0.5) +
+  geom_jitter(data = seep_df, aes(x = factor(Site_Grouping), y = pH, fill = Watershed), 
+              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
+  
+  # Boxplot and jitter for df_3
+  geom_boxplot(data = Seep_control_df, aes(x = factor(Site_Grouping), y = pH, fill = factor(Site_Group)), 
+               width = 0.75, outlier.shape = NA, alpha = 0.5) +
+  geom_jitter(data = Seep_control_df, aes(x = factor(Site_Grouping), y = pH, fill = Watershed), 
+              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
+
+  # Manual fill colors for Site Group (Boxplots)
+  scale_fill_manual(name = "Site Group", values = boxplot_colors) +
+  # Labels
+  labs(
+    title = "Comparison of pH by Proximity to Seeps",
+    x = "Site Group",
+    y = "pH"
+  ) +
+  scale_y_continuous(
+    breaks = c(3,4,5,6,7,8)) +
+  # Theme settings
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),  
+    plot.title = element_blank(),  
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(size = 24, color = "black", face = "bold", margin = margin(r = 10)),
+    legend.position = "none",
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
+    panel.background = element_rect(fill = "transparent"),  
+    plot.background = element_rect(fill = "transparent", color = NA),
+    #panel.grid.minor.y = element_line(color = "black", linewidth = 0.4, linetype = "dotted"),
+    axis.ticks.y = element_line(size = 0.8, color = "black"),  # Thicker y-axis ticks
+    axis.ticks.length.y = unit(0.15, "cm"),  # Longer tick marks
+      axis.ticks.x = element_line(size = 0.8, color = "black"),  # Make x-axis ticks visible
+      axis.ticks.length = unit(5, "pt")  # Adjust tick length (optional)
+  ) 
+
+pH_plot
+
+ggsave("C:/Users/tayta/Downloads/pH_V2.png", pH_plot, bg = "transparent", width = 3, height = 5, dpi = 300)
+```
+
+##2.4 Upstream Chemistry Barplots
+###Plot theme
+```{r}
+barplot_theme <- theme(
+  panel.grid.minor = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.background = element_rect(fill = "white"),
+  panel.border = element_rect(fill = NA, color = "black", size = 1),
+  # X and Y axis tick labels
+  axis.text.x = element_text(size = 8, color = "black", face = "bold" 
+                             #angle = 45, 
+                             #hjust = 1
+                             ),
+  axis.text.y = element_text(size = 18, color = "black", face = "bold"),
+  
+  # X and Y axis titles
+  axis.title.x = element_blank(),
+  axis.title.y = element_text(
+    size = 14, color = "black", face = "bold",
+    margin = margin(r = 15)  # add space to the right of the y-axis title
+  ),
+  legend.position = "top",
+  legend.title = element_blank(),
+  legend.background = element_rect(fill = NA),
+  legend.text = element_text(size = 9, color = "black", face = "bold"),
+  legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+  axis.ticks.y = element_line(size = 0.8, color = "black"),  # Thicker y-axis ticks
+    axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
+  plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold")
+)
+```
+
+###DF modifications
+```{r}
+# data other than metals
+Upstream_long <- Upstream_df %>%
+  dplyr::select(2,18:24) %>%
+  pivot_longer(
+    cols = 2:8,
+    names_to = "Variable",
+    values_to = "Value"
+  ) %>%
+  mutate(Metal_Group = case_when(
+    grepl("pH|DIC|Alk", Variable) ~ "Buffering",
+    TRUE ~ NA_character_  # Optional: NA if none match
+  )) %>%
+  # Add a column of watershed area to organize the watersheds by later
+  mutate(Watershed_area = case_when(
+    Watershed == "Agashashok River"     ~ 762.96,
+    Watershed == "Anaktok River"        ~ 196.91,
+    Watershed == "Kugururok River"      ~ 2059.42,
+    Watershed == "Tukpahlearik"   ~ 83.24,
+    Watershed == "Salmon River"         ~ 1740.33,
+    Watershed == "Nakolikurok"    ~ 349.5,
+    TRUE ~ NA_real_
+  )) %>% 
+  mutate(
+    Watershed = factor(Watershed, levels = names(sort(watershed_areas)))
+  )
+  
+Upstream_long_summary <- Upstream_long %>%
+  group_by(Variable, Watershed, Metal_Group) %>%
+  summarise(
+    mean_value = mean(Value, na.rm = TRUE),
+    sd_value = sd(Value, na.rm = TRUE),
+    Min = round(min(Value, na.rm = TRUE), 5),
+    Max = round(max(Value, na.rm = TRUE), 5),     
+    Count = n(),
+    .groups = "drop"
+  )
+
+df_buffering_capacity <- Upstream_long_summary %>%
+  filter(Metal_Group == "Buffering")
+
+write_xlsx(df_buffering_capacity, "C:/Users/tayta/Downloads/Buffering Capacity Parameters Stats.xlsx")
+
+```
+
+```{r}
+# metal data columns only
+watershed_areas <- c(
+  "Agashashok River" = 762.96,
+  "Anaktok River" = 196.91,
+  "Kugururok River" = 2059.42,
+  "Tukpahlearik Creek" = 83.24,
+  "Salmon River" = 1740.33,
+  "Nakolikurok Creek" = 349.5
+)
+
+Upstream_f_metals_long <- Upstream_df %>%
+  dplyr::select(2,18:103) %>% #select Watershed column and the metal data columns
+  pivot_longer(
+    cols = 2:87,
+    names_to = "Variable",
+    values_to = "Value"
+  ) %>%
+  dplyr::filter(grepl("f_", Variable)) %>% #keep only filtered metals
+  # Add a column for grouping the metals 
+  mutate(Metal_Group = case_when(
+    grepl("Al|Fe|Mn|Ba", Variable) ~ "Major",
+    grepl("Pb|As|Cd|Cr|Co|Cu|Zn|Ni|U|Se", Variable) ~ "Trace",
+    grepl("Ce|Dy|Nd|Pr|La|Y", Variable) ~ "REE",
+    grepl("K|Na", Variable) ~ "Minor Cations",
+    grepl("Cl|NO3", Variable) ~ "Minor Anions",
+    grepl("Ca|Mg", Variable) ~ "Major Cations",
+    grepl("SO4", Variable) ~ "Sulfate",
+    TRUE ~ NA_character_  # Optional: NA if none match
+  )) %>%
+  # Add a column of watershed area to organize the watersheds by later
+  mutate(Watershed_area = case_when(
+    Watershed == "Agashashok River"     ~ 762.96,
+    Watershed == "Anaktok River"        ~ 196.91,
+    Watershed == "Kugururok River"      ~ 2059.42,
+    Watershed == "Tukpahlearik Creek"   ~ 83.24,
+    Watershed == "Salmon River"         ~ 1740.33,
+    Watershed == "Nakolikurok Creek"    ~ 349.5,
+    TRUE ~ NA_real_
+  )) %>% 
+  mutate(
+    Watershed = factor(Watershed, levels = names(sort(watershed_areas)))
+  )
+  
+Upstream_f_metals_long_summary <- Upstream_f_metals_long %>%
+  group_by(Variable, Watershed, Metal_Group) %>%
+  summarise(
+    mean_value = mean(Value, na.rm = TRUE),
+    sd_value = sd(Value, na.rm = TRUE),
+    Min = round(min(Value, na.rm = TRUE), 5),
+    Max = round(max(Value, na.rm = TRUE), 5),     
+    Count = n(),
+    .groups = "drop"
+  )
+```
+
+```{r}
+# Major metals
+major_order <- c("f_Al_mcg_per_l", "f_Fe_mcg_per_l", "f_Mn_mcg_per_l", "f_Ba_mcg_per_l")
+
+# Trace metals
+trace_order <- c(
+  "f_Pb Sum_mcg_per_l", "f_As_mcg_per_l", "f_Cr_mcg_per_l", "f_Cd_mcg_per_l", "f_Cu_mcg_per_l", "f_Se_mcg_per_l", "f_U_mcg_per_l", "f_Co_mcg_per_l", "f_Ni_mcg_per_l", "f_Zn_mcg_per_l")
+
+# REE metals
+ree_order <- c(
+  "f_Ce_mcg_per_l", "f_Dy_mcg_per_l", "f_Nd_mcg_per_l", "f_Pr_mcg_per_l",
+  "f_La_mcg_per_l", "f_Y_mcg_per_l"
+)
+
+#Cations
+major_cations_order <- c(
+  "f_Ca_mg_l", "f_Mg_mg_l"
+)
+
+minor_cations_order <- c(
+  "f_Na_mg_l", "f_K_mg_l"
+)
+
+#Anions
+minor_anions_order <- c(
+  "f_Cl_mg_per_l", "f_NO3_mg_per_l"
+)
+
+
+df_major <- Upstream_f_metals_long_summary %>%
+  filter(Metal_Group == "Major") %>%
+  filter(Variable != "NA") %>%
+  mutate(Variable = factor(Variable, levels = major_order))
+
+df_trace <- Upstream_f_metals_long_summary %>%
+  filter(Metal_Group == "Trace") %>%
+  mutate(Variable = factor(Variable, levels = trace_order))
+
+df_ree <- Upstream_f_metals_long_summary %>%
+  filter(Metal_Group == "REE") %>%
+  mutate(Variable = factor(Variable, levels = ree_order))
+
+df_minor_cations <- Upstream_f_metals_long_summary %>%
+  filter(Metal_Group == "Minor Cations") %>%
+  mutate(Variable = factor(Variable, levels = minor_cations_order))
+
+df_major_cations <- Upstream_f_metals_long_summary %>%
+  filter(Metal_Group == "Major Cations") %>%
+  mutate(Variable = factor(Variable, levels = major_cations_order))
+
+df_minor_anions <- Upstream_f_metals_long_summary %>%
+  filter(Metal_Group == "Minor Anions") %>%
+  mutate(Variable = factor(Variable, levels = minor_anions_order))
+
+df_anions <- Upstream_f_metals_long_summary %>%
+  filter(Metal_Group == "Sulfate") 
+```
+
+```{r}
+# comparing the concentrations of Zn, Ni, Cu, Se, U to other major metals
+major_order_2 <- c("f_Cu_mcg_per_l", "f_Se_mcg_per_l", "f_U_mcg_per_l", "f_Co_mcg_per_l", "f_Ni_mcg_per_l", "f_Zn_mcg_per_l", "f_Al_mcg_per_l", "f_Fe_mcg_per_l", "f_Mn_mcg_per_l", "f_Ba_mcg_per_l")
+
+df_major_2 <- Upstream_f_metals_long_summary %>%
+  filter(Metal_Group == "Major") %>%
+  mutate(Variable = factor(Variable, levels = major_order_2))
+```
+
+```{r}
+write_xlsx(df_major, "C:/Users/tayta/Downloads/Major Metals Summary Stats.xlsx")
+
+write_xlsx(df_trace, "C:/Users/tayta/Downloads/Trace Metals Summary Stats.xlsx")
+
+write_xlsx(df_ree, "C:/Users/tayta/Downloads/REE Metals Summary Stats.xlsx")
+```
+
+###Set the colors of the metals
+```{r}
+cb_palette_20 <- c(
+  "#E69F00", "#56B4E9", "#000000", "#009E73", "#F0E442", "#0072B2",
+  "#D55E00", "#CC79A7", "#999999", "#E41A1C",
+  "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#A65628",
+  "#F781BF", "#999999", "#66C2A5", "#FC8D62", "#8DA0CB"
+)
+
+metals_ordered <- c(
+  # Major
+  "f_Fe_mcg_per_l", "f_Al_mcg_per_l", "f_Mn_mcg_per_l", "f_Ba_mcg_per_l",
+  # Trace
+  "f_Pb Sum_mcg_per_l", "f_As_mcg_per_l", "f_Cd_mcg_per_l", "f_Co_mcg_per_l", "f_Cr_mcg_per_l", "f_Cu_mcg_per_l", "f_Ni_mcg_per_l", "f_Zn_mcg_per_l", "f_Se_mcg_per_l",
+  # REE
+  "f_Ce_mcg_per_l", "f_Dy_mcg_per_l", "f_Nd_mcg_per_l", "f_Pr_mcg_per_l", "f_La_mcg_per_l", "f_U_mcg_per_l", "f_Y_mcg_per_l"
+)
+
+metal_colors <- cb_palette_20
+names(metal_colors) <- metals_ordered
+```
+
+###2.4.1 Major Metals
+```{r}
+#Grouped by watershed on the y-axis
+upstream_metals_major <- df_major %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "Major Metals by Watershed",
+    x = "Watershed",
+    y = "Concentration (μg/L)"
+  ) +
+  #coord_cartesian(ylim = c(0,15)) +
+  #scale_fill_manual(labels = c("f_Al_mcg_per_l" = "Al", "f_Fe_mcg_per_l" = "Fe", "f_Mn_mcg_per_l" = "Mn", "f_Ba_mcg_per_l" = "Ba")) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "none",
+    axis.title.y = element_blank()
+  )
+
+upstream_metals_major
+```
+
+###2.4.2 Trace Metals
+```{r}
+#grouped by watershed on the y-axis
+upstream_metals_trace_bottom <- df_trace %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = NULL
+  ) +
+  coord_cartesian(ylim = c(0, 25)) +
+  scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "none"
+    #axis.text.x = element_blank()
+  )
+
+upstream_metals_trace_bottom
+
+upstream_metals_trace_top <- df_trace %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = NULL
+  ) +
+  coord_cartesian(ylim = c(90, 100)) +
+  scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "none",
+    axis.text.x = element_blank()
+  )
+
+upstream_metals_trace_top
+```
+
+```{r}
+upstream_metals_trace_combo <- upstream_metals_trace_top / upstream_metals_trace_bottom + 
+  plot_layout(
+    heights = c(1, 4), 
+    guides = "collect"
+  ) & 
+  theme(
+    plot.margin = margin(0, 5, 0, 2), 
+    panel.background = element_rect(fill = "NA", color = "NA"), # Panel background
+    plot.background = element_rect(fill = "NA", color = "NA") # Plot background
+  )
+
+upstream_metals_trace_combo
+```
+
+###2.4.3 REE Metals
+```{r}
+#grouped by watershed on the y-axis
+upstream_metals_REE <- df_ree %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "REE Metals by Watershed",
+    x = "Watershed",
+    y = "Concentration (μg/L)"
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "none",
+    axis.title.y = element_blank()
+  )
+
+upstream_metals_REE
+```
+
+###2.4.4 Upstream Cations
+Ca, Mg, Na, K
+```{r}
+upstream_major_cations <- df_cations %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "Major Cations by Watershed",
+    x = "Watershed",
+    y = "Concentration (mg/L)"
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "top"
+  )
+
+upstream_major_cations
+```
+
+###2.4.5 Upstream Anions
+SO4, Cl, NO3, PO4, HCO3(?)
+```{r}
+upstream_major_anions <- df_anions %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "Major Anions by Watershed",
+    x = "Watershed",
+    y = "Concentration (mg/L)"
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "top"
+  )
+
+upstream_major_anions
+```
+
+###2.4.6 Upstream SpC, Temp, DOC
+
+
+###2.4.7 Upstream Buffering Capacity
+pH, DIC, Alk
+
+
+##2.5 Seep Chemistry
+### Seep dataframe
+```{r}
+Seep_df <- working_Ferrum_data %>%
+  filter(New_Grouping == "Seep")
+
+view(Seep_df)
+
+Seep_df_long <- Seep_df %>%
+  dplyr::select(-c(3,4,7,8,9,10,12,13,14,18)) %>% # remove site information columns that aren't necessary
+  pivot_longer(
+    cols = 6:66,
+    names_to = "Variable",
+    values_to = "Conc"
+  ) %>%
+  # Add a column for grouping the metals 
+  mutate(Metal_Group = case_when(
+    grepl("Al_|Fe_|Mn_|Ba_", Variable) ~ "Major",
+    grepl("Pb_|As_|Cd_|Cr_|Co_|Cu_|Zn_|Ni_|U_|Se_", Variable) ~ "Trace",
+    grepl("Ce_|Dy_|Nd_|Pr_|La_|Y_", Variable) ~ "REE",
+    grepl("K_|Na_", Variable) ~ "Minor Cations",
+    grepl("Cl_|NO3_|PO4_", Variable) ~ "Minor Anions",
+    grepl("Ca_|Mg_", Variable) ~ "Major Cations",
+    grepl("SO4_", Variable) ~ "Sulfate",
+    TRUE ~ NA_character_  # Optional: NA if none match
+  )) %>%
+  mutate(Metal_Type = case_when(
+    grepl("f_", Variable) ~ "f",
+    grepl("p_", Variable) ~ "p",
+    TRUE ~ NA_character_ # NA if none match
+  )
+  ) %>%
+  mutate(across(c(Conc), round, 2)) %>%
+  # Add a column of watershed area to organize the watersheds by later
+  mutate(Watershed_area = case_when(
+    Watershed == "Agashashok River"     ~ 762.96,
+    Watershed == "Anaktok River"        ~ 196.91,
+    Watershed == "Kugururok River"      ~ 2059.42,
+    Watershed == "Tukpahlearik Creek"   ~ 83.24,
+    Watershed == "Salmon River"         ~ 1740.33,
+    Watershed == "Nakolikurok Creek"    ~ 349.5,
+    TRUE ~ NA_real_
+  )) %>% 
+  mutate(
+    Watershed = factor(Watershed, levels = names(sort(watershed_areas)))
+  )
+
+view(Seep_df_long)
+```
+
+DF Modifications
+```{r}
+watershed_areas <- c(
+  "Agashashok River" = 762.96,
+  "Anaktok River" = 196.91,
+  "Kugururok River" = 2059.42,
+  "Tukpahlearik Creek" = 83.24,
+  "Salmon River" = 1740.33,
+  "Nakolikurok Creek" = 349.5
+)
+  
+Seep_f_metals_long_summary <- Seep_df_long %>%
+  group_by(Variable, Watershed, Metal_Group, Metal_Type) %>%
+  summarise(
+    mean_value = mean(Conc, na.rm = TRUE),
+    sd_value = sd(Conc, na.rm = TRUE),
+    Min = if (all(is.na(Conc))) NA_real_ else round(min(Conc, na.rm = TRUE), 5),
+    Max = if (all(is.na(Conc))) NA_real_ else round(max(Conc, na.rm = TRUE), 5),     
+    Count = n(),
+    .groups = "drop"
+  )
+
+view(Seep_f_metals_long_summary)
+```
+
+##Plot colors and metal order
+```{r}
+watershed_colors <- c(  
+    "Agashashok River" = "#A1E3F9",   
+    "Anaktok River" = "#9F8383",
+    "Salmon River Watershed" = "#9F8383",
+    "Salmon River" = "#2DAA9E",   
+    "Kugururok River" = "#2D3D85",  
+    "Nakolikurok Creek" = "#F87FC7",
+    "Nakolikurok" = "#F87FC7",
+    "Tukpahlearik Creek" = "#FDDE74",
+    "Tukpahlearik" = "#FDDE74"
+    )
+
+cb_palette_20 <- c(
+  # Major metal colors
+  #"#FF7F00", "#56B4E9", "grey31", "#009E73", 
+  #"#FF7F00", "#56B4E9", "grey31", "#5d9b84",
+  #"#de8042", "#ffce96", "#5d455e", "#009E73",
+  "#D55E00", "#ffce96", "#5d455e", "#009E73",
+  "#D55E00", "#ffce96", "#5d455e", "#009E73",
+  
+  # Trace metal colors
+  #"#F0E442", "#0072B2","#D55E00", "#CC79A7", "#999999", "#E41A1C", "#E69F00",
+  #"#377EB8", "#4DAF4A", "#984EA3",
+  #"#F0E442", "#0072B2","#D55E00", "#CC79A7", "#999999", "#E41A1C", "#E69F00",
+  #"#377EB8", "#4DAF4A", "#984EA3",
+  
+  "#003f5c", "#2c4875", "#752c48", "#8a508f", "#bc5090", "#ff6361", "#ff8531", "#ffa600", "#ffca67", "#80acff",
+  "#003f5c", "#2c4875", "#752c48", "#8a508f", "#bc5090", "#ff6361", "#ff8531", "#ffa600", "#ffca67", "#80acff",
+  
+  # REE colors
+  #"#FF7F00", "#A65628", "#999999", "#66C2A5", "#FC8D62", "#8DA0CB"
+  
+  "#b86622", "#c5e6a1", "#8DA0CB", "#ab694e", "#4eab69", "#6d7a6b",
+  "#b86622", "#c5e6a1", "#8DA0CB", "#ab694e", "#4eab69", "#6d7a6b"
+  
+)
+
+metals_ordered <- c(
+  # Major
+  "f_Fe_mcg_per_l", "f_Al_mcg_per_l", "f_Mn_mcg_per_l", "f_Ba_mcg_per_l",
+  "p_Fe_mcg_per_l", "p_Al_mcg_per_l", "p_Mn_mcg_per_l", "p_Ba_mcg_per_l",
+  # Trace
+  "f_Pb_mcg_per_l", "f_As_mcg_per_l", "f_Cr_mcg_per_l", "f_Cd_mcg_per_l", 
+  "f_Cu_mcg_per_l", "f_Se_mcg_per_l", "f_U_mcg_per_l", "f_Co_mcg_per_l", 
+  "f_Ni_mcg_per_l", "f_Zn_mcg_per_l",
+  "p_Pb_mcg_per_l", "p_As_mcg_per_l", "p_Cr_mcg_per_l", "p_Cd_mcg_per_l",
+"p_Cu_mcg_per_l", "p_Se_mcg_per_l", "p_U_mcg_per_l", "p_Co_mcg_per_l",
+"p_Ni_mcg_per_l", "p_Zn_mcg_per_l",
+  # REE
+  "f_Ce_mcg_per_l", "f_Dy_mcg_per_l", "f_Nd_mcg_per_l", "f_Pr_mcg_per_l", "f_La_mcg_per_l", "f_Y_mcg_per_l", 
+"p_Ce_mcg_per_l", "p_Dy_mcg_per_l", "p_Nd_mcg_per_l", "p_Pr_mcg_per_l","p_La_mcg_per_l", "p_Y_mcg_per_l"
+)
+
+metal_colors <- cb_palette_20
+names(metal_colors) <- metals_ordered
+```
+
+```{r}
+# Major metals
+major_order <- c("f_Ba_mcg_per_l", "p_Ba_mcg_per_l", "f_Al_mcg_per_l", "p_Al_mcg_per_l", "f_Fe_mcg_per_l", "p_Fe_mcg_per_l", "f_Mn_mcg_per_l", "p_Mn_mcg_per_l")
+
+# Trace metals
+trace_order <- c(
+"f_Pb_mcg_per_l", "p_Pb_mcg_per_l",
+"f_As_mcg_per_l", "p_As_mcg_per_l",
+"f_Cr_mcg_per_l", "p_Cr_mcg_per_l",
+"f_Cd_mcg_per_l", "p_Cd_mcg_per_l",
+"f_Cu_mcg_per_l", "p_Cu_mcg_per_l",
+"f_Se_mcg_per_l", "p_Se_mcg_per_l",
+"f_U_mcg_per_l",  "p_U_mcg_per_l",
+"f_Co_mcg_per_l", "p_Co_mcg_per_l",
+"f_Ni_mcg_per_l", "p_Ni_mcg_per_l",
+"f_Zn_mcg_per_l", "p_Zn_mcg_per_l")
+
+# REE metals
+ree_order <- c(
+"f_Ce_mcg_per_l", "p_Ce_mcg_per_l",
+"f_Dy_mcg_per_l", "p_Dy_mcg_per_l",
+"f_Nd_mcg_per_l", "p_Nd_mcg_per_l",
+"f_Pr_mcg_per_l", "p_Pr_mcg_per_l",
+"f_La_mcg_per_l", "p_La_mcg_per_l",
+"f_Y_mcg_per_l",  "p_Y_mcg_per_l"
+
+)
+
+#Cations
+major_cations_order <- c(
+  "f_Ca_mg_l", "f_Mg_mg_l"
+)
+
+minor_cations_order <- c(
+  "f_Na_mg_l", "f_K_mg_l"
+)
+
+#Anions
+minor_anions_order <- c(
+  "f_Cl_mg_per_l", "f_NO3_mg_per_l"
+)
+
+
+df_major_seep <- Seep_f_metals_long_summary %>%
+  filter(Metal_Group == "Major") %>%
+  filter(!is.na(Variable)) %>%
+  mutate(Variable = factor(Variable, levels = major_order))
+
+#view(df_major_seep)
+
+df_trace_seep <- Seep_f_metals_long_summary %>%
+  filter(Metal_Group == "Trace") %>%
+  mutate(Variable = factor(Variable, levels = trace_order))
+
+#view(df_trace_seep)
+
+df_ree_seep <- Seep_f_metals_long_summary %>%
+  filter(Metal_Group == "REE") %>%
+  mutate(Variable = factor(Variable, levels = ree_order))
+
+df_major_cations_seep <- Seep_f_metals_long_summary %>%
+  filter(Metal_Group == "Major Cations") %>%
+  mutate(Variable = factor(Variable, levels = major_cations_order))
+
+df_minor_cations_seep <- Seep_f_metals_long_summary %>%
+  filter(Metal_Group == "Minor Cations") %>%
+  mutate(Variable = factor(Variable, levels = minor_cations_order))
+
+df_minor_anions_seep <- Seep_f_metals_long_summary %>%
+  filter(Metal_Group == "Minor Anions") %>%
+  mutate(Variable = factor(Variable, levels = minor_anions_order))
+
+df_sulfate_seep <- Seep_f_metals_long_summary %>%
+  filter(Metal_Group == "Sulfate")
+```
+
+###2.5.1 Seep Major Metals
+```{r}
+#Grouped by watershed on the y-axis
+seep_metals_major <- df_major_seep %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "Major Metals by Watershed",
+    x = NULL,
+    y = "Concentration (μg/L)"
+  ) +
+  #coord_cartesian(ylim = c(0,15)) +
+ #scale_y_log10(labels = label_comma()) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10), breaks = c(0,10,100,1000,10000,100000,1000000,10000000), labels = label_comma(), expand = expansion(mult = c(0, 0.05))) +
+  annotation_logticks(sides = "l") +
+  scale_fill_manual(values = c(metal_colors)) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "top",
+    axis.title.y = element_text(margin = margin(r=1))
+    #axis.title.y = element_blank()
+  ) +
+  guides(fill = guide_legend(nrow = 2)) +
+  scale_x_discrete(expand = expansion(mult = c(0.4, 0.2)))
+
+seep_metals_major
+```
+
+```{r}
+#Grouped by watershed on the y-axis
+seep_metals_major_2 <- df_major_seep %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+  geom_col_pattern(aes(fill = Variable, pattern = Metal_Type, pattern_fill = Metal_Type),
+    position = position_dodge(width = 0.9),
+    color = "black",
+    size = 0.7,
+    pattern_density = 0.2,
+    pattern_spacing = 0.02,
+    pattern_angle = 25,
+    #width = 0.75,
+    alpha = 0.9,
+    width = 0.9
+    ) +
+        #geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "Major Metals by Watershed",
+    x = NULL,
+    y = "Concentration (μg/L)"
+  ) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10), breaks = c(0,10,100,1000,10000,100000,1000000,10000000), labels = label_comma(), expand = expansion(mult = c(0, 0.05))) +
+  annotation_logticks(sides = "l") +
+  scale_fill_manual(values = c(metal_colors)) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey28")) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "top",
+    axis.title.y = element_text(margin = margin(r=1))
+    #axis.title.y = element_blank()
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.25, 0.2))) +
+  guides(fill = guide_legend(nrow = 2))
+  
+
+seep_metals_major_2
+```
+
+```{r}
+stacked_seep_major_metals <- ggplot(df_major_seep, aes(x = Watershed, y = mean_value, fill = Variable)) +
+  geom_bar(stat = "identity") +  # stacked by default
+  scale_fill_manual(values = metal_colors) +  # your custom color vector
+  labs(x = "Watershed", y = "Concentration (µg/L)", fill = "Metal") +
+  scale_y_log10(labels = scales::label_comma()) +
+  theme_minimal()
+
+stacked_seep_major_metals
+```
+
+###2.5.2 Seep Trace Metals
+```{r}
+#grouped by watershed on the y-axis
+seep_metals_trace_bottom <- df_trace_seep %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+  geom_col_pattern(aes(fill = Variable, pattern = Metal_Type, pattern_fill = Metal_Type),
+    position = position_dodge(width = 0.9),
+    color = "black",
+    size = 0.7,
+    pattern_density = 0.2,
+    pattern_spacing = 0.02,
+    pattern_angle = 25,
+    #width = 0.75,
+    alpha = 0.7,
+    width = 0.9
+    ) +
+        #geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "Trace Elements by Watershed",
+    x = NULL,
+    y = "Concentration (μg/L)"
+  ) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10), breaks = c(0,10,100,1000,10000,100000,1000000,10000000), labels = label_comma(), expand = expansion(mult = c(0, 0.05))) +
+  annotation_logticks(sides = "l") +
+  scale_fill_manual(values = c(metal_colors)) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey28")) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "top",
+    axis.title.y = element_text(margin = margin(r=1))
+    #axis.title.y = element_blank()
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.25, 0.2))) +
+  guides(fill = guide_legend(nrow = 2))
+
+seep_metals_trace_bottom
+```
+
+```{r}
+upstream_metals_trace_combo <- upstream_metals_trace_top / upstream_metals_trace_bottom + 
+  plot_layout(
+    heights = c(1, 4), 
+    guides = "collect"
+  ) & 
+  theme(
+    plot.margin = margin(0, 5, 0, 2), 
+    panel.background = element_rect(fill = "NA", color = "NA"), # Panel background
+    plot.background = element_rect(fill = "NA", color = "NA") # Plot background
+  )
+
+upstream_metals_trace_combo
+```
+
+###2.5.3 Seep REE Metals
+```{r}
+#grouped by watershed on the y-axis
+Seep_metals_REE <- df_ree_seep %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+  geom_col_pattern(aes(fill = Variable, pattern = Metal_Type, pattern_fill = Metal_Type),
+    position = position_dodge(width = 0.9),
+    color = "black",
+    size = 0.7,
+    pattern_density = 0.2,
+    pattern_spacing = 0.02,
+    pattern_angle = 25,
+    #width = 0.75,
+    alpha = 0.7,
+    width = 0.9
+    ) +
+        #geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "Rare Earth Elements by Watershed",
+    x = NULL,
+    y = "Concentration (μg/L)"
+  ) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10), breaks = c(0,10,100,1000,10000), labels = label_comma(), expand = expansion(mult = c(0, 0.05))) +
+  annotation_logticks(sides = "l") +
+  scale_fill_manual(values = c(metal_colors)) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey28")) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "top",
+    axis.title.y = element_text(margin = margin(r=1))
+    #axis.title.y = element_blank()
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.25, 0.2))) +
+  guides(fill = guide_legend(nrow = 2))
+
+Seep_metals_REE 
+
+```
+
+####Combo Plots
+```{r}
+Seep_metals_combo_plot <- plot_grid(
+  seep_metals_major, seep_metals_trace_bottom, Seep_metals_REE, 
+  ncol = 3,
+  rel_widths = c(1.1, 0.95, 0.85)
+  )
+
+Seep_metals_combo_plot
+
+```
+
+```{r}
+Stacked_seep_metals_combo_plot <- plot_grid(
+  seep_metals_major, seep_metals_trace_bottom, Seep_metals_REE, 
+  ncol = 3,
+  rel_widths = c(1.1, 0.95, 0.85)
+  )
+
+Stacked_seep_metals_combo_plot
+
+```
+
+###2.5.4 Seep Cations
+Ca, Mg, Na, K
+```{r}
+upstream_major_cations <- df_cations %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "Major Cations by Watershed",
+    x = "Watershed",
+    y = "Concentration (mg/L)"
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "top"
+  )
+
+upstream_major_cations
+```
+
+###2.5.5 Seep Anions
+SO4, Cl, NO3, PO4, HCO3(?)
+
+###2.5.6 Seep SpC, Temp, DOC
+
+###2.5.7 Seep Buffering Capacity
+pH, DIC, Alk
+

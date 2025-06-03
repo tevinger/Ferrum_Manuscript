@@ -14,10 +14,10 @@ working_Alaska_DataRelease_2022_2023_Ferrum <- read_excel("C:/Users/tayta/OneDri
 ## Load master spreadsheet
 
 ```{r}
-Alaska_2024_DataRelease_V2.3 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Becca Frei/Alaska_ProjectData/Alaska_2024_DataRelease_V2.3.xlsx", 
+Alaska_2024_DataRelease_V2.4 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Becca Frei/Alaska_ProjectData/Alaska_2024_DataRelease_V2.4_20250528_for Brett to review.xlsx", 
                                            sheet = "Table3_Water")
 
-Alaska_Project_Master_Spreadsheet <- Alaska_2024_DataRelease_V2.3
+Alaska_Project_Master_Spreadsheet <- Alaska_2024_DataRelease_V2.4
 view(Alaska_Project_Master_Spreadsheet)
 ```
 

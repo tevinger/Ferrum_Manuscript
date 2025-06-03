@@ -30,6 +30,14 @@ Alaska_DataRelease_2022_2023_Ferrum_OG <- Alaska_Project_Master_Spreadsheet %>%
   filter(`Project Name` == "Alaska FERRUM" | `Project Name` == "Hydro-Ecology of Arctic Thaw")  # Select only Ferrum Project data
 
 view(Alaska_DataRelease_2022_2023_Ferrum_OG)
+
+# Save the file to modify manually
+write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_OG, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_to_modify.xlsx")  # Saves a new Excel file
+
+# In the exported Alaska_DataRelease_2022_2023_Ferrum file, I moved the four rows of data from the CCAL Cl, SO4, Na, K, Ca, and Mg to Poulin Lab Cl, SO4, Na, K, Ca, and Mg, added field measurements for the 2022 samples I have them for, deleted columns 265-274 and 277 (UC Davis Becca cation measurements), and deleted UC Davis Poulin Lab f_SiO2 columns, and the CCAL Cl, SO4, Na, K, Ca, and Mg columns)
+
+# Bring the spreadsheet back in after those changes to use for the DL correction
+
 ```
 
 
@@ -41,12 +49,12 @@ Alaska_DataRelease_2022_2023_Ferrum_modified <- Alaska_DataRelease_2022_2023_Fer
 
 view(Alaska_DataRelease_2022_2023_Ferrum_modified)
 
-# Save the modified file to check
-#write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_modified, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/your_file_modified.xlsx")  # Saves a new Excel file
+
 ```
 
 ## Convert Columns to Numeric
 ``` {r}
+Alaska_DataRelease_2022_2023_Ferrum <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_from_R_with mods.xlsx")
 
 # Define the vector of column indices to convert
 columns_to_convert <- c(27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 
@@ -73,14 +81,7 @@ colnames(Alaska_DataRelease_2022_2023_Ferrum_modified)[146] <- "f_NO3_mgN_per_l_
 colnames(Alaska_DataRelease_2022_2023_Ferrum_modified)[148] <- "f_SO4_mg_per_l_qa"
 
 # Save the modified file to check
-write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_modified, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_from_R.xlsx")  # Saves a new Excel file
-
-
-# In the exported Alaska_DataRelease_2022_2023_Ferrum file, I moved the one row of data from the CCAL Cl, SO4, Na, K, Ca, and Mg to Poulin Lab Cl, SO4, Na, K, Ca, and Mg and added field measurements for the 2022 samples I have them for)
-
-# Bring the spreadsheet back in after those changes to use for the DL correction
-
-Alaska_DataRelease_2022_2023_Ferrum <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_from_R_with mods.xlsx")
+#write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_modified, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_from_R.xlsx")  # Saves a new Excel file
 ```
 
 ## <DL Transformation

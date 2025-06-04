@@ -78,6 +78,149 @@ Alaska_DataRelease_2022_2023_Ferrum_V1 <- Alaska_DataRelease_2022_2023_Ferrum_mo
 write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V1, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_V1.xlsx")  # Saves a new Excel file
 ```
 
+# Particulate Metal Calculation
+```{r}
+# convert to long format with 
+metal_df_long <- Alaska_DataRelease_2022_2023_Ferrum_V1 %>%
+  dplyr::select(
+    c(21, 144:237)  # Select metal columns by column number
+  ) %>%
+  dplyr::select(
+    -contains("qa")  # Remove any column that contains "qa"
+  ) %>%
+
+  # Step 2: Pivot to long format
+  pivot_longer(
+    cols = -SamplingEventID,
+    names_to = c("prefix", "metal", "unit"),
+    names_pattern = "(f|u)_([^_]+)_(mcg_per_l)",
+    values_to = "value"
+  ) %>%
+  
+  filter(!is.na(prefix)) %>%
+  
+  # Step 3: Pivot wider to get f and u in separate columns
+  pivot_wider(
+    names_from = prefix,
+    values_from = value
+  ) %>%
+  
+  # Step 4: Calculate p_metal = u - f
+  mutate(
+  p = if_else(
+    is.na(f) | is.na(u),
+    NA_real_,
+    if_else(u - f < 0, 0, u - f)
+  )
+)
+
+view(metal_df_long)
+
+```
+
+```{r}
+# Convert back to wide format with the particulate metal data
+metal_df_wide <- metal_df_long %>%
+  pivot_longer(
+    cols = c(f, u, p),
+    names_to = "prefix",
+    values_to = "value"
+  ) %>%
+  mutate(full_name = paste0(prefix, "_", metal, "_", unit)) %>%
+  dplyr::select(SamplingEventID, full_name, value) %>%
+  pivot_wider(
+    names_from = full_name,
+    values_from = value
+  )
+
+view(metal_df_wide)
+```
+
+```{r}
+# bring particulate metal data into the datasheet
+p_metals <- metal_df_wide %>%
+  dplyr::select(1, starts_with("p"))
+
+Alaska_DataRelease_2022_2023_Ferrum_V2 <- Alaska_DataRelease_2022_2023_Ferrum_V1 %>%
+  left_join(p_metals, by = "SamplingEventID")
+```
+
+```{r}
+# Make qa columns for the p metal data
+# If f or u qa columns have a qa flag, add it to the p qa column
+
+# convert to long format with 
+metal_qa_long <- Alaska_DataRelease_2022_2023_Ferrum_V1 %>%
+  dplyr::select(
+    c(21, 144:237)  # Select metal columns by column number
+  ) %>%
+  dplyr::select(1,
+    contains("qa")  # Remove any column that contains "qa"
+  ) %>%
+
+  # Step 2: Pivot to long format
+  pivot_longer(
+    cols = -SamplingEventID,
+    names_to = c("prefix", "metal", "unit"),
+    names_pattern = "(f|u)_([^_]+)_(mcg_per_l_qa)",
+    values_to = "qa_flag"
+  ) %>%
+  
+  filter(!is.na(prefix)) %>%
+  
+  # Step 3: Pivot wider to get f and u in separate columns
+  pivot_wider(
+    names_from = prefix,
+    values_from = qa_flag
+  ) %>%
+  
+  # make the -- cells NA
+  mutate(
+    f = ifelse(f == "--", NA, f)
+  ) %>%
+  
+  # Step 5: add value to qa_flag column for p data
+  mutate(
+    p = case_when(
+      f == "l" ~ NA_character_,
+      is.na(f) & is.na(u) ~ NA_character_,
+      !is.na(f) & !is.na(u) ~ paste(f, u, sep = ", "),
+      !is.na(f) ~ as.character(f),
+      !is.na(u) ~ as.character(u)
+    )
+  )
+
+view(metal_qa_long)
+
+```
+
+```{r}
+# Convert back to wide format with the particulate metal data
+metal_qa_wide <- metal_qa_long %>%
+  pivot_longer(
+    cols = c(f, u, p),
+    names_to = "prefix",
+    values_to = "qa_flag"
+  ) %>%
+  mutate(full_name = paste0(prefix, "_", metal, "_", unit)) %>%
+  dplyr::select(SamplingEventID, full_name, qa_flag) %>%
+  pivot_wider(
+    names_from = full_name,
+    values_from = qa_flag
+  )
+
+view(metal_qa_wide)
+```
+
+```{r}
+# bring particulate metal data qa flags into the datasheet
+p_metals_qa <- metal_qa_wide %>%
+  dplyr::select(1, starts_with("p"))
+
+Alaska_DataRelease_2022_2023_Ferrum_V2 <- Alaska_DataRelease_2022_2023_Ferrum_V2 %>%
+  left_join(p_metals_qa, by = "SamplingEventID")
+```
+
 ## <DL Transformation
 ####percent of data that is <DL
 ```{r}

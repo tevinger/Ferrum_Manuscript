@@ -283,7 +283,7 @@ print(DL_counts)
 DL_counts_df <- data.frame(Column = names(DL_counts), DL_Count = DL_counts)
 
 # Add percent_DL column
-DL_counts_df$percent_DL <- (DL_counts_df$DL_Count / 134) * 100
+DL_counts_df$percent_DL <- (DL_counts_df$DL_Count / 133) * 100
 
 #view(DL_counts_df)
 

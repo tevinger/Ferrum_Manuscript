@@ -693,7 +693,7 @@ f_V_mcg_per_l, p_V_mcg_per_l,
 f_Y_mcg_per_l, p_Y_mcg_per_l,
 f_Zn_mcg_per_l, p_Zn_mcg_per_l
 ) %>%
-  filter(New_Grouping != "Seep") 
+  filter(New_Grouping != "Seep" | is.na(New_Grouping))
 
 view(stats_working_Ferrum_data)
 ```
@@ -881,7 +881,8 @@ for (i in seq_along(elements)) {
     Q1 = round(quantile(.data[[column]], probs = 0.25, na.rm = TRUE), 2),
     Q3 = round(quantile(.data[[column]], probs = 0.75, na.rm = TRUE), 2),
     IQR = round(IQR(.data[[column]], na.rm = TRUE), 2),
-    Count = n()
+    Count = n(),
+    .groups = "drop"  # Ensure ungrouped result after summarization
   )
   
   # Store the result in the list with the element name as key
@@ -893,7 +894,7 @@ summary_stats_results <- do.call(rbind, summary_stats_list)
 
 view(summary_stats_results)
 
-write_xlsx(summary_stats_results, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/By Groups and Watershed_seeps included.xlsx")
+write_xlsx(summary_stats_results, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/By Groups and watershed_seeps included.xlsx")
 ```
 
 ```{r}

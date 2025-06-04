@@ -50,6 +50,11 @@ circle <- ggplot() +
 ggsave("C:/Users/tayta/Downloads/circle_with_half_colors.png", plot = circle, bg = "transparent", width = 5, height = 5)
 ```
 
+#Load Data
+```{r}
+Alaska_DataRelease_2022_2023_Ferrum_V1 <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_V1.xlsx")
+```
+
 # Statistics Codes
 
 The Shapiro-Wilk measures the residuals to determine whether the data is normally distributed. If the p-value is significant (p-value \< 0.05), then the data is not normally distributed and non-parameteric tests must be used.
@@ -235,6 +240,26 @@ metal_summary_stats_results <- metal_summary_stats_results %>%
 # Step 2: Test for Normal or NonNormal Distribution
 
 # Perform the Shapiro-Wilk test
+#Cl
+Cl_shapiro_test_result <- shapiro.test(Alaska_DataRelease_2022_2023_Ferrum_V1$f_Cl_mg_per_l)
+
+# Create the interpretation based on the P-value
+Cl_interpretation <- if (Cl_shapiro_test_result$p.value > 0.05) {
+  "The data is likely normally distributed (fail to reject H0)."
+} else {
+  "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+}
+
+# Store the results in a dataframe
+Cl_shapiro_test_df <- data.frame(
+  Variable = "Cl",
+  Test_Statistic = round(Cl_shapiro_test_result$statistic, 3),
+  P_Value = Cl_shapiro_test_result$p.value,
+  Interpretation = Cl_interpretation
+)
+
+view(Cl_shapiro_test_df)
+
 #Fe
 Fe_shapiro_test_result <- shapiro.test(Impaired_status_2023_data$Fe_mcg_per_l)
 

@@ -34,7 +34,10 @@ view(Alaska_DataRelease_2022_2023_Ferrum_OG)
 # Save the file to modify manually
 write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_OG, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_to_modify.xlsx")  # Saves a new Excel file
 
-# In the exported Alaska_DataRelease_2022_2023_Ferrum file, I moved the four rows of data from the CCAL Cl, SO4, Na, K, Ca, and Mg to Poulin Lab Cl, SO4, Na, K, Ca, and Mg, added field measurements for the 2022 samples I have them for, deleted columns 265-274 and 277 (UC Davis Becca cation measurements), and deleted UC Davis Poulin Lab f_SiO2 columns, and the CCAL Cl, SO4, Na, K, Ca, and Mg columns)
+# Modifications made to Alaska_DataRelease_2022_2023_Ferrum_to_modify 
+#I moved the four rows of data from the CCAL Cl, SO4, Na, K, Ca, and Mg to Poulin Lab Cl, SO4, Na, K, Ca, and Mg and deleted those CCAL columns 
+#added field measurements for the 2022 samples I have them for 
+#deleted columns 265-274 and 277 (UC Davis Becca cation measurements)
 
 # Bring the spreadsheet back in after those changes to use for the DL correction
 Alaska_DataRelease_2022_2023_Ferrum <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_to_modify.xlsx")
@@ -53,7 +56,7 @@ view(Alaska_DataRelease_2022_2023_Ferrum_modified)
 ## Convert Columns to Numeric
 ``` {r}
 # Define the vector of column indices to convert
-columns_to_convert <- c(27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 57, 59, 61, 63, 65, 67, 69, 88, 100, 102, 104, 106, 108, 110, 112, 117, 119, 121, 123, 125, 127, 129, 131, 133, 135, 137, 139, 141, 143, 145, 147, 149, 151, 153, 155, 157, 159, 161, 163, 165, 167, 169, 171, 173, 175, 177, 179, 181, 183, 185, 187, 189, 191, 193, 195, 197, 199, 201, 203, 205, 207, 209, 211, 213, 215, 217, 219, 221, 223, 225, 227, 229, 231, 233, 235, 237, 239, 241, 243, 245, 247, 249)
+columns_to_convert <- c(27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 57, 59, 61, 63, 65, 67, 69, 75, 87, 89, 91, 93, 95, 97, 99, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 138, 140, 142, 144, 146, 148, 150, 152, 154, 156, 158, 160, 162, 164, 166, 168, 170, 172, 174, 176, 178, 180, 182, 184, 186, 188, 190, 192, 194, 196, 198, 200, 202, 204, 206, 208, 210, 212, 214, 216, 218, 220, 222, 224, 226, 228, 230, 232, 234, 236)
 
 Alaska_DataRelease_2022_2023_Ferrum_modified <- Alaska_DataRelease_2022_2023_Ferrum_modified %>%
   mutate(across(all_of(columns_to_convert), as.numeric))  # Convert specified columns to numeric
@@ -63,16 +66,16 @@ str(Alaska_DataRelease_2022_2023_Ferrum_modified)
 
 ## Change duplicate column names
 ```{r}
-colnames(Alaska_DataRelease_2022_2023_Ferrum_modified)[40] <- "CCAL_f_NO3_mgN_per_l" 
-colnames(Alaska_DataRelease_2022_2023_Ferrum_modified)[145] <- "f_NO3_mgN_per_l"
+colnames(Alaska_DataRelease_2022_2023_Ferrum_modified)[57] <- "CCAL_f_NO3_mgN_per_l" 
+colnames(Alaska_DataRelease_2022_2023_Ferrum_modified)[120] <- "f_NO3_mgN_per_l"
 
-colnames(Alaska_DataRelease_2022_2023_Ferrum_modified)[41] <- "CCAL_f_NO3_mgN_per_l_qa" 
-colnames(Alaska_DataRelease_2022_2023_Ferrum_modified)[146] <- "f_NO3_mgN_per_l_qa"
+colnames(Alaska_DataRelease_2022_2023_Ferrum_modified)[58] <- "CCAL_f_NO3_mgN_per_l_qa" 
+colnames(Alaska_DataRelease_2022_2023_Ferrum_modified)[121] <- "f_NO3_mgN_per_l_qa"
 
 Alaska_DataRelease_2022_2023_Ferrum_V1 <- Alaska_DataRelease_2022_2023_Ferrum_modified
 
 # Save the modified file as the version prior to calculations
-write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_modified, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_V1.xlsx")  # Saves a new Excel file
+write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V1, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_V1.xlsx")  # Saves a new Excel file
 ```
 
 ## <DL Transformation
@@ -132,7 +135,7 @@ DL_counts_df <- data.frame(Column = names(DL_counts), DL_Count = DL_counts)
 # Add percent_DL column
 DL_counts_df$percent_DL <- (DL_counts_df$DL_Count / 135) * 100
 
-view(DL_counts_df)
+#view(DL_counts_df)
 
 # f_V and f_Ag had high censoring but these metals aren't going to be used in any analysis anyways
 

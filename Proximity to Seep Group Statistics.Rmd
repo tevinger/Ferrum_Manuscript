@@ -637,7 +637,7 @@ f_V_mcg_per_l, p_V_mcg_per_l,
 f_Y_mcg_per_l, p_Y_mcg_per_l,
 f_Zn_mcg_per_l, p_Zn_mcg_per_l
 ) %>%
-  filter(New_Grouping != "NA") 
+  filter(New_Grouping != "NA")
 
 view(grouped_stats_working_Ferrum_data)
 

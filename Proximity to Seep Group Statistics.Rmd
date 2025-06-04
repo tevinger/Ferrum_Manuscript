@@ -753,8 +753,8 @@ column_order <- c(
   "p_Pr_Mean", "p_Pr_SD", "p_Pr_Count",
   "f_Se_Mean", "f_Se_SD", "f_Se_Count",
   "p_Se_Mean", "p_Se_SD", "p_Se_Count",
-  "f_Th_Mean", "f_Th_SD", "f_Th_Count",
-  "p_Th_Mean", "p_Th_SD", "p_Th_Count",
+  #"f_Th_Mean", "f_Th_SD", "f_Th_Count",
+  #"p_Th_Mean", "p_Th_SD", "p_Th_Count",
   "f_Tl_Mean", "f_Tl_SD", "f_Tl_Count",
   "p_Tl_Mean", "p_Tl_SD", "p_Tl_Count",
   "f_U_Mean", "f_U_SD", "f_U_Count",
@@ -799,7 +799,7 @@ elements <- c(
 "f_Ni", "p_Ni",
 "f_Pr", "p_Pr",
 "f_Se", "p_Se",
-"f_Th", "p_Th",
+#"f_Th", "p_Th",
 "f_Tl", "p_Tl",
 "f_U", "p_U",
 "f_V", "p_V",
@@ -831,7 +831,7 @@ columns <- c(
 "f_Ni_mcg_per_l", "p_Ni_mcg_per_l",
 "f_Pr_mcg_per_l", "p_Pr_mcg_per_l",
 "f_Se_mcg_per_l", "p_Se_mcg_per_l",
-"f_Th_mcg_per_l", "p_Th_mcg_per_l",
+#"f_Th_mcg_per_l", "p_Th_mcg_per_l",
 "f_Tl_mcg_per_l", "p_Tl_mcg_per_l",
 "f_U_mcg_per_l", "p_U_mcg_per_l",
 "f_V_mcg_per_l", "p_V_mcg_per_l",
@@ -851,7 +851,6 @@ for (i in seq_along(elements)) {
   
   # Perform the summary operation for the current element
   summary_stats <- stats_working_Ferrum_data %>%
-    #filter(!is.na(New_Groups)) %>%
     filter(!is.na(.data[[column]])) %>%
     #group_by(New_Groups) %>% #This is where you can change what variable you want to group the data by
     summarise(

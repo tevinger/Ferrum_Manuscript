@@ -250,7 +250,7 @@ columns_to_check <- c(
   "f_Ce_mcg_per_l_qa", "f_Pr_mcg_per_l_qa", 
   "f_Nd_mcg_per_l_qa", "f_Dy_mcg_per_l_qa", 
   "f_Tl_mcg_per_l_qa", "f_U_mcg_per_l_qa",
-  "f_Pb_mcg_per_l_qa", "u_SiO2_mcg_per_l_qa", 
+  "f_Pb_mcg_per_l_qa",  
   "u_Al_mcg_per_l_qa", "u_V_mcg_per_l_qa", 
   "u_Cr_mcg_per_l_qa", "u_Mn_mcg_per_l_qa", 
   "u_Fe_mcg_per_l_qa", "u_Co_mcg_per_l_qa", 
@@ -299,52 +299,50 @@ measure_cols <- c(
   "f_PO4_mgP_per_l",
   "TDP_mgP_per_l",
   "UTP_mgP_per_l",
-  #"f_Cl_mg_per_l",
+  "f_Cl_mg_per_l",
   "f_NO3_mgN_per_l",
   "f_SO4_mg_per_l",
   "f_K_mg_l",
   "f_Na_mg_l",
+  "f_SiO2_mg_per_l",
   "f_Al_mcg_per_l", 
-  #"f_V_mcg_per_l", 
+  "f_V_mcg_per_l", 
   "f_Cr_mcg_per_l", "f_Mn_mcg_per_l", 
   "f_Fe_mcg_per_l", "f_Co_mcg_per_l", 
   "f_Ni_mcg_per_l", "f_Cu_mcg_per_l", 
   "f_Zn_mcg_per_l", "f_As_mcg_per_l", 
   "f_Se_mcg_per_l", "f_Y_mcg_per_l", 
-  #"f_Ag_mcg_per_l",
-  "f_Cd_mcg_per_l", 
+  "f_Ag_mcg_per_l","f_Cd_mcg_per_l", 
   "f_Ba_mcg_per_l", "f_La_mcg_per_l", 
   "f_Ce_mcg_per_l", "f_Pr_mcg_per_l", 
   "f_Nd_mcg_per_l", "f_Dy_mcg_per_l", 
   "f_Tl_mcg_per_l", "f_U_mcg_per_l",
-  "f_Pb_mcg_per_l", "u_SiO2_mcg_per_l", 
-  "u_Al_mcg_per_l", 
-  #"u_V_mcg_per_l", 
+  "f_Pb_mcg_per_l",  
+  "u_Al_mcg_per_l", "u_V_mcg_per_l", 
   "u_Cr_mcg_per_l", "u_Mn_mcg_per_l", 
   "u_Fe_mcg_per_l", "u_Co_mcg_per_l", 
   "u_Ni_mcg_per_l", "u_Cu_mcg_per_l", 
   "u_Zn_mcg_per_l", "u_As_mcg_per_l", 
   "u_Se_mcg_per_l", "u_Y_mcg_per_l", 
-  #"u_Ag_mcg_per_l", 
-  "u_Cd_mcg_per_l", 
+  "u_Ag_mcg_per_l", "u_Cd_mcg_per_l", 
   "u_Ba_mcg_per_l", "u_La_mcg_per_l", 
   "u_Ce_mcg_per_l", "u_Pr_mcg_per_l", 
   "u_Nd_mcg_per_l", "u_Dy_mcg_per_l", 
   "u_Tl_mcg_per_l", "u_U_mcg_per_l", 
-  "u_Pb_mcg_per_l" 
-)
+  "u_Pb_mcg_per_l"
+  )
 
 # Create the transformed dataframe
-Alaska_DataRelease_2022_2023_Ferrum_DL_transformation <- Alaska_DataRelease_2022_2023_Ferrum
+Alaska_DataRelease_2022_2023_Ferrum_DL_transformation <- Alaska_DataRelease_2022_2023_Ferrum_V1
 
 # Loop through each column and apply the DL transformation if QA column contains "DL"
 for (col in measure_cols) {
   qa_col <- paste0(col, "_qa")
   
   Alaska_DataRelease_2022_2023_Ferrum_DL_transformation[[col]] <- ifelse(
-    grepl("DL", Alaska_DataRelease_2022_2023_Ferrum[[qa_col]]),
-    (sqrt(2) / 2) * Alaska_DataRelease_2022_2023_Ferrum[[col]],
-    Alaska_DataRelease_2022_2023_Ferrum[[col]]
+    grepl("DL", Alaska_DataRelease_2022_2023_Ferrum_V1[[qa_col]]),
+    (sqrt(2) / 2) * Alaska_DataRelease_2022_2023_Ferrum_V1[[col]],
+    Alaska_DataRelease_2022_2023_Ferrum_V1[[col]]
   )
 }
 
@@ -361,7 +359,7 @@ f_Ba_mcg_per_l, f_La_mcg_per_l,
 f_Ce_mcg_per_l, f_Pr_mcg_per_l, 
 f_Nd_mcg_per_l, f_Dy_mcg_per_l, 
 f_Tl_mcg_per_l, f_U_mcg_per_l,
-f_Pb_mcg_per_l, u_SiO2_mcg_per_l, 
+f_Pb_mcg_per_l, f_SiO2_mg_per_l, 
 u_Al_mcg_per_l, u_V_mcg_per_l, 
 u_Cr_mcg_per_l, u_Mn_mcg_per_l, 
 u_Fe_mcg_per_l, u_Co_mcg_per_l, 
@@ -380,10 +378,11 @@ u_Pb_mcg_per_l
   
 
 view(Alaska_DataRelease_2022_2023_Ferrum_DL_transformation)
-view(Alaska_DataRelease_2022_2023_Ferrum)
+
+Alaska_DataRelease_2022_2023_Ferrum_V3 <-  Alaska_DataRelease_2022_2023_Ferrum_DL_transformation
 
 # Save the modified file to check
-write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_DL_transformation, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_DL corrected.xlsx")  # Saves a new Excel file
+write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V3, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_V3.xlsx")  
 
 ```
 
@@ -432,49 +431,6 @@ Alaska_DataRelease_2022_2023_Ferrum_DL_transformation <- Alaska_DataRelease_2022
 write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_DL_transformation, "Alaska_DataRelease_2022_2023_Ferrum_DL_transformation.xlsx")
 ```
 
-### Bring in the visual description and site classification information
-
-```{r}
-# Load data to join
-# This file has the VisualDescription, site_classification, Hyd_site_classification, Hyd_Classification, and Site_Grouping columns used for some analyses
-Site_info_to_bring_in <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Master Spreadsheet/Site_info_to_bring_in.xlsx")
-
-# distances downstream and elevation data
-site_metrics <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Master Spreadsheet/site_elevation_and_distances_V2.xlsx", sheet = "USE")
-
-# make everything in this df numeric
-site_metrics$Distance_km <- as.numeric(site_metrics$Distance_km)
-site_metrics$Elevation_ft <- as.numeric(site_metrics$Elevation_ft)
-site_metrics$Watershed_Area <- as.numeric(site_metrics$Watershed_Area)
-site_metrics$Relative_MS_Watershed_Area <- as.numeric(site_metrics$Relative_MS_Watershed_Area)
-
-# Make sure SamplingEventID is character in all dataframes
-Alaska_DataRelease_2022_2023_Ferrum_DL_transformation <- Alaska_DataRelease_2022_2023_Ferrum_DL_transformation %>%
-  mutate(SamplingEventID = as.character(SamplingEventID))
-
-Site_info_to_bring_in <- Site_info_to_bring_in %>%
-  mutate(SamplingEventID = as.character(SamplingEventID))
-
-site_metrics <- site_metrics %>%
-  mutate(SamplingEventID = as.character(SamplingEventID))
-
-#join dataframes
-working_Alaska_DataRelease_2022_2023_Ferrum_joined <- Alaska_DataRelease_2022_2023_Ferrum_DL_transformation %>% 
-  left_join(Site_info_to_bring_in, by = "SamplingEventID") %>%
-  left_join(site_metrics, by = "SamplingEventID") %>%
-  relocate(Prox_Groups, RelAcc_Groups, New_Groups, Distance_km, Elevation_ft, VisualDescription,
-                Site_Classification,
-                Hyd_Classification, .after = SamplingEventID)
-
-view(working_Alaska_DataRelease_2022_2023_Ferrum_joined)
-
-# Remove sample from the kotzebue water quality lake
-working_Alaska_DataRelease_2022_2023_Ferrum_joined <- working_Alaska_DataRelease_2022_2023_Ferrum_joined %>%
-  filter(!grepl("kotzebue", SamplingEventID, ignore.case = TRUE))
-
-# Save as an excel file
-write_xlsx(working_Alaska_DataRelease_2022_2023_Ferrum_joined, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/joined_Alaska_DataRelease_2022_2023_Ferrum_with site information.xlsx")
-```
 
 # Particulate Metal Calculation
 ```{r}
@@ -531,6 +487,51 @@ metal_df_wide <- metal_df_long %>%
 
 view(metal_df_wide)
 ```
+
+### Bring in the visual description and site classification information
+
+```{r}
+# Load data to join
+# This file has the VisualDescription, site_classification, Hyd_site_classification, Hyd_Classification, and Site_Grouping columns used for some analyses
+Site_info_to_bring_in <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Master Spreadsheet/Site_info_to_bring_in.xlsx")
+
+# distances downstream and elevation data
+site_metrics <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Master Spreadsheet/site_elevation_and_distances_V2.xlsx", sheet = "USE")
+
+# make everything in this df numeric
+site_metrics$Distance_km <- as.numeric(site_metrics$Distance_km)
+site_metrics$Elevation_ft <- as.numeric(site_metrics$Elevation_ft)
+site_metrics$Watershed_Area <- as.numeric(site_metrics$Watershed_Area)
+site_metrics$Relative_MS_Watershed_Area <- as.numeric(site_metrics$Relative_MS_Watershed_Area)
+
+# Make sure SamplingEventID is character in all dataframes
+Alaska_DataRelease_2022_2023_Ferrum_DL_transformation <- Alaska_DataRelease_2022_2023_Ferrum_DL_transformation %>%
+  mutate(SamplingEventID = as.character(SamplingEventID))
+
+Site_info_to_bring_in <- Site_info_to_bring_in %>%
+  mutate(SamplingEventID = as.character(SamplingEventID))
+
+site_metrics <- site_metrics %>%
+  mutate(SamplingEventID = as.character(SamplingEventID))
+
+#join dataframes
+working_Alaska_DataRelease_2022_2023_Ferrum_joined <- Alaska_DataRelease_2022_2023_Ferrum_DL_transformation %>% 
+  left_join(Site_info_to_bring_in, by = "SamplingEventID") %>%
+  left_join(site_metrics, by = "SamplingEventID") %>%
+  relocate(Prox_Groups, RelAcc_Groups, New_Groups, Distance_km, Elevation_ft, VisualDescription,
+                Site_Classification,
+                Hyd_Classification, .after = SamplingEventID)
+
+view(working_Alaska_DataRelease_2022_2023_Ferrum_joined)
+
+# Remove sample from the kotzebue water quality lake
+working_Alaska_DataRelease_2022_2023_Ferrum_joined <- working_Alaska_DataRelease_2022_2023_Ferrum_joined %>%
+  filter(!grepl("kotzebue", SamplingEventID, ignore.case = TRUE))
+
+# Save as an excel file
+write_xlsx(working_Alaska_DataRelease_2022_2023_Ferrum_joined, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/joined_Alaska_DataRelease_2022_2023_Ferrum_with site information.xlsx")
+```
+
 
 ```{r}
 metal_data_swap <- Alaska_DataRelease_2022_2023_Ferrum_DL_transformation %>%

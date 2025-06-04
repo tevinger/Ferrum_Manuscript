@@ -712,7 +712,8 @@ view(Alaska_DataRelease_2022_2023_Ferrum_V7)
 write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V7, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V7.xlsx")
 
 #Manually added year, month and season for the Salmon 2022 sites in excel and then reload to R
-# Manually fixed the Watershed names in excel too
+# Manually fixed the Watershed names in excel
+# Manually removed ASFT4_Thermokarst site
 
 Alaska_DataRelease_2022_2023_Ferrum_V7 <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V7.xlsx")
 ```

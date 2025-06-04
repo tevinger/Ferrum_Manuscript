@@ -587,10 +587,11 @@ can you rewrite this code multiple times so that where it says "Fe" it says "As"
 
 ```{r}
 # filter out samples without a Site_Group
-stats_working_Ferrum_data <- working_Ferrum_data %>%
-  dplyr::select(-contains("QA_flag")) %>%
-  dplyr::select(-contains("tot_")) %>%
-  filter(Site_Group != "NA") 
+stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V2 %>%
+  dplyr::select(27:283) %>%
+  dplyr::select(-contains("qa")) %>%
+  dplyr::select(-contains("u_")) 
+  #filter(Site_Group != "NA") 
 
 view(stats_working_Ferrum_data)
 #view(working_Ferrum_data)
@@ -615,19 +616,20 @@ column_order <- c(
   "f_Mg_Mean", "f_Mg_SD", "f_Mg_Count",
   "f_Na_Mean", "f_Na_SD", "f_Na_Count",
   "f_K_Mean", "f_K_SD", "f_K_Count",
-  "f_206Pb_Mean", "f_206Pb_SD", "f_206Pb_Count",
-  "f_207Pb_Mean", "f_207Pb_SD", "f_207Pb_Count",
-  "f_208Pb_Mean", "f_208Pb_SD", "f_208Pb_Count",
-  "f_Pb_Sum_Mean", "f_Pb_Sum_SD", "f_Pb_Sum_Count",
-  "p_Pb_Sum_Mean", "p_Pb_Sum_SD", "p_Pb_Sum_Count",
+  "f_Pb_Mean", "f_Pb_SD", "f_Pb_Count",
+  "p_Pb_Mean", "p_Pb_SD", "p_Pb_Count",
   "f_Ag_Mean", "f_Ag_SD", "f_Ag_Count",
+  "p_Ag_Mean", "p_Ag_SD", "p_Ag_Count",
   "f_Al_Mean", "f_Al_SD", "f_Al_Count",
   "p_Al_Mean", "p_Al_SD", "p_Al_Count",
   "f_As_Mean", "f_As_SD", "f_As_Count",
   "p_As_Mean", "p_As_SD", "p_As_Count",
   "f_Ba_Mean", "f_Ba_SD", "f_Ba_Count",
+  "p_Ba_Mean", "p_Ba_SD", "p_Ba_Count",
   "f_Be_Mean", "f_Be_SD", "f_Be_Count",
-  "f_Br_Mean", "f_Br_SD", "f_Br_Count",
+  "p_Be_Mean", "p_Be_SD", "p_Be_Count",
+  #"f_Br_Mean", "f_Br_SD", "f_Br_Count",
+  #"p_Br_Mean", "p_Br_SD", "p_Br_Count",
   "f_Cd_Mean", "f_Cd_SD", "f_Cd_Count",
   "p_Cd_Mean", "p_Cd_SD", "p_Cd_Count",
   "f_Ce_Mean", "f_Ce_SD", "f_Ce_Count",
@@ -655,15 +657,17 @@ column_order <- c(
   "f_Se_Mean", "f_Se_SD", "f_Se_Count",
   "p_Se_Mean", "p_Se_SD", "p_Se_Count",
   "f_Th_Mean", "f_Th_SD", "f_Th_Count",
+  "p_Th_Mean", "p_Th_SD", "p_Th_Count",
   "f_Tl_Mean", "f_Tl_SD", "f_Tl_Count",
+  "p_Tl_Mean", "p_Tl_SD", "p_Tl_Count",
   "f_U_Mean", "f_U_SD", "f_U_Count",
+  "p_U_Mean", "p_U_SD", "p_U_Count",
   "f_V_Mean", "f_V_SD", "f_V_Count",
+  "p_V_Mean", "p_V_SD", "p_V_Count",
   "f_Y_Mean", "f_Y_SD", "f_Y_Count",
   "p_Y_Mean", "p_Y_SD", "p_Y_Count",
   "f_Zn_Mean", "f_Zn_SD", "f_Zn_Count",
-  "p_Zn_Mean", "p_Zn_SD", "p_Zn_Count",
-  "f_sum_REE_Mean", "f_sum_REE_SD", "f_sum_REE_Count",
-  "p_sum_REE_Mean", "p_sum_REE_SD", "p_sum_REE_Count"
+  "p_Zn_Mean", "p_Zn_SD", "p_Zn_Count"
 )
 
 ```
@@ -679,28 +683,64 @@ library(dplyr)
 elements <- c(
   "pH", "Temp", "Diss_oxy", "Diss_oxy_percent_sat", "Spec_Cond", "DIC", 
   "Alk", "DOC", "f_Cl", "f_NO3", "f_SO4", "f_Ca", "f_Mg", "f_Na", "f_K", 
-  "f_206Pb", "f_207Pb", "f_208Pb", "f_Pb_Sum", "p_Pb_Sum", "f_Ag", "f_Al", 
-  "p_Al", "f_As", "p_As", "f_Ba", "f_Be", "f_Br", "f_Cd", "p_Cd", "f_Ce", 
-  "p_Ce", "f_Co", "p_Co", "f_Cr", "p_Cr", "f_Cu", "p_Cu", "f_Dy", "p_Dy", 
-  "f_Fe", "p_Fe", "f_La", "p_La", "f_Mn", "p_Mn", "f_Nd", "p_Nd", "f_Ni", 
-  "p_Ni", "f_Pr", "p_Pr", "f_Se", "p_Se", "f_Th", "f_Tl", "f_U", "f_V", "f_Y", 
-  "p_Y", "f_Zn", "p_Zn", "f_sum_REE", "p_sum_REE"
+ "f_Pb", "p_Pb", 
+ "f_Ag", "p_Ag",
+"f_Al", "p_Al",
+"f_As", "p_As",
+"f_Ba", "p_Ba",
+"f_Be", "p_Be",
+"f_Cd", "p_Cd",
+"f_Ce", "p_Ce",
+"f_Co", "p_Co",
+"f_Cr", "p_Cr",
+"f_Cu", "p_Cu",
+"f_Dy", "p_Dy",
+"f_Fe", "p_Fe",
+"f_La", "p_La",
+"f_Mn", "p_Mn",
+"f_Nd", "p_Nd",
+"f_Ni", "p_Ni",
+"f_Pr", "p_Pr",
+"f_Se", "p_Se",
+"f_Th", "p_Th",
+"f_Tl", "p_Tl",
+"f_U", "p_U",
+"f_V", "p_V",
+"f_Y", "p_Y",
+"f_Zn", "p_Zn"
 )
 
 columns <- c(
   "pH", "Temp_deg_celsius", "Diss_oxy_mg_per_l", "Diss_oxy_percent_sat", "Spec_Cond_microS_per_cm", 
   "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mg_per_l", 
-  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l", "f_206Pb_mcg_per_l", 
-  "f_207Pb_mcg_per_l", "f_208Pb_mcg_per_l", "f_Pb Sum_mcg_per_l", "p_Pb Sum_mcg_per_l", 
-  "f_Ag_mcg_per_l", "f_Al_mcg_per_l", "p_Al_mcg_per_l", "f_As_mcg_per_l", "p_As_mcg_per_l", 
-  "f_Ba_mcg_per_l", "f_Be_mcg_per_l", "f_Br_mcg_per_l", "f_Cd_mcg_per_l", "p_Cd_mcg_per_l", 
-  "f_Ce_mcg_per_l", "p_Ce_mcg_per_l", "f_Co_mcg_per_l", "p_Co_mcg_per_l", "f_Cr_mcg_per_l", 
-  "p_Cr_mcg_per_l", "f_Cu_mcg_per_l", "p_Cu_mcg_per_l", "f_Dy_mcg_per_l", "p_Dy_mcg_per_l", 
-  "f_Fe_mcg_per_l", "p_Fe_mcg_per_l", "f_La_mcg_per_l", "p_La_mcg_per_l", "f_Mn_mcg_per_l", 
-  "p_Mn_mcg_per_l", "f_Nd_mcg_per_l", "p_Nd_mcg_per_l", "f_Ni_mcg_per_l", "p_Ni_mcg_per_l", 
-  "f_Pr_mcg_per_l", "p_Pr_mcg_per_l", "f_Se_mcg_per_l", "p_Se_mcg_per_l", "f_Th_mcg_per_l", 
-  "f_Tl_mcg_per_l", "f_U_mcg_per_l", "f_V_mcg_per_l", "f_Y_mcg_per_l", "p_Y_mcg_per_l", 
-  "f_Zn_mcg_per_l", "p_Zn_mcg_per_l", "f_sum_REE_mcg_per_l", "p_sum_REE_mcg_per_l"
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l",
+  "f_Pb_mcg_per_l", "p_Pb_mcg_per_l", 
+  "f_Ag_mcg_per_l", "p_Ag_mcg_per_l",
+"f_Al_mcg_per_l", "p_Al_mcg_per_l",
+"f_As_mcg_per_l", "p_As_mcg_per_l",
+"f_Ba_mcg_per_l", "p_Ba_mcg_per_l",
+"f_Be_mcg_per_l", "p_Be_mcg_per_l",
+#"f_Br_mcg_per_l", "p_Br_mcg_per_l",
+"f_Cd_mcg_per_l", "p_Cd_mcg_per_l",
+"f_Ce_mcg_per_l", "p_Ce_mcg_per_l",
+"f_Co_mcg_per_l", "p_Co_mcg_per_l",
+"f_Cr_mcg_per_l", "p_Cr_mcg_per_l",
+"f_Cu_mcg_per_l", "p_Cu_mcg_per_l",
+"f_Dy_mcg_per_l", "p_Dy_mcg_per_l",
+"f_Fe_mcg_per_l", "p_Fe_mcg_per_l",
+"f_La_mcg_per_l", "p_La_mcg_per_l",
+"f_Mn_mcg_per_l", "p_Mn_mcg_per_l",
+"f_Nd_mcg_per_l", "p_Nd_mcg_per_l",
+"f_Ni_mcg_per_l", "p_Ni_mcg_per_l",
+"f_Pr_mcg_per_l", "p_Pr_mcg_per_l",
+"f_Se_mcg_per_l", "p_Se_mcg_per_l",
+"f_Th_mcg_per_l", "p_Th_mcg_per_l",
+"f_Tl_mcg_per_l", "p_Tl_mcg_per_l",
+"f_U_mcg_per_l", "p_U_mcg_per_l",
+"f_V_mcg_per_l", "p_V_mcg_per_l",
+"f_Y_mcg_per_l", "p_Y_mcg_per_l",
+"f_Zn_mcg_per_l", "p_Zn_mcg_per_l"
+
 )
 
 
@@ -748,7 +788,7 @@ summary_stats_wide <-  summary_stats_wide %>%
 view(summary_stats_wide)
 
 
-write_xlsx(summary_stats_wide, "C:/Users/tayta/Downloads/Proximity Group Summary Stats.xlsx")
+write_xlsx(summary_stats_wide, "C:/Users/tevinger/Downloads/Proximity Group Summary Stats.xlsx")
 
 ```
 

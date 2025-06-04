@@ -606,7 +606,7 @@ site_metrics$Watershed_Area <- as.numeric(site_metrics$Watershed_Area)
 site_metrics$Relative_MS_Watershed_Area <- as.numeric(site_metrics$Relative_MS_Watershed_Area)
 
 # Make sure SamplingEventID is character in all dataframes
-Alaska_DataRelease_2022_2023_Ferrum_DL_transformation <- Alaska_DataRelease_2022_2023_Ferrum_DL_transformation %>%
+Alaska_DataRelease_2022_2023_Ferrum_V4 <- Alaska_DataRelease_2022_2023_Ferrum_V4 %>%
   mutate(SamplingEventID = as.character(SamplingEventID))
 
 Site_info_to_bring_in <- Site_info_to_bring_in %>%
@@ -616,21 +616,22 @@ site_metrics <- site_metrics %>%
   mutate(SamplingEventID = as.character(SamplingEventID))
 
 #join dataframes
-working_Alaska_DataRelease_2022_2023_Ferrum_joined <- Alaska_DataRelease_2022_2023_Ferrum_DL_transformation %>% 
+Alaska_DataRelease_2022_2023_Ferrum_V5 <- Alaska_DataRelease_2022_2023_Ferrum_V4 %>% 
   left_join(Site_info_to_bring_in, by = "SamplingEventID") %>%
   left_join(site_metrics, by = "SamplingEventID") %>%
+  relocate(SamplingEventID, .after = FieldNotesFile) %>%
   relocate(Prox_Groups, RelAcc_Groups, New_Groups, Distance_km, Elevation_ft, VisualDescription,
                 Site_Classification,
                 Hyd_Classification, .after = SamplingEventID)
 
-view(working_Alaska_DataRelease_2022_2023_Ferrum_joined)
+view(Alaska_DataRelease_2022_2023_Ferrum_V5)
 
 # Remove sample from the kotzebue water quality lake
-working_Alaska_DataRelease_2022_2023_Ferrum_joined <- working_Alaska_DataRelease_2022_2023_Ferrum_joined %>%
+Alaska_DataRelease_2022_2023_Ferrum_V5 <- Alaska_DataRelease_2022_2023_Ferrum_V5 %>%
   filter(!grepl("kotzebue", SamplingEventID, ignore.case = TRUE))
 
 # Save as an excel file
-write_xlsx(working_Alaska_DataRelease_2022_2023_Ferrum_joined, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/joined_Alaska_DataRelease_2022_2023_Ferrum_with site information.xlsx")
+write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V5, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_V5.xlsx")
 ```
 
 

@@ -587,8 +587,8 @@ can you rewrite this code multiple times so that where it says "Fe" it says "As"
 
 ```{r}
 # filter out samples without a Site_Group
-stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V2 %>%
-  dplyr::select(27:283) %>%
+stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V6 %>%
+  dplyr::select(3,29,35:293) %>%
   dplyr::select(-contains("qa")) %>%
   dplyr::select(-contains("u_")) 
   #filter(Site_Group != "NA") 
@@ -754,14 +754,22 @@ for (i in seq_along(elements)) {
   
   # Perform the summary operation for the current element
   summary_stats <- stats_working_Ferrum_data %>%
+    #filter(!is.na(New_Groups)) %>%
     filter(!is.na(.data[[column]])) %>%
-    group_by(Site_Group) %>% #This is where you can change what variable you want to group the data by
+    #group_by(New_Groups) %>% #This is where you can change what variable you want to group the data by
     summarise(
-      Variable = element,
-      Mean = round(mean(.data[[column]], na.rm = TRUE), 2),  
-      SD = round(sd(.data[[column]], na.rm = TRUE), 2),     
-      Count = n()
-    )
+    Variable = element,
+    Mean = round(mean(.data[[column]], na.rm = TRUE), 2),
+    SD = round(sd(.data[[column]], na.rm = TRUE), 2),
+    SE = round(sd(.data[[column]], na.rm = TRUE) / sqrt(n()), 2),
+    Median = round(median(.data[[column]], na.rm = TRUE), 2),
+    Min = round(min(.data[[column]], na.rm = TRUE), 2),
+    Max = round(max(.data[[column]], na.rm = TRUE), 2),
+    Q1 = round(quantile(.data[[column]], probs = 0.25, na.rm = TRUE), 2),
+    Q3 = round(quantile(.data[[column]], probs = 0.75, na.rm = TRUE), 2),
+    IQR = round(IQR(.data[[column]], na.rm = TRUE), 2),
+    Count = n()
+  )
   
   # Store the result in the list with the element name as key
   summary_stats_list[[element]] <- summary_stats
@@ -788,7 +796,7 @@ summary_stats_wide <-  summary_stats_wide %>%
 view(summary_stats_wide)
 
 
-write_xlsx(summary_stats_wide, "C:/Users/tevinger/Downloads/Proximity Group Summary Stats.xlsx")
+write_xlsx(summary_stats_wide, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/uncorrected DL summary stats.xlsx")
 
 ```
 

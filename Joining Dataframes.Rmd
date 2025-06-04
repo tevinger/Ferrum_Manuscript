@@ -69,6 +69,7 @@ colnames(Alaska_DataRelease_2022_2023_Ferrum_modified)[145] <- "f_NO3_mgN_per_l"
 colnames(Alaska_DataRelease_2022_2023_Ferrum_modified)[41] <- "CCAL_f_NO3_mgN_per_l_qa" 
 colnames(Alaska_DataRelease_2022_2023_Ferrum_modified)[146] <- "f_NO3_mgN_per_l_qa"
 
+Alaska_DataRelease_2022_2023_Ferrum_V1 <- Alaska_DataRelease_2022_2023_Ferrum_modified
 
 # Save the modified file as the version prior to calculations
 write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_modified, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_V1.xlsx")  # Saves a new Excel file

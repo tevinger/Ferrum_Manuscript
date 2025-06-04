@@ -592,6 +592,7 @@ grouped_stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V7 %>%
                 New_Grouping,
                 sample_collection_year,
                 sample_collection_month,
+                sample_collection_season,
                 Watershed_Area,
                 Relative_MS_Watershed_Area,
                 pH,
@@ -647,6 +648,7 @@ stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V7 %>%
                 New_Grouping,
                 sample_collection_year,
                 sample_collection_month,
+                sample_collection_season,
                 Watershed_Area,
                 Relative_MS_Watershed_Area,
                 pH,
@@ -696,7 +698,8 @@ f_Zn_mcg_per_l, p_Zn_mcg_per_l
 view(stats_working_Ferrum_data)
 ```
 
-## Summary Stats Loop
+## Summary Stats
+### set final column order
 ```{r}
 # order for columns
 column_order <- c(
@@ -771,6 +774,7 @@ column_order <- c(
 
 ```
 
+### set elements and columns for stats loop
 ```{r}
 #summary stats
 library(dplyr)
@@ -841,10 +845,11 @@ columns <- c(
 "f_V_mcg_per_l", "p_V_mcg_per_l",
 "f_Y_mcg_per_l", "p_Y_mcg_per_l",
 "f_Zn_mcg_per_l", "p_Zn_mcg_per_l"
-
 )
+```
 
-
+### Summary stats loop
+```{r}
 # Initialize an empty list to store results
 summary_stats_list <- list()
 
@@ -857,11 +862,12 @@ for (i in seq_along(elements)) {
   summary_stats <- 
     stats_working_Ferrum_data %>% # use for all data, watershed, year and month summary stats
     #grouped_stats_working_Ferrum_data %>% # to group by New Grouping (seeps included)
-    #dplyr::select(8:69) %>% # all data
-    #dplyr::select(2,8:69) %>% # Watershed
-    #dplyr::select(4,8:69) %>% # Year
-    dplyr::select(5,8:69) %>% # Month
-    #dplyr::select(3,8:69) %>% # New Grouping
+    #dplyr::select(9:70) %>% # all data
+    #dplyr::select(2,9:70) %>% # Watershed
+    #dplyr::select(4,9:70) %>% # Year
+    dplyr::select(5,9:70) %>% # Month
+    #dplyr::select(6,9:70) %>% # Season
+    #dplyr::select(3,9:70) %>% # New Grouping
     filter(!is.na(.data[[column]])) %>%
     group_by(sample_collection_month) %>% #This is where you can change what variable you want to group the data by
     summarise(
@@ -887,6 +893,10 @@ summary_stats_results <- do.call(rbind, summary_stats_list)
 
 view(summary_stats_results)
 
+write_xlsx(summary_stats_results, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/By Month_seeps excluded.xlsx")
+```
+
+```{r}
 # Reshape to wide format
 summary_stats_wide <- summary_stats_results %>%
   pivot_wider(
@@ -903,7 +913,7 @@ summary_stats_wide <-  summary_stats_wide %>%
 view(summary_stats_wide)
 
 
-write_xlsx(summary_stats_results, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/By Year_seeps excluded.xlsx")
+#write_xlsx(summary_stats_results, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/By Year_seeps excluded.xlsx")
 
 ```
 

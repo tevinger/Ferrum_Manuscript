@@ -584,17 +584,114 @@ can you rewrite this code multiple times so that where it says "Fe" it says "As"
 
 #Stats loops
 ## Create specific dataframes
-
 ```{r}
-# filter out samples without a Site_Group
-stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V6 %>%
-  dplyr::select(3,29,35:293) %>%
-  dplyr::select(-contains("qa")) %>%
-  dplyr::select(-contains("u_")) 
-  #filter(Site_Group != "NA") 
+# filter out samples without a New_Group - use for summary stats of the groups
+grouped_stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V7 %>%
+  dplyr::select(ParkID,
+                Watershed,
+                New_Grouping,
+                sample_collection_year,
+                sample_collection_month,
+                Watershed_Area,
+                Relative_MS_Watershed_Area,
+                pH,
+                Temp_deg_celsius,
+                Diss_oxy_mg_per_l,
+                Diss_oxy_percent_sat,
+                Spec_Cond_microS_per_cm,
+                DIC_mgC_per_l,
+                Alk_mgCaCO3_per_l,
+                DOC_mgC_per_l,
+                f_Cl_mg_per_l,
+                f_NO3_mgN_per_l,
+                f_SO4_mg_per_l,
+                f_Ca_mg_l,
+                f_Mg_mg_l,
+                f_Na_mg_l,
+                f_K_mg_l,
+                f_SiO2_mg_per_l,
+                f_Ag_mcg_per_l, p_Ag_mcg_per_l,
+f_Al_mcg_per_l, p_Al_mcg_per_l,
+f_As_mcg_per_l, p_As_mcg_per_l,
+f_Ba_mcg_per_l, p_Ba_mcg_per_l,
+#f_Be_mcg_per_l, p_Be_mcg_per_l,
+f_Cd_mcg_per_l, p_Cd_mcg_per_l,
+f_Ce_mcg_per_l, p_Ce_mcg_per_l,
+f_Co_mcg_per_l, p_Co_mcg_per_l,
+f_Cr_mcg_per_l, p_Cr_mcg_per_l,
+f_Cu_mcg_per_l, p_Cu_mcg_per_l,
+f_Dy_mcg_per_l, p_Dy_mcg_per_l,
+f_Fe_mcg_per_l, p_Fe_mcg_per_l,
+f_La_mcg_per_l, p_La_mcg_per_l,
+f_Mn_mcg_per_l, p_Mn_mcg_per_l,
+f_Nd_mcg_per_l, p_Nd_mcg_per_l,
+f_Ni_mcg_per_l, p_Ni_mcg_per_l,
+f_Pr_mcg_per_l, p_Pr_mcg_per_l,
+f_Se_mcg_per_l, p_Se_mcg_per_l,
+#f_Th_mcg_per_l, p_Th_mcg_per_l,
+f_Tl_mcg_per_l, p_Tl_mcg_per_l,
+f_U_mcg_per_l, p_U_mcg_per_l,
+f_V_mcg_per_l, p_V_mcg_per_l,
+f_Y_mcg_per_l, p_Y_mcg_per_l,
+f_Zn_mcg_per_l, p_Zn_mcg_per_l
+) %>%
+  filter(New_Grouping != "NA") 
+
+view(grouped_stats_working_Ferrum_data)
+
+# filter out seep samples - use for summary stats of all data, grouped by watershed, year, and month
+stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V7 %>%
+  dplyr::select(ParkID,
+                Watershed,
+                New_Grouping,
+                sample_collection_year,
+                sample_collection_month,
+                Watershed_Area,
+                Relative_MS_Watershed_Area,
+                pH,
+                Temp_deg_celsius,
+                Diss_oxy_mg_per_l,
+                Diss_oxy_percent_sat,
+                Spec_Cond_microS_per_cm,
+                DIC_mgC_per_l,
+                Alk_mgCaCO3_per_l,
+                DOC_mgC_per_l,
+                f_Cl_mg_per_l,
+                f_NO3_mgN_per_l,
+                f_SO4_mg_per_l,
+                f_Ca_mg_l,
+                f_Mg_mg_l,
+                f_Na_mg_l,
+                f_K_mg_l,
+                f_SiO2_mg_per_l,
+                f_Ag_mcg_per_l, p_Ag_mcg_per_l,
+f_Al_mcg_per_l, p_Al_mcg_per_l,
+f_As_mcg_per_l, p_As_mcg_per_l,
+f_Ba_mcg_per_l, p_Ba_mcg_per_l,
+#f_Be_mcg_per_l, p_Be_mcg_per_l,
+f_Cd_mcg_per_l, p_Cd_mcg_per_l,
+f_Ce_mcg_per_l, p_Ce_mcg_per_l,
+f_Co_mcg_per_l, p_Co_mcg_per_l,
+f_Cr_mcg_per_l, p_Cr_mcg_per_l,
+f_Cu_mcg_per_l, p_Cu_mcg_per_l,
+f_Dy_mcg_per_l, p_Dy_mcg_per_l,
+f_Fe_mcg_per_l, p_Fe_mcg_per_l,
+f_La_mcg_per_l, p_La_mcg_per_l,
+f_Mn_mcg_per_l, p_Mn_mcg_per_l,
+f_Nd_mcg_per_l, p_Nd_mcg_per_l,
+f_Ni_mcg_per_l, p_Ni_mcg_per_l,
+f_Pr_mcg_per_l, p_Pr_mcg_per_l,
+f_Se_mcg_per_l, p_Se_mcg_per_l,
+#f_Th_mcg_per_l, p_Th_mcg_per_l,
+f_Tl_mcg_per_l, p_Tl_mcg_per_l,
+f_U_mcg_per_l, p_U_mcg_per_l,
+f_V_mcg_per_l, p_V_mcg_per_l,
+f_Y_mcg_per_l, p_Y_mcg_per_l,
+f_Zn_mcg_per_l, p_Zn_mcg_per_l
+) %>%
+  filter(New_Grouping != "Seep") 
 
 view(stats_working_Ferrum_data)
-#view(working_Ferrum_data)
 ```
 
 ## Summary Stats Loop

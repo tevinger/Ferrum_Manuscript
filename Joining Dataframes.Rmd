@@ -660,8 +660,8 @@ UAM_2022_metal_data_DL <- read_excel("C:/Users/tevinger/OneDrive - University of
 
 SalmonR_2022_df <- Salmon_R_2022_SEID %>%
   left_join(UAM_2022_metal_data_DL, by = "container_id") %>%
-  #left_join(Site_info_to_bring_in, by = "SamplingEventID") %>%
-  #left_join(site_elevation_and_distances, by = "SamplingEventID") %>%
+  left_join(Site_info_to_bring_in, by = "SamplingEventID") %>%
+  left_join(site_metrics, by = "SamplingEventID") %>%
   dplyr::select(-matches("206Pb|207Pb|208Pb"))
 
 colnames(SalmonR_2022_df)[11] <- "u_Pb_mcg_per_l" 
@@ -669,10 +669,16 @@ colnames(SalmonR_2022_df)[12] <- "u_Pb_mcg_per_l_qa"
 
 view(SalmonR_2022_df)
 
-cols_to_num <- c(3,4,5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47)
+# convert columns to numeric
+cols_to_num <- c(3,4,5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 50, 51)
 
 SalmonR_2022_df <- SalmonR_2022_df %>%
   mutate(across(all_of(cols_to_num), as.numeric))
+
+# convert columns to numeric in V5
+V5_num <- c(27,28)
+Alaska_DataRelease_2022_2023_Ferrum_V5 <- Alaska_DataRelease_2022_2023_Ferrum_V5 %>%
+  mutate(across(all_of(V5_num), as.numeric))
 
 Alaska_DataRelease_2022_2023_Ferrum_V6 <- bind_rows(Alaska_DataRelease_2022_2023_Ferrum_V5, SalmonR_2022_df)
 

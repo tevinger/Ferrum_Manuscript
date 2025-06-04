@@ -860,16 +860,16 @@ for (i in seq_along(elements)) {
   
   # Perform the summary operation for the current element
   summary_stats <- 
-    stats_working_Ferrum_data %>% # use for all data, watershed, year and month summary stats
-    #grouped_stats_working_Ferrum_data %>% # to group by New Grouping (seeps included)
+    #stats_working_Ferrum_data %>% # use for all data, watershed, year and month summary stats
+    grouped_stats_working_Ferrum_data %>% # to group by New Grouping (seeps included)
     #dplyr::select(9:70) %>% # all data
     #dplyr::select(2,9:70) %>% # Watershed
     #dplyr::select(4,9:70) %>% # Year
-    dplyr::select(5,9:70) %>% # Month
+    #dplyr::select(5,9:70) %>% # Month
     #dplyr::select(6,9:70) %>% # Season
-    #dplyr::select(3,9:70) %>% # New Grouping
+    dplyr::select(3,9:70) %>% # New Grouping
     filter(!is.na(.data[[column]])) %>%
-    group_by(sample_collection_month) %>% #This is where you can change what variable you want to group the data by
+    group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
     summarise(
     Variable = element,
     Mean = round(mean(.data[[column]], na.rm = TRUE), 2),
@@ -893,7 +893,7 @@ summary_stats_results <- do.call(rbind, summary_stats_list)
 
 view(summary_stats_results)
 
-write_xlsx(summary_stats_results, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/By Month_seeps excluded.xlsx")
+write_xlsx(summary_stats_results, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/By Groups_seeps excluded.xlsx")
 ```
 
 ```{r}

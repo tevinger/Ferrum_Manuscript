@@ -848,6 +848,15 @@ columns <- c(
 )
 ```
 
+### Basic boxplots
+To see if there are outliers
+```{r}
+for (i in seq_along(columns)) {
+  col <- columns[i]
+  boxplot(stats_working_Ferrum_data[[col]], main = paste("Boxplot of", col))
+}
+```
+
 ### Summary stats loop
 ```{r}
 # Initialize an empty list to store results

@@ -1,0 +1,1712 @@
+---
+title: "AGU 2024 Statistics"
+output: html_document
+date: "2024-12-03"
+---dd
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(ggplot2)
+
+# Create a data frame for the two halves of the circle
+data <- data.frame(
+  x = c(0, 0),
+  y = c(0, 0),
+  r = c(1, 1), 
+  fill = c("#72D9FF", "#FFAD72"),
+  side = c("left", "right")
+)
+
+# Create a circle by plotting two halves using geom_polygon
+circle <- ggplot() +
+  # Left half
+  geom_polygon(
+    data = data.frame(
+      x = cos(seq(0, pi, length.out = 100)),
+      y = sin(seq(0, pi, length.out = 100))
+    ),
+    aes(x = x, y = y), 
+    fill = "#72D9FF"
+  ) +
+  # Right half
+  geom_polygon(
+    data = data.frame(
+      x = cos(seq(pi, 2*pi, length.out = 100)),
+      y = sin(seq(pi, 2*pi, length.out = 100))
+    ),
+    aes(x = x, y = y), 
+    fill = "#FFAD72"
+  ) +
+  coord_fixed() + 
+  theme_void() +
+  theme(
+    panel.background = element_rect(fill = "transparent", color = NA),  # Transparent background
+    plot.background = element_rect(fill = "transparent", color = NA)  # Transparent plot area
+  )
+
+# If you want to save it as a transparent PNG file
+ggsave("C:/Users/tayta/Downloads/circle_with_half_colors.png", plot = circle, bg = "transparent", width = 5, height = 5)
+```
+
+# Statistics Codes
+
+The Shapiro-Wilk measures the residuals to determine whether the data is normally distributed. If the p-value is significant (p-value \< 0.05), then the data is not normally distributed and non-parameteric tests must be used.
+
+If the Shapiro-Wilk determines the data to be not normally distributed (p-value \< 0.05), run the Kruskal-Wallis test to determine significant differences between group means. If the p-value is significant, then there are statistically significant differences between the groups and a pairwise test needs to be conducted. If there are only two groups of comparison, a Mann-Whitney-U/Wilcox test can substitute the Kruskal-Wallis test and then a pairwise analysis is not needed. The Kruskal-Wallis test is used when the data has one independent variable (i.e., treatment group) with 3+ levels and a continuous variable that is not normally distributed. It ranks observations within each group and compares the average ranks across the groups.
+
+```{r}
+library(dunn.test)
+library(multcompView)
+
+view(stats_working_Ferrum_data)
+
+# Step 1: Calculate summary statistics 
+f_SO4_mg_per_l_summary_stats <- stats_working_Ferrum_data %>%
+  filter(!is.na(f_SO4_mg_per_l)) %>%
+  group_by(Site_Group) %>%
+  summarise(
+    Mean = round(mean(f_SO4_mg_per_l), 2),  
+    SD = round(sd(f_SO4_mg_per_l, na.rm = TRUE), 2),     
+    Count = n()
+  )
+
+view(f_SO4_mg_per_l_summary_stats)
+
+#write_xlsx(pH_impaired_status_summary_stats, "C:/Users/tayta/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/pH_impaired_status_summary_stats.xlsx")
+
+
+# Step 2: Test for Normal or NonNormal Distribution
+
+# Perform the Shapiro-Wilk test
+shapiro_test_result <- shapiro.test(stats_working_Ferrum_data$f_SO4_mg_per_l)
+
+# Interpret and print the result
+cat("Shapiro-Wilk Normality Test\n")
+cat("----------------------------\n")
+cat("Test Statistic (W):", round(shapiro_test_result$statistic, 3), "\n")
+cat("P-value:", shapiro_test_result$p.value, "\n")
+
+# Interpretation
+if (shapiro_test_result$p.value > 0.05) {
+  cat("Conclusion: The data is likely normally distributed (fail to reject H0).\n")
+} else {
+  cat("Conclusion: The data is not normally distributed (reject H0) and a non-parametric test must be used.\n")
+}
+
+print(shapiro_test_result)
+```
+
+```{r}
+# Step 3: Statistical test for comparison
+
+# Perform Kruskal-Wallis test
+kruskal_test_result <- kruskal.test(f_SO4_mg_per_l ~ Site_Group, data = stats_working_Ferrum_data)
+
+# Print the result
+print(kruskal_test_result)
+
+# Step 4: If the Kruskal-Wallis test is significant (p-value < 0.05), perform a pairwise comparison (post-hoc testing) to identify which groups differ using the Dunn test
+
+# Perform Dunn's post-hoc test with Bonferroni adjustment
+dunn_result <- dunn.test(stats_working_Ferrum_data$f_SO4_mg_per_l, stats_working_Ferrum_data$Site_Group, method = "bonferroni")
+
+view(dunn_result)
+```
+
+Get CLD
+```{r}
+# Extract the unique group levels
+groups <- as.character(unique(stats_working_Ferrum_data$Site_Group))
+#groups <- as.character(unique(dunn_result$comparisons))
+
+# Create a matrix of adjusted p-values
+comparison_matrix <- matrix(NA, nrow = length(groups), ncol = length(groups))
+rownames(comparison_matrix) <- groups
+colnames(comparison_matrix) <- groups
+#comparison_matrix <- na.omit(comparison_matrix)
+
+# Fill the matrix with adjusted p-values
+for (i in seq_along(dunn_result$comparisons)) {
+  # Extract comparison pair and p-value
+  comparison <- unlist(strsplit(dunn_result$comparisons[i], " - "))
+  p_value <- dunn_result$P.adjusted[i]
+  
+  # Assign the p-value to the matrix
+  comparison_matrix[comparison[1], comparison[2]] <- p_value
+  comparison_matrix[comparison[2], comparison[1]] <- p_value
+}
+
+view(comparison_matrix)
+
+# Generate compact letter displays (CLDs) using multcompView
+letters <- multcompLetters(comparison_matrix, threshold = 0.05/2)
+
+# Print the letters
+print(letters$Letters)
+```
+
+make final dataframes for results
+```{r}
+# Extract comparisons and adjusted p-values into a data frame
+num_comparisons <- length(dunn_result$comparisons)
+
+# Repeat Kruskal-Wallis p-value to match the number of comparisons
+kruskal_p_values <- rep(kruskal_test_result$p.value, num_comparisons)
+
+dunn_df <- data.frame(
+  Comparison = dunn_result$comparisons,
+  #Z_Score = dunn_result$Z,
+  #P_Unadjusted = dunn_result$P,
+  P_Adjusted = dunn_result$P.adjusted,
+  Kruskal_P_Value = kruskal_p_values  
+)
+
+view(dunn_df)
+
+# Extract comparisons and adjusted p-values into a data frame
+num_comparisons_letters <- length(letters$Letters)
+
+# Repeat Kruskal-Wallis p-value to match the number of comparisons
+kruskal_p_values_letters <- rep(kruskal_test_result$p.value, num_comparisons_letters)
+
+
+# Extract comparisons and adjusted p-values into a data frame
+num_comparisons_letters <- length(letters$Letters)
+
+# Repeat Kruskal-Wallis p-value to match the number of comparisons
+kruskal_p_values_letters <- rep(kruskal_test_result$p.value, num_comparisons_letters)
+
+Dunn_Letters_df <- data.frame(
+  Element = "f_SO4_mg_per_l",
+  Site_Group = names(letters$Letters),
+  Letters = letters$Letters,
+  Kruskal_P_Value = kruskal_p_values_letters
+)
+view(Dunn_Letters_df)
+
+#write_xlsx(kruskal_dunn_df, "C:/Users/tayta/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Comparisons by Visual Description/pH_impaired_status_kruskal_dunn.xlsx")
+
+
+#look at pH boxplot for comparison by visual description for how to use these letters in the boxplot
+```
+
+# Stats for faceted Metals
+
+```{r}
+#summary stats
+library(dplyr)
+
+# Define the elements and corresponding column names
+elements <- c("Fe","Co", "Cu", "Mn", "Ni", "Zn")
+columns <- c("Fe_mcg_per_l", "Co_mcg_per_l","Cu_mcg_per_l", "Mn_mcg_per_l", "Ni_mcg_per_l", "Zn_mcg_per_l")
+
+# Initialize an empty list to store results
+summary_stats_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the summary operation for the current element
+  summary_stats <- working_Ferrum_data %>%
+    group_by(Site_Group) %>%
+    summarise(
+      Variable = element,
+      Mean = round(mean(.data[[column]], na.rm = TRUE), 2),  
+      SD = round(sd(.data[[column]], na.rm = TRUE), 2),     
+      Count = n()
+    )
+  
+  # Store the result in the list with the element name as key
+  summary_stats_list[[element]] <- summary_stats
+}
+
+# Combine all individual data frames into one
+metal_summary_stats_results <- do.call(rbind, summary_stats_list)
+
+metal_summary_stats_results <- metal_summary_stats_results %>%
+  mutate(Label = paste("N=", Count))
+```
+
+```{r}
+# Step 2: Test for Normal or NonNormal Distribution
+
+# Perform the Shapiro-Wilk test
+#Fe
+Fe_shapiro_test_result <- shapiro.test(Impaired_status_2023_data$Fe_mcg_per_l)
+
+# Create the interpretation based on the P-value
+Fe_interpretation <- if (Fe_shapiro_test_result$p.value > 0.05) {
+  "The data is likely normally distributed (fail to reject H0)."
+} else {
+  "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+}
+
+# Store the results in a dataframe
+Fe_shapiro_test_df <- data.frame(
+  Variable = "Fe",
+  Test_Statistic = round(Fe_shapiro_test_result$statistic, 3),
+  P_Value = Fe_shapiro_test_result$p.value,
+  Interpretation = Fe_interpretation
+)
+
+# As
+As_shapiro_test_result <- shapiro.test(Impaired_status_2023_data$As_mcg_per_l)
+As_interpretation <- if (As_shapiro_test_result$p.value > 0.05) {
+  "The data is likely normally distributed (fail to reject H0)."
+} else {
+  "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+}
+As_shapiro_test_df <- data.frame(
+  Variable = "As",
+  Test_Statistic = round(As_shapiro_test_result$statistic, 3),
+  P_Value = As_shapiro_test_result$p.value,
+  Interpretation = As_interpretation
+)
+
+# Ba
+Ba_shapiro_test_result <- shapiro.test(Impaired_status_2023_data$Ba_mcg_per_l)
+Ba_interpretation <- if (Ba_shapiro_test_result$p.value > 0.05) {
+  "The data is likely normally distributed (fail to reject H0)."
+} else {
+  "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+}
+Ba_shapiro_test_df <- data.frame(
+  Variable = "Ba",
+  Test_Statistic = round(Ba_shapiro_test_result$statistic, 3),
+  P_Value = Ba_shapiro_test_result$p.value,
+  Interpretation = Ba_interpretation
+)
+
+# Co
+Co_shapiro_test_result <- shapiro.test(Impaired_status_2023_data$Co_mcg_per_l)
+Co_interpretation <- if (Co_shapiro_test_result$p.value > 0.05) {
+  "The data is likely normally distributed (fail to reject H0)."
+} else {
+  "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+}
+Co_shapiro_test_df <- data.frame(
+  Variable = "Co",
+  Test_Statistic = round(Co_shapiro_test_result$statistic, 3),
+  P_Value = Co_shapiro_test_result$p.value,
+  Interpretation = Co_interpretation
+)
+
+# Cr
+Cr_shapiro_test_result <- shapiro.test(Impaired_status_2023_data$Cr_mcg_per_l)
+Cr_interpretation <- if (Cr_shapiro_test_result$p.value > 0.05) {
+  "The data is likely normally distributed (fail to reject H0)."
+} else {
+  "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+}
+Cr_shapiro_test_df <- data.frame(
+  Variable = "Cr",
+  Test_Statistic = round(Cr_shapiro_test_result$statistic, 3),
+  P_Value = Cr_shapiro_test_result$p.value,
+  Interpretation = Cr_interpretation
+)
+
+# Mn
+Mn_shapiro_test_result <- shapiro.test(Impaired_status_2023_data$Mn_mcg_per_l)
+Mn_interpretation <- if (Mn_shapiro_test_result$p.value > 0.05) {
+  "The data is likely normally distributed (fail to reject H0)."
+} else {
+  "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+}
+Mn_shapiro_test_df <- data.frame(
+  Variable = "Mn",
+  Test_Statistic = round(Mn_shapiro_test_result$statistic, 3),
+  P_Value = Mn_shapiro_test_result$p.value,
+  Interpretation = Mn_interpretation
+)
+
+# Ni
+Ni_shapiro_test_result <- shapiro.test(Impaired_status_2023_data$Ni_mcg_per_l)
+Ni_interpretation <- if (Ni_shapiro_test_result$p.value > 0.05) {
+  "The data is likely normally distributed (fail to reject H0)."
+} else {
+  "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+}
+Ni_shapiro_test_df <- data.frame(
+  Variable = "Ni",
+  Test_Statistic = round(Ni_shapiro_test_result$statistic, 3),
+  P_Value = Ni_shapiro_test_result$p.value,
+  Interpretation = Ni_interpretation
+)
+
+# Pb
+Pb_shapiro_test_result <- shapiro.test(Impaired_status_2023_data$Pb_mcg_per_l)
+Pb_interpretation <- if (Pb_shapiro_test_result$p.value > 0.05) {
+  "The data is likely normally distributed (fail to reject H0)."
+} else {
+  "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+}
+Pb_shapiro_test_df <- data.frame(
+  Variable = "Pb",
+  Test_Statistic = round(Pb_shapiro_test_result$statistic, 3),
+  P_Value = Pb_shapiro_test_result$p.value,
+  Interpretation = Pb_interpretation
+)
+
+# Se
+Se_shapiro_test_result <- shapiro.test(Impaired_status_2023_data$Se_mcg_per_l)
+Se_interpretation <- if (Se_shapiro_test_result$p.value > 0.05) {
+  "The data is likely normally distributed (fail to reject H0)."
+} else {
+  "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+}
+Se_shapiro_test_df <- data.frame(
+  Variable = "Se",
+  Test_Statistic = round(Se_shapiro_test_result$statistic, 3),
+  P_Value = Se_shapiro_test_result$p.value,
+  Interpretation = Se_interpretation
+)
+
+# U
+U_shapiro_test_result <- shapiro.test(Impaired_status_2023_data$U_mcg_per_l)
+U_interpretation <- if (U_shapiro_test_result$p.value > 0.05) {
+  "The data is likely normally distributed (fail to reject H0)."
+} else {
+  "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+}
+U_shapiro_test_df <- data.frame(
+  Variable = "U",
+  Test_Statistic = round(U_shapiro_test_result$statistic, 3),
+  P_Value = U_shapiro_test_result$p.value,
+  Interpretation = U_interpretation
+)
+
+#combine all shapiro results into one df to evaluate what test to use for each
+combined_metal_shapiro_test_df <- bind_rows(
+  Fe_shapiro_test_df,
+  As_shapiro_test_df,
+  Ba_shapiro_test_df,
+  Co_shapiro_test_df,
+  Cr_shapiro_test_df,
+  Mn_shapiro_test_df,
+  Ni_shapiro_test_df,
+  Pb_shapiro_test_df,
+  Se_shapiro_test_df,
+  U_shapiro_test_df
+)
+
+#all are non normally distributed and need a non parametric test for analysis
+```
+
+```{r}
+library(dunn.test)
+library(multcompView)
+
+# Define the elements and corresponding column names
+elements <- c("Fe","Co", "Cu", "Mn", "Ni", "Zn")
+columns <- c("Fe_mcg_per_l", "Co_mcg_per_l","Cu_mcg_per_l", "Mn_mcg_per_l", "Ni_mcg_per_l", "Zn_mcg_per_l")
+
+# Initialize a list to store results
+results_list <- list()
+
+# Loop through each element and perform the analysis
+for (i in seq_along(elements)) {
+  # Element name and column name
+  element <- elements[i]
+  column <- columns[i]
+  
+    # Perform Kruskal-Wallis test
+  kruskal_test_result <- kruskal.test(as.formula(paste(column, "~ Site_Group")), data = working_Ferrum_data)
+  
+  # Initialize variables for Dunn test and compact letter display
+  dunn_result <- NULL
+  letters <- NULL
+  
+  # Check if Kruskal-Wallis p-value is < 0.05
+  if (kruskal_test_result$p.value < 0.05) {
+    # Perform Dunn's post-hoc test with Bonferroni adjustment
+    dunn_result <- dunn.test(working_Ferrum_data[[column]], working_Ferrum_data$Site_Group, method = "bonferroni")
+    
+    # Extract the unique group levels
+    groups <- unique(working_Ferrum_data$Site_Group)
+    
+    # Create a matrix of adjusted p-values
+    comparison_matrix <- matrix(NA, nrow = length(groups), ncol = length(groups))
+    rownames(comparison_matrix) <- groups
+    colnames(comparison_matrix) <- groups
+    
+    # Fill the matrix with adjusted p-values
+    for (j in seq_along(dunn_result$comparisons)) {
+      # Extract comparison pair and p-value
+      comparison <- unlist(strsplit(dunn_result$comparisons[j], " - "))
+      p_value <- dunn_result$P.adjusted[j]
+      
+      # Assign the p-value to the matrix
+      comparison_matrix[comparison[1], comparison[2]] <- p_value
+      comparison_matrix[comparison[2], comparison[1]] <- p_value
+    }
+    
+    # Generate compact letter displays (CLDs) using multcompView
+    letters <- multcompLetters(comparison_matrix, threshold = 0.05/2)
+  }
+  
+  # Create a data frame for the results
+  kruskal_dunn_df <- data.frame(
+    Variable = element,
+    Kruskal_P_Value = format(kruskal_test_result$p.value, scientific = FALSE),
+    Comparison = if (!is.null(dunn_result)) dunn_result$comparisons else NA,
+    Adjusted_P_Value = if (!is.null(dunn_result)) dunn_result$P.adjusted else NA,
+    Impaired_Status = if (!is.null(letters)) names(letters$Letters) else NA,
+    Letters = if (!is.null(letters)) letters$Letters else NA
+  )
+  
+  # Add the results to the list
+  results_list[[element]] <- kruskal_dunn_df
+}
+
+# Combine all results into a single data frame
+final_kruskal_dunn_metal_results_df <- do.call(rbind, results_list)
+
+```
+
+### Export Shapiro and Kruskal / Dunn Results as a formatted table
+
+```{r}
+library(flextable)
+library(officer)
+
+# Create a flextable from the dataframe
+Metal_Shapiro_results <- flextable(combined_metal_shapiro_test_df) %>%
+  set_header_labels(Impaired_Status = "Impaired Status", Mean = "Mean Value", SD = "Standard Deviation", Count = "Sample Size") %>%
+  theme_vanilla() %>%      # Apply a vanilla theme
+  align(align = "center", part = "all") %>%  # Center all text in header and body
+  autofit() %>%                # Adjust column width to fit content
+  set_table_properties(layout = "autofit", align = "center")  # Center the table on the page
+
+# Save as a Word file
+save_as_docx(Metal_Shapiro_results, path = "C:/Users/tayta/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Comparisons by Visual Description/Metal_Shapiro_results.docx")
+
+
+# Modify the data frame to round p-values to 5 decimal places
+final_kruskal_dunn_metal_results_df <- final_kruskal_dunn_metal_results_df %>%
+  mutate(
+    Adjusted_P_Value = round(Adjusted_P_Value, 5),
+    Kruskal_P_Value = round(as.numeric(Kruskal_P_Value), 5)
+  )
+
+# Rename the columns using exact names
+#colnames(final_kruskal_dunn_metal_results_df)[colnames(final_kruskal_dunn_metal_results_df) == "Kruskal_P_Value"] <- "Kruskal p-value"
+colnames(final_kruskal_dunn_metal_results_df)[colnames(final_kruskal_dunn_metal_results_df) == "Adjusted_P_Value"] <- "p-value.adj"
+colnames(final_kruskal_dunn_metal_results_df)[colnames(final_kruskal_dunn_metal_results_df) == "Impaired_Status"] <- "Impaired Status"
+colnames(final_kruskal_dunn_metal_results_df)[colnames(final_kruskal_dunn_metal_results_df) == "Letters"] <- "CLD"
+colnames(final_kruskal_dunn_metal_results_df)[colnames(final_kruskal_dunn_metal_results_df) == "Variable"] <- "Element"
+
+# Get the indices of rows where the "Variable" column changes
+variable_change_indices <- which(!duplicated(final_kruskal_dunn_metal_results_df$Variable)) - 1
+
+# Use flextable to format the table
+final_kruskal_dunn_metal_results <- flextable(final_kruskal_dunn_metal_results_df) %>%
+  #set_header_labels(Impaired_Status = "Impaired Status",Letters = "CLD") %>%
+  # Merge Variable and Kruskal_P_Value rows where they are repeated
+  merge_v(j = ~Element + Kruskal_P_Value) %>%
+  # Center align all text in header and body
+  align(align = "center", part = "all") %>%
+  # Adjust font size
+  fontsize(size = 8, part = "all") %>%
+  # Automatically fit column width to content
+  autofit() %>%
+  # Set table properties for alignment
+  set_table_properties(layout = "autofit", align = "center")
+# figure out how to add horizontal lines between variables
+
+# Print the flextable
+final_kruskal_dunn_metal_results
+
+
+# Save as a Word file
+save_as_docx(final_kruskal_dunn_metal_results, path = "C:/Users/tayta/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Comparisons by Visual Description/AGU_metals_final_kruskal_dunn_metal_results.docx")
+
+```
+
+```{r}
+library(officer)
+library(flextable)
+
+# Create a PowerPoint object
+ppt <- read_pptx()
+
+# Add a blank slide to the PowerPoint
+ppt <- add_slide(ppt, layout = "Title and Content", master = "Office Theme")
+
+# Add a title to the slide
+ppt <- ph_with(ppt, value = "Kruskal-Wallis and Dunn's Test Results", location = ph_location_type(type = "title"))
+
+# Scale the flextable to fit within the content area of the slide
+ppt <- ph_with(
+  ppt, 
+  value = final_kruskal_dunn_metal_results, 
+  location = ph_location_fullsize()
+)
+
+# Save the PowerPoint
+print(ppt, target = "C:/Users/tayta/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Comparisons by Visual Description/Kruskal_Dunn_Results.pptx")
+
+
+# this did not work lol
+```
+
+can you rewrite this code multiple times so that where it says "Fe" it says "As", "Ba", "La", "Co", "Cr", "La", "Mn", "Ni", "Pb", "Se", "U", "Pb" and where it says "Fe_mcg_per_l" it says "Co_mcg_per_l", "Mn_mcg_per_l", "Zn_mcg_per_l", "Ni_mcg_per_l", "Cr_mcg_per_l", "Se_mcg_per_l", "As_mcg_per_l", "Ba_mcg_per_l", "La_mcg_per_l", "U_mcg_per_l", "Pb_mcg_per_l"
+
+
+
+#Stats loops
+## Create specific dataframes
+
+```{r}
+# filter out samples without a Site_Group
+stats_working_Ferrum_data <- working_Ferrum_data %>%
+  dplyr::select(-contains("QA_flag")) %>%
+  dplyr::select(-contains("tot_")) %>%
+  filter(Site_Group != "NA") 
+
+view(stats_working_Ferrum_data)
+#view(working_Ferrum_data)
+```
+
+## Summary Stats Loop
+```{r}
+# order for columns
+column_order <- c(
+  "pH_Mean", "pH_SD", "pH_Count",
+  "Temp_Mean", "Temp_SD", "Temp_Count",
+  "Diss_oxy_Mean", "Diss_oxy_SD", "Diss_oxy_Count",
+  "Diss_oxy_percent_sat_Mean", "Diss_oxy_percent_sat_SD", "Diss_oxy_percent_sat_Count",
+  "Spec_Cond_Mean", "Spec_Cond_SD", "Spec_Cond_Count",
+  "DIC_Mean", "DIC_SD", "DIC_Count",
+  "Alk_Mean", "Alk_SD", "Alk_Count",
+  "DOC_Mean", "DOC_SD", "DOC_Count",
+  "f_Cl_Mean", "f_Cl_SD", "f_Cl_Count",
+  "f_NO3_Mean", "f_NO3_SD", "f_NO3_Count",
+  "f_SO4_Mean", "f_SO4_SD", "f_SO4_Count",
+  "f_Ca_Mean", "f_Ca_SD", "f_Ca_Count",
+  "f_Mg_Mean", "f_Mg_SD", "f_Mg_Count",
+  "f_Na_Mean", "f_Na_SD", "f_Na_Count",
+  "f_K_Mean", "f_K_SD", "f_K_Count",
+  "f_206Pb_Mean", "f_206Pb_SD", "f_206Pb_Count",
+  "f_207Pb_Mean", "f_207Pb_SD", "f_207Pb_Count",
+  "f_208Pb_Mean", "f_208Pb_SD", "f_208Pb_Count",
+  "f_Pb_Sum_Mean", "f_Pb_Sum_SD", "f_Pb_Sum_Count",
+  "p_Pb_Sum_Mean", "p_Pb_Sum_SD", "p_Pb_Sum_Count",
+  "f_Ag_Mean", "f_Ag_SD", "f_Ag_Count",
+  "f_Al_Mean", "f_Al_SD", "f_Al_Count",
+  "p_Al_Mean", "p_Al_SD", "p_Al_Count",
+  "f_As_Mean", "f_As_SD", "f_As_Count",
+  "p_As_Mean", "p_As_SD", "p_As_Count",
+  "f_Ba_Mean", "f_Ba_SD", "f_Ba_Count",
+  "f_Be_Mean", "f_Be_SD", "f_Be_Count",
+  "f_Br_Mean", "f_Br_SD", "f_Br_Count",
+  "f_Cd_Mean", "f_Cd_SD", "f_Cd_Count",
+  "p_Cd_Mean", "p_Cd_SD", "p_Cd_Count",
+  "f_Ce_Mean", "f_Ce_SD", "f_Ce_Count",
+  "p_Ce_Mean", "p_Ce_SD", "p_Ce_Count",
+  "f_Co_Mean", "f_Co_SD", "f_Co_Count",
+  "p_Co_Mean", "p_Co_SD", "p_Co_Count",
+  "f_Cr_Mean", "f_Cr_SD", "f_Cr_Count",
+  "p_Cr_Mean", "p_Cr_SD", "p_Cr_Count",
+  "f_Cu_Mean", "f_Cu_SD", "f_Cu_Count",
+  "p_Cu_Mean", "p_Cu_SD", "p_Cu_Count",
+  "f_Dy_Mean", "f_Dy_SD", "f_Dy_Count",
+  "p_Dy_Mean", "p_Dy_SD", "p_Dy_Count",
+  "f_Fe_Mean", "f_Fe_SD", "f_Fe_Count",
+  "p_Fe_Mean", "p_Fe_SD", "p_Fe_Count",
+  "f_La_Mean", "f_La_SD", "f_La_Count",
+  "p_La_Mean", "p_La_SD", "p_La_Count",
+  "f_Mn_Mean", "f_Mn_SD", "f_Mn_Count",
+  "p_Mn_Mean", "p_Mn_SD", "p_Mn_Count",
+  "f_Nd_Mean", "f_Nd_SD", "f_Nd_Count",
+  "p_Nd_Mean", "p_Nd_SD", "p_Nd_Count",
+  "f_Ni_Mean", "f_Ni_SD", "f_Ni_Count",
+  "p_Ni_Mean", "p_Ni_SD", "p_Ni_Count",
+  "f_Pr_Mean", "f_Pr_SD", "f_Pr_Count",
+  "p_Pr_Mean", "p_Pr_SD", "p_Pr_Count",
+  "f_Se_Mean", "f_Se_SD", "f_Se_Count",
+  "p_Se_Mean", "p_Se_SD", "p_Se_Count",
+  "f_Th_Mean", "f_Th_SD", "f_Th_Count",
+  "f_Tl_Mean", "f_Tl_SD", "f_Tl_Count",
+  "f_U_Mean", "f_U_SD", "f_U_Count",
+  "f_V_Mean", "f_V_SD", "f_V_Count",
+  "f_Y_Mean", "f_Y_SD", "f_Y_Count",
+  "p_Y_Mean", "p_Y_SD", "p_Y_Count",
+  "f_Zn_Mean", "f_Zn_SD", "f_Zn_Count",
+  "p_Zn_Mean", "p_Zn_SD", "p_Zn_Count",
+  "f_sum_REE_Mean", "f_sum_REE_SD", "f_sum_REE_Count",
+  "p_sum_REE_Mean", "p_sum_REE_SD", "p_sum_REE_Count"
+)
+
+```
+
+```{r}
+#summary stats
+library(dplyr)
+
+# Define the elements and corresponding column names
+#elements <- c("pH", "SpC", "SO4", "DIC", "Alk", "DOC", "Ca", "Mg", "Na", "K", "Cl", "NO3", "DO")
+#columns <- c("pH", "Spec_Cond_microS_per_cm", "f_SO4_mg_per_l", "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l", "f_Cl_mg_per_l", "f_NO3_mg_per_l", "Diss_oxy_mg_per_l")
+
+elements <- c(
+  "pH", "Temp", "Diss_oxy", "Diss_oxy_percent_sat", "Spec_Cond", "DIC", 
+  "Alk", "DOC", "f_Cl", "f_NO3", "f_SO4", "f_Ca", "f_Mg", "f_Na", "f_K", 
+  "f_206Pb", "f_207Pb", "f_208Pb", "f_Pb_Sum", "p_Pb_Sum", "f_Ag", "f_Al", 
+  "p_Al", "f_As", "p_As", "f_Ba", "f_Be", "f_Br", "f_Cd", "p_Cd", "f_Ce", 
+  "p_Ce", "f_Co", "p_Co", "f_Cr", "p_Cr", "f_Cu", "p_Cu", "f_Dy", "p_Dy", 
+  "f_Fe", "p_Fe", "f_La", "p_La", "f_Mn", "p_Mn", "f_Nd", "p_Nd", "f_Ni", 
+  "p_Ni", "f_Pr", "p_Pr", "f_Se", "p_Se", "f_Th", "f_Tl", "f_U", "f_V", "f_Y", 
+  "p_Y", "f_Zn", "p_Zn", "f_sum_REE", "p_sum_REE"
+)
+
+columns <- c(
+  "pH", "Temp_deg_celsius", "Diss_oxy_mg_per_l", "Diss_oxy_percent_sat", "Spec_Cond_microS_per_cm", 
+  "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mg_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l", "f_206Pb_mcg_per_l", 
+  "f_207Pb_mcg_per_l", "f_208Pb_mcg_per_l", "f_Pb Sum_mcg_per_l", "p_Pb Sum_mcg_per_l", 
+  "f_Ag_mcg_per_l", "f_Al_mcg_per_l", "p_Al_mcg_per_l", "f_As_mcg_per_l", "p_As_mcg_per_l", 
+  "f_Ba_mcg_per_l", "f_Be_mcg_per_l", "f_Br_mcg_per_l", "f_Cd_mcg_per_l", "p_Cd_mcg_per_l", 
+  "f_Ce_mcg_per_l", "p_Ce_mcg_per_l", "f_Co_mcg_per_l", "p_Co_mcg_per_l", "f_Cr_mcg_per_l", 
+  "p_Cr_mcg_per_l", "f_Cu_mcg_per_l", "p_Cu_mcg_per_l", "f_Dy_mcg_per_l", "p_Dy_mcg_per_l", 
+  "f_Fe_mcg_per_l", "p_Fe_mcg_per_l", "f_La_mcg_per_l", "p_La_mcg_per_l", "f_Mn_mcg_per_l", 
+  "p_Mn_mcg_per_l", "f_Nd_mcg_per_l", "p_Nd_mcg_per_l", "f_Ni_mcg_per_l", "p_Ni_mcg_per_l", 
+  "f_Pr_mcg_per_l", "p_Pr_mcg_per_l", "f_Se_mcg_per_l", "p_Se_mcg_per_l", "f_Th_mcg_per_l", 
+  "f_Tl_mcg_per_l", "f_U_mcg_per_l", "f_V_mcg_per_l", "f_Y_mcg_per_l", "p_Y_mcg_per_l", 
+  "f_Zn_mcg_per_l", "p_Zn_mcg_per_l", "f_sum_REE_mcg_per_l", "p_sum_REE_mcg_per_l"
+)
+
+
+# Initialize an empty list to store results
+summary_stats_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the summary operation for the current element
+  summary_stats <- stats_working_Ferrum_data %>%
+    filter(!is.na(.data[[column]])) %>%
+    group_by(Site_Group) %>% #This is where you can change what variable you want to group the data by
+    summarise(
+      Variable = element,
+      Mean = round(mean(.data[[column]], na.rm = TRUE), 2),  
+      SD = round(sd(.data[[column]], na.rm = TRUE), 2),     
+      Count = n()
+    )
+  
+  # Store the result in the list with the element name as key
+  summary_stats_list[[element]] <- summary_stats
+}
+
+# Combine all individual data frames into one
+summary_stats_results <- do.call(rbind, summary_stats_list)
+
+view(summary_stats_results)
+
+# Reshape to wide format
+summary_stats_wide <- summary_stats_results %>%
+  pivot_wider(
+    id_cols = c(Site_Group),           # Keep Site_Group fixed - so this would be whatever variable you added for grouping your data by
+    names_from = Variable,             # Create new columns from Variable values
+    values_from = c(Mean, SD, Count),  # Use these columns as values
+    names_glue = "{Variable}_{.value}"  # Format column names like Variable_Mean, Variable_SD, etc.
+  )
+
+summary_stats_wide <-  summary_stats_wide %>%
+  dplyr::select(Site_Group, all_of(column_order))
+
+# View the result
+view(summary_stats_wide)
+
+
+write_xlsx(summary_stats_wide, "C:/Users/tayta/Downloads/Proximity Group Summary Stats.xlsx")
+
+```
+
+## With watershed
+```{r}
+library(dplyr)
+
+# Initialize an empty list to store results
+summary_stats_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the summary operation for the current element
+  summary_stats <- stats_working_Ferrum_data %>%
+    filter(!is.na(.data[[column]])) %>%
+    group_by(Site_Group, Watershed) %>%
+    summarise(
+      Variable = element,
+      Mean = round(mean(.data[[column]], na.rm = TRUE), 2),  
+      SD = round(sd(.data[[column]], na.rm = TRUE), 2),     
+      Count = n(),
+      .groups = "drop"  # Ensure ungrouped result after summarization
+    )
+  
+  # Store the result in the list with the element name as key
+  summary_stats_list[[element]] <- summary_stats
+}
+
+# Combine all individual data frames into one
+summary_stats_results <- do.call(rbind, summary_stats_list)
+
+# View the combined summary results
+view(summary_stats_results)
+
+# Reshape to wide format
+summary_stats_wide <- summary_stats_results %>%
+  pivot_wider(
+    id_cols = c(Site_Group, Watershed),  # Keep these columns fixed
+    names_from = c(Variable),       # Create new columns from Watershed values
+    values_from = c(Mean, SD, Count),   # Use these columns as values
+    names_glue = "{Variable}_{.value}" # Format column names like Watershed_Mean, Watershed_SD, etc.
+  ) 
+
+summary_stats_wide <-  summary_stats_wide %>%
+  dplyr::select(Site_Group, Watershed, all_of(column_order))
+
+# View the final wide-format table
+view(summary_stats_wide)
+
+
+write_xlsx(summary_stats_wide, "C:/Users/tayta/Downloads/Proximity Group Summary Stats - Watershed.xlsx")
+
+```
+
+## Upstream + Unimpaired Watershed
+```{r}
+library(dplyr)
+
+Upstream_df <- stats_working_Ferrum_data %>%
+  filter(Site_Grouping %in% c(1,4))
+
+# Initialize an empty list to store results
+summary_stats_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the summary operation for the current element
+  summary_stats <- Upstream_df %>%
+    filter(!is.na(.data[[column]])) %>%
+    group_by(Watershed) %>%
+    summarise(
+      Variable = element,
+      Mean = round(mean(.data[[column]], na.rm = TRUE), 2),  
+      SD = round(sd(.data[[column]], na.rm = TRUE), 2),     
+      Count = n(),
+      .groups = "drop"  # Ensure ungrouped result after summarization
+    )
+  
+  # Store the result in the list with the element name as key
+  summary_stats_list[[element]] <- summary_stats
+}
+
+# Combine all individual data frames into one
+summary_stats_results <- do.call(rbind, summary_stats_list)
+
+# View the combined summary results
+view(summary_stats_results)
+
+# Reshape to wide format
+summary_stats_wide <- summary_stats_results %>%
+  pivot_wider(
+    id_cols = c(Watershed),  # Keep these columns fixed
+    names_from = Variable,       # Create new columns from Watershed values
+    values_from = c(Mean, SD, Count),   # Use these columns as values
+    names_glue = "{Variable}_{.value}" # Format column names like Watershed_Mean, Watershed_SD, etc.
+  ) 
+
+summary_stats_wide <-  summary_stats_wide %>%
+  dplyr::select(Watershed, all_of(column_order))
+
+# View the final wide-format table
+view(summary_stats_wide)
+
+
+write_xlsx(summary_stats_wide, "C:/Users/tayta/Downloads/Reference Site Summary Stats - Watershed.xlsx")
+
+```
+
+# Shapiro Test Loop
+
+```{r}
+# Elements and Columns defined in previous chunk
+
+# Initialize an empty list to store results
+shapiro_test_results <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the Shapiro-Wilk test
+  test_result <- tryCatch(
+    shapiro.test(stats_working_Ferrum_data[[column]]),
+    error = function(e) NULL # Handle cases where the test cannot be performed
+  )
+  
+  # Create the interpretation
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The data is likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store the results in a data frame
+  test_df <- data.frame(
+    Variable = element,
+    Test_Statistic = if (!is.null(test_result)) round(test_result$statistic, 3) else NA,
+    P_Value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+  
+  # Append the result to the list
+  shapiro_test_results[[element]] <- test_df
+}
+
+# Combine all individual data frames into one
+shapiro_results <- do.call(rbind, shapiro_test_results)
+
+view(shapiro_results)
+
+```
+
+# Kruskal & Dunn 
+## Kruskal only
+```{r}
+# Initialize a dataframe to store Kruskal-Wallis test results
+kruskal_results <- data.frame(Element = character(), Kruskal_P_Value = numeric(), stringsAsFactors = FALSE)
+
+# Loop through each element and perform Kruskal-Wallis test
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform Kruskal-Wallis test
+  kruskal_test_result <- kruskal.test(as.formula(paste(column, "~ Site_Group")), data = stats_working_Ferrum_data)
+  
+  # Store the result in a dataframe
+  kruskal_results <- rbind(kruskal_results, data.frame(Variable = element, Kruskal_P_Value = kruskal_test_result$p.value))
+}
+
+# Print Kruskal-Wallis results
+print(kruskal_results)
+
+# Merge Kruskal-Wallis results into shapiro_results by "Element"
+shapiro_results <- merge(shapiro_results, kruskal_results, by = "Variable", all.x = TRUE)
+
+# add a kruskal wallis interpretation
+shapiro_results <- shapiro_results %>%
+  mutate(kruskal_interpretation = case_when(
+    !is.na(Kruskal_P_Value) & Kruskal_P_Value >= 0.05 ~ "No significant differences between groups",
+    !is.na(Kruskal_P_Value) & Kruskal_P_Value < 0.05  ~ "At least one group is significantly different",
+    TRUE ~ "Test could not be performed due to insufficient data or errors."
+  ))
+
+shapiro_results <- shapiro_results %>%
+  mutate(
+    P_Value = round(P_Value, 5),
+    Kruskal_P_Value = round(as.numeric(Kruskal_P_Value), 5)
+  )
+
+# Print the updated shapiro_results dataframe
+view(shapiro_results)
+
+write_xlsx(shapiro_results, "C:/Users/tayta/Downloads/Shapiro and Kruskal proximity results.xlsx")
+
+```
+
+## Kruskal and Dunn Loop
+```{r}
+# Load necessary package
+library(multcompView)
+library(dunn.test)
+
+# Initialize lists to store results
+results_list <- list()  # For pairwise comparisons (Dunn's test)
+cld_results_list <- list()  # For compact letter display (CLD)
+
+# Loop through each element and perform the analysis
+for (i in seq_along(elements)) {
+  # Element name and column name
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform Kruskal-Wallis test
+  kruskal_test_result <- kruskal.test(as.formula(paste(column, "~ Site_Group")), data = stats_working_Ferrum_data)
+  
+  # Check if Kruskal-Wallis p-value is < 0.05
+  if (kruskal_test_result$p.value < 0.05) {
+    # Perform Dunn's post-hoc test with Bonferroni adjustment
+    dunn_result <- dunn.test(stats_working_Ferrum_data[[column]], stats_working_Ferrum_data$Site_Group, 
+                             method = "bonferroni")
+    
+    # Extract unique group levels
+    groups <- unique(stats_working_Ferrum_data$Site_Group)
+    
+    # Create a matrix of adjusted p-values
+    comparison_matrix <- matrix(NA, nrow = length(groups), ncol = length(groups))
+    rownames(comparison_matrix) <- groups
+    colnames(comparison_matrix) <- groups
+    
+    # Fill the matrix with adjusted p-values
+    for (j in seq_along(dunn_result$comparisons)) {
+      # Extract comparison pair and p-value
+      comparison <- unlist(strsplit(dunn_result$comparisons[j], " - "))
+      p_value <- dunn_result$P.adjusted[j]
+      
+      # Assign the p-value to the matrix
+      comparison_matrix[comparison[1], comparison[2]] <- p_value
+      comparison_matrix[comparison[2], comparison[1]] <- p_value
+    }
+    
+    # Generate compact letter displays (CLDs) using multcompView
+    letters <- multcompLetters(comparison_matrix, threshold = 0.05/2)
+    
+    # ---- Store Dunn’s test results in a dataframe ----
+    # Convert comparison matrix to dataframe
+    comparison_df <- as.data.frame(as.table(comparison_matrix))
+    colnames(comparison_df) <- c("Group1", "Group2", "Adjusted_P_Value")
+    
+    # Add element name and Kruskal-Wallis p-value to the dataframe
+    comparison_df$Element <- element
+    comparison_df$Kruskal_P_Value <- kruskal_test_result$p.value
+    
+    # Convert CLD results to a dataframe
+    letters_df <- data.frame(
+      Site_Group = names(letters$Letters),
+      Letters = letters$Letters
+    )
+    
+    # Merge CLD letters into the Dunn's test comparison dataframe
+    comparison_df <- merge(comparison_df, letters_df, by.x = "Group1", by.y = "Site_Group", all.x = TRUE)
+    comparison_df <- merge(comparison_df, letters_df, by.x = "Group2", by.y = "Site_Group", all.x = TRUE, suffixes = c("_Group1", "_Group2"))
+    
+    # Store in results list
+    results_list[[i]] <- comparison_df
+
+    # ---- Store CLD results separately ----
+    cld_df <- data.frame(
+      Element = element,
+      Site_Group = names(letters$Letters),
+      Letters = letters$Letters,
+      Kruskal_P_Value = rep(kruskal_test_result$p.value, length(letters$Letters))
+    )
+    
+    # Store in CLD results list
+    cld_results_list[[i]] <- cld_df
+  }
+}
+
+# Combine all results into final dataframes
+final_results_df <- do.call(rbind, results_list)  # Dunn’s test results
+final_cld_df <- do.call(rbind, cld_results_list)  # CLD results
+
+
+
+# Ensure Group1, Group2, and Element are characters before processing
+final_results_df <- final_results_df %>%
+  mutate(
+    Group1 = as.character(Group1),
+    Group2 = as.character(Group2),
+    Element = as.character(Element),  # Ensure Element is also a character column
+    comparison = ifelse(Group1 < Group2, 
+                        paste(Group1, Group2, Element, sep = "_"),  # Consistent ordering
+                        paste(Group2, Group1, Element, sep = "_"))
+  ) %>%
+  distinct(comparison, .keep_all = TRUE) %>%  # Remove duplicate combinations
+  dplyr::select(-comparison) %>% # Drop the temporary column
+  filter(!is.na(Adjusted_P_Value))
+
+final_results_df <- final_results_df %>%
+  mutate(
+    Adjusted_P_Value = formatC(Adjusted_P_Value, format = "e", digits = 3),
+    Kruskal_P_Value = formatC(Kruskal_P_Value, format = "e", digits = 3)
+  ) %>%
+  relocate(Group2, .after = Group1) %>%
+  relocate(Element, .before = Group1)
+
+# Print final dataframes
+view(final_results_df)
+
+
+final_cld_df <- final_cld_df %>%
+  mutate(
+    Kruskal_P_Value = formatC(Kruskal_P_Value, format = "e", digits = 3)
+  )
+
+view(final_cld_df)
+
+# Save to CSV if needed
+#write.csv(final_results_df, "Dunn_Kruskal_results.csv", row.names = FALSE)
+#write.csv(final_cld_df, "CLD_Results.csv", row.names = FALSE)
+
+```
+
+## ANOVA loop
+```{r}
+
+
+```
+
+# Export to table
+Need to save summary_stats_results, shapiro_results, final_results_df and final_cld_df
+
+### Proximity to Seep Groups
+```{r}
+# Summary stats with final results of stats (CLD and Kruskal p-value)
+final_cld_df <- final_cld_df %>%
+  mutate(combo = paste(Element, Site_Group, sep = "_"))
+
+summary_stats_results <- summary_stats_results %>%
+  mutate(combo = paste(Variable, Site_Group, sep = "_"))
+
+final_stats_df <- summary_stats_results %>% 
+  left_join(final_cld_df, by = "combo") %>%
+  dplyr::select(-Element, -Site_Group.y, -combo)
+
+view(final_stats_df)
+
+write_xlsx(final_stats_df, "C:/Users/tayta/Downloads/Proximity Group Stats.xlsx")
+```
+
+```{r}
+# Create a flextable from the dataframe
+summary_stats_results <- flextable(final_stats_df) %>%
+  set_header_labels(
+    Site_Group.x = "Site_Group",
+    Variable = "Variable",
+    Mean = "Mean Value", 
+    SD = "Standard Deviation", 
+    Count = "Sample Size") %>%
+  theme_zebra() %>%      # Apply a vanilla theme
+  align(align = "center", part = "all") %>%  # Center all text in header and body
+  autofit() %>%                # Adjust column width to fit content
+  set_table_properties(layout = "autofit", align = "center") # Center the table on the page
+
+  
+
+# Save as a Word file
+save_as_docx(summary_stats_results, path = "C:/Users/tayta/Downloads/proximity_summary_stats_with_stats.docx")
+```
+
+```{r}
+# Create a flextable from the dataframe
+shapiro_results_filtered <- shapiro_results %>%
+  dplyr::select(-Test_Statistic)
+
+shaprio_kruskal_results <- flextable(shapiro_results_filtered) %>%
+  set_header_labels(
+    Variable = "Variable",
+    P_Value = "Shapiro P_Value", 
+    Interpretation = "Shapiro Interpretation", 
+    Kruskal_P_Value = "Kruskal P_Value",
+    kruskal_interpretation = "Kruskal Interpretation") %>%
+  theme_zebra() %>%      # Apply a vanilla theme
+  align(align = "center", part = "all") %>%  # Center all text in header and body
+  autofit() %>%                # Adjust column width to fit content
+  set_table_properties(layout = "autofit", align = "center")  # Center the table on the page
+
+# Save as a Word file
+save_as_docx(shaprio_kruskal_results, path = "C:/Users/tayta/Downloads/proximity_shaprio_kruskal_results.docx")
+```
+
+```{r}
+final_dunn_results <- flextable(final_results_df) %>%
+  theme_zebra() %>%      # Apply a vanilla theme
+  align(align = "center", part = "all") %>%  # Center all text in header and body
+  autofit() %>%                # Adjust column width to fit content
+  set_table_properties(layout = "autofit", align = "center")  # Center the table on the page
+
+# Save as a Word file
+save_as_docx(final_dunn_results, path = "C:/Users/tayta/Downloads/proximity_final_dunn_results.docx")
+```
+
+```{r}
+final_CLD_results <- flextable(final_cld_df) %>%
+  theme_zebra() %>%      # Apply a vanilla theme
+  align(align = "center", part = "all") %>%  # Center all text in header and body
+  autofit() %>%                # Adjust column width to fit content
+  set_table_properties(layout = "autofit", align = "center")  # Center the table on the page
+
+# Save as a Word file
+save_as_docx(final_CLD_results, path = "C:/Users/tayta/Downloads/proximity_final_CLD_results.docx")
+```
+
+
+### Impaired Status
+```{r}
+# Create a flextable from the dataframe
+Cations_Shapiro_results_ft <- flextable(cation_shapiro_results) %>%
+  set_header_labels(Impaired_Status = "Impaired Status", Mean = "Mean Value", SD = "Standard Deviation", Count = "Sample Size") %>%
+  theme_vanilla() %>%      # Apply a vanilla theme
+  align(align = "center", part = "all") %>%  # Center all text in header and body
+  autofit() %>%                # Adjust column width to fit content
+  set_table_properties(layout = "autofit", align = "center")  # Center the table on the page
+
+# Save as a Word file
+save_as_docx(Cations_Shapiro_results_ft, path = "C:/Users/tayta/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Comparisons by Visual Description/Cations_Shapiro_results.docx")
+
+
+# Modify the data frame to round p-values to 5 decimal places
+final_kruskal_dunn_cation_results_df <- final_kruskal_dunn_cation_results_df %>%
+  mutate(
+    Adjusted_P_Value = round(Adjusted_P_Value, 5),
+    Kruskal_P_Value = round(as.numeric(Kruskal_P_Value), 5)
+  )
+
+# Rename the columns using exact names
+colnames(final_kruskal_dunn_cation_results_df)[colnames(final_kruskal_dunn_cation_results_df) == "Kruskal_P_Value"] <- "Kruskal p-value"
+colnames(final_kruskal_dunn_cation_results_df)[colnames(final_kruskal_dunn_cation_results_df) == "Adjusted_P_Value"] <- "p-value.adj"
+colnames(final_kruskal_dunn_cation_results_df)[colnames(final_kruskal_dunn_cation_results_df) == "Impaired_Status"] <- "Impaired Status"
+colnames(final_kruskal_dunn_cation_results_df)[colnames(final_kruskal_dunn_cation_results_df) == "Letters"] <- "CLD"
+colnames(final_kruskal_dunn_cation_results_df)[colnames(final_kruskal_dunn_metal_results_df) == "Variable"] <- "Element"
+
+
+# Use flextable to format the table
+final_kruskal_dunn_cation_results <- flextable(final_kruskal_dunn_cation_results_df) %>%
+  #set_header_labels(Impaired_Status = "Impaired Status",Letters = "CLD") %>%
+  # Merge Variable and Kruskal_P_Value rows where they are repeated
+  merge_v(j = ~Element + `Kruskal p-value`) %>%
+  # Center align all text in header and body
+  align(align = "center", part = "all") %>%
+  # Adjust font size
+  fontsize(size = 8, part = "all") %>%
+  # Automatically fit column width to content
+  autofit() %>%
+  # Set table properties for alignment
+  set_table_properties(layout = "autofit", align = "center")
+# figure out how to add horizontal lines between variables
+
+# Print the flextable
+final_kruskal_dunn_cation_results
+
+
+# Save as a Word file
+save_as_docx(final_kruskal_dunn_cation_results, path = "C:/Users/tayta/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Comparisons by Visual Description/final_kruskal_dunn_cation_results.docx")
+
+```
+
+## Watershed Comparisons
+
+```{r}
+#summary stats
+library(dplyr)
+
+# Define the elements and corresponding column names
+elements <- c("pH","DOC", "DIC", "Ca", "Mg", "SO4", "Cl")
+columns <- c("pH", "DOC_mgC_per_l","DIC_mgC_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_SO4_mg_per_l", "f_Cl_mg_per_l")
+
+# Initialize an empty list to store results
+summary_stats_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the summary operation for the current element
+  summary_stats <- no_seep_2023_data %>%
+    group_by(SiteName) %>%
+    summarise(
+      Variable = element,
+      Mean = round(mean(.data[[column]], na.rm = TRUE), 2),  
+      SD = round(sd(.data[[column]], na.rm = TRUE), 2),     
+      Count = n()
+    )
+  
+  # Store the result in the list with the element name as key
+  summary_stats_list[[element]] <- summary_stats
+}
+
+# Combine all individual data frames into one
+watershed_summary_stats_results <- do.call(rbind, summary_stats_list)
+
+watershed_summary_stats_results <- watershed_summary_stats_results %>%
+  mutate(Label = paste("N=",Count))
+```
+
+```{r}
+# Elements and Columns defined in previous chunk
+
+# Initialize an empty list to store results
+shapiro_test_results <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the Shapiro-Wilk test
+  test_result <- tryCatch(
+    shapiro.test(no_seep_2023_data[[column]]),
+    error = function(e) NULL # Handle cases where the test cannot be performed
+  )
+  
+  # Create the interpretation
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The data is likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store the results in a data frame
+  test_df <- data.frame(
+    Variable = element,
+    Test_Statistic = if (!is.null(test_result)) round(test_result$statistic, 3) else NA,
+    P_Value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+  
+  # Append the result to the list
+  shapiro_test_results[[element]] <- test_df
+}
+
+# Combine all individual data frames into one
+Watershed_shapiro_results <- do.call(rbind, shapiro_test_results)
+
+```
+
+```{r}
+#stats
+
+# Initialize a list to store results
+results_list <- list()
+
+# Loop through each element and perform the analysis
+for (i in seq_along(elements)) {
+  # Element name and column name
+  element <- elements[i]
+  column <- columns[i]
+  
+    # Perform Kruskal-Wallis test
+  kruskal_test_result <- kruskal.test(as.formula(paste(column, "~ SiteName")), data = no_seep_2023_data)
+  
+  # Initialize variables for Dunn test and compact letter display
+  dunn_result <- NULL
+  letters <- NULL
+  
+  # Check if Kruskal-Wallis p-value is < 0.05
+  if (kruskal_test_result$p.value < 0.05) {
+    # Perform Dunn's post-hoc test with Bonferroni adjustment
+    dunn_result <- dunn.test(no_seep_2023_data[[column]], no_seep_2023_data$SiteName, method = "bonferroni")
+    
+    # Extract the unique group levels
+    groups <- unique(no_seep_2023_data$SiteName)
+    
+    # Create a matrix of adjusted p-values
+    comparison_matrix <- matrix(NA, nrow = length(groups), ncol = length(groups))
+    rownames(comparison_matrix) <- groups
+    colnames(comparison_matrix) <- groups
+    
+    # Fill the matrix with adjusted p-values
+    for (j in seq_along(dunn_result$comparisons)) {
+      # Extract comparison pair and p-value
+      comparison <- unlist(strsplit(dunn_result$comparisons[j], " - "))
+      p_value <- dunn_result$P.adjusted[j]
+      
+      # Assign the p-value to the matrix
+      comparison_matrix[comparison[1], comparison[2]] <- p_value
+      comparison_matrix[comparison[2], comparison[1]] <- p_value
+    }
+    
+    # Generate compact letter displays (CLDs) using multcompView
+    letters <- multcompLetters(comparison_matrix, threshold = 0.05/2)
+  }
+  
+ # Create a data frame for the Dunn test comparisons (if the test was run)
+  if (!is.null(dunn_result)) {
+    dunn_df <- data.frame(
+      Element = element,
+      Kruskal_P_Value = format(kruskal_test_result$p.value, scientific = FALSE),
+      Comparison = dunn_result$comparisons,
+      Adjusted_P_Value = dunn_result$P.adjusted
+    )
+  } else {
+    # If no Dunn test was run, create a placeholder empty data frame
+    dunn_df <- data.frame(
+      Element = element,
+      Kruskal_P_Value = format(kruskal_test_result$p.value, scientific = FALSE),
+      Comparison = NA,
+      Adjusted_P_Value = NA
+    )
+  }
+  
+  # Create a data frame for the CLD (compact letter display) if letters are available
+  if (!is.null(letters)) {
+    cld_df <- data.frame(
+      Element = element,
+      SiteName = names(letters$Letters),
+      Letters = letters$Letters
+    )
+  } else {
+    cld_df <- data.frame(
+      Element = element,
+      SiteName = NA,
+      Letters = NA
+    )
+  }
+  
+  # Merge the dunn_df and cld_df to create a unified summary
+  combined_df <- dunn_df %>%
+    left_join(cld_df, by = "Element")
+  
+  # Add the results to the list
+  results_list[[element]] <- combined_df
+}
+
+
+# Combine all results into a single data frame
+Watershed_final_kruskal_dunn_results_df <- do.call(rbind, results_list)
+```
+
+## Temporal Pre vs Post Stats
+
+### Sulfate
+
+```{r}
+#summary stats
+library(dplyr)
+
+# Define the elements and corresponding column names
+elements <- c("SO4")
+columns <- c("f_SO4_mg_per_l")
+
+# Initialize an empty list to store results
+summary_stats_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the summary operation for the current element
+  summary_stats <- Agashashok_River_Data_filtered_no_early_2022 %>%
+    group_by(Temporal_status) %>%
+    summarise(
+      Variable = element,
+      Mean = round(mean(.data[[column]], na.rm = TRUE), 2),  
+      SD = round(sd(.data[[column]], na.rm = TRUE), 2),     
+      Count = n()
+    )
+  
+  # Store the result in the list with the element name as key
+  summary_stats_list[[element]] <- summary_stats
+}
+
+# Combine all individual data frames into one
+SO4_temporal_summary_stats_results <- do.call(rbind, summary_stats_list)
+
+#watershed_summary_stats_results <- watershed_summary_stats_results %>%
+#  mutate(Label = paste("N=",Count))
+```
+
+```{r}
+# Elements and Columns defined in previous chunk
+
+# Initialize an empty list to store results
+shapiro_test_results <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the Shapiro-Wilk test
+  test_result <- tryCatch(
+    shapiro.test(Agashashok_River_Data_filtered_no_early_2022[[column]]),
+    error = function(e) NULL # Handle cases where the test cannot be performed
+  )
+  
+  # Create the interpretation
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The data is likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store the results in a data frame
+  test_df <- data.frame(
+    Variable = element,
+    Test_Statistic = if (!is.null(test_result)) round(test_result$statistic, 3) else NA,
+    P_Value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+  
+  # Append the result to the list
+  shapiro_test_results[[element]] <- test_df
+}
+
+# Combine all individual data frames into one
+SO4_temporal_shapiro_results <- do.call(rbind, shapiro_test_results)
+
+```
+
+```{r}
+#stats
+
+# Initialize a list to store results
+results_list <- list()
+
+# Loop through each element and perform the analysis
+for (i in seq_along(elements)) {
+  # Element name and column name
+  element <- elements[i]
+  column <- columns[i]
+  
+    # Perform Kruskal-Wallis test
+  kruskal_test_result <- kruskal.test(as.formula(paste(column, "~ Temporal_status")), data = Agashashok_River_Data_filtered_no_early_2022)
+  
+  # Initialize variables for Dunn test and compact letter display
+  dunn_result <- NULL
+  letters <- NULL
+  
+  # Check if Kruskal-Wallis p-value is < 0.05
+  if (kruskal_test_result$p.value < 0.05) {
+    # Perform Dunn's post-hoc test with Bonferroni adjustment
+    dunn_result <- dunn.test(Agashashok_River_Data_filtered_no_early_2022[[column]], Agashashok_River_Data_filtered_no_early_2022$Temporal_status, method = "bonferroni")
+    
+    # Extract the unique group levels
+    groups <- unique(no_seep_2023_data$SiteName)
+    
+    # Create a matrix of adjusted p-values
+    comparison_matrix <- matrix(NA, nrow = length(groups), ncol = length(groups))
+    rownames(comparison_matrix) <- groups
+    colnames(comparison_matrix) <- groups
+    
+    # Fill the matrix with adjusted p-values
+    for (j in seq_along(dunn_result$comparisons)) {
+      # Extract comparison pair and p-value
+      comparison <- unlist(strsplit(dunn_result$comparisons[j], " - "))
+      p_value <- dunn_result$P.adjusted[j]
+      
+      # Assign the p-value to the matrix
+      comparison_matrix[comparison[1], comparison[2]] <- p_value
+      comparison_matrix[comparison[2], comparison[1]] <- p_value
+    }
+    
+    # Generate compact letter displays (CLDs) using multcompView
+    letters <- multcompLetters(comparison_matrix, threshold = 0.05/2)
+  }
+  
+ # Create a data frame for the Dunn test comparisons (if the test was run)
+  if (!is.null(dunn_result)) {
+    dunn_df <- data.frame(
+      Element = element,
+      Kruskal_P_Value = format(kruskal_test_result$p.value, scientific = FALSE),
+      Comparison = dunn_result$comparisons,
+      Adjusted_P_Value = dunn_result$P.adjusted
+    )
+  } else {
+    # If no Dunn test was run, create a placeholder empty data frame
+    dunn_df <- data.frame(
+      Element = element,
+      Kruskal_P_Value = format(kruskal_test_result$p.value, scientific = FALSE),
+      Comparison = NA,
+      Adjusted_P_Value = NA
+    )
+  }
+  
+  # Create a data frame for the CLD (compact letter display) if letters are available
+  if (!is.null(letters)) {
+    cld_df <- data.frame(
+      Element = element,
+      SiteName = names(letters$Letters),
+      Letters = letters$Letters
+    )
+  } else {
+    cld_df <- data.frame(
+      Element = element,
+      SiteName = NA,
+      Letters = NA
+    )
+  }
+  
+  # Merge the dunn_df and cld_df to create a unified summary
+  combined_df <- dunn_df %>%
+    left_join(cld_df, by = "Element")
+  
+  # Add the results to the list
+  results_list[[element]] <- combined_df
+}
+
+SO4_temporal_final_Mann_Whitney_results_df <- wilcox.test(f_SO4_mg_per_l ~ Temporal_status, data = Agashashok_River_Data_filtered_no_early_2022, alternative = "two.sided")
+
+print(SO4_temporal_final_Mann_Whitney_results_df)
+
+SO4_temporal_p_value <- formatC(SO4_temporal_final_Mann_Whitney_results_df$p.value, format = "e", digits = 2) # Scientific notation
+
+# Combine all results into a single data frame
+SO4_temporal_final_kruskal_dunn_results_df <- do.call(rbind, results_list)
+```
+
+### DIC
+
+```{r}
+Agashashok_River_Data_filtered_no_2015_mod
+
+
+# Add the Temporal_status column
+Agashashok_River_Data_filtered_no_2015_mod <- Agashashok_River_Data_filtered_no_2015_mod %>%
+  mutate(
+    Temporal_status = ifelse(Year %in% c(2015, 2016, 2017, 2018), 'pre',
+                      ifelse(Year %in% c(2019, 2022, 2023), 'post', NA))
+  )
+
+Agashashok_River_Data_filtered_no_2015_mod_late_season <- Agashashok_River_Data_filtered_no_2015_mod %>%
+  filter(Season == "Late")
+
+Agashashok_River_Data_filtered_no_2015_mod_early_season <- Agashashok_River_Data_filtered_no_2015_mod %>%
+  filter(Season == "Early")
+
+
+# Define the elements and corresponding column names
+elements <- c("DIC")
+columns <- c("DIC_mgC_per_l")
+
+# Initialize an empty list to store results
+summary_stats_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the summary operation for the current element
+  summary_stats <- Agashashok_River_Data_filtered_no_2015_mod_late_season %>%
+    group_by(Temporal_status) %>%
+    summarise(
+      Variable = element,
+      Mean = round(mean(.data[[column]], na.rm = TRUE), 2),  
+      SD = round(sd(.data[[column]], na.rm = TRUE), 2),     
+      Count = n()
+    )
+  
+  # Store the result in the list with the element name as key
+  summary_stats_list[[element]] <- summary_stats
+}
+
+# Combine all individual data frames into one
+DIC_temporal_summary_stats_results <- do.call(rbind, summary_stats_list)
+
+#watershed_summary_stats_results <- watershed_summary_stats_results %>%
+#  mutate(Label = paste("N=",Count))
+```
+
+```{r}
+
+# Initialize an empty list to store results
+shapiro_test_results <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the Shapiro-Wilk test
+  test_result <- tryCatch(
+    shapiro.test(Agashashok_River_Data_filtered_no_2015_mod[[column]]),
+    error = function(e) NULL # Handle cases where the test cannot be performed
+  )
+  
+  # Create the interpretation
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The data is likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The data is not normally distributed (reject H0) and a non-parametric test must be used."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store the results in a data frame
+  test_df <- data.frame(
+    Variable = element,
+    Test_Statistic = if (!is.null(test_result)) round(test_result$statistic, 3) else NA,
+    P_Value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+  
+  # Append the result to the list
+  shapiro_test_results[[element]] <- test_df
+}
+
+# Combine all individual data frames into one
+DIC_temporal_shapiro_results <- do.call(rbind, shapiro_test_results)
+```
+
+```{r}
+#DIC data is normally distributed so need to do an ANOVA and then a tukey kramer post hoc
+
+# Fit the model using lm()
+DIC_temporal_model <- lm(DIC_mgC_per_l ~ Temporal_status, data = Agashashok_River_Data_filtered_no_2015_mod)
+
+# Run the ANOVA on the fitted model
+DIC_temporal_anova <- anova(DIC_temporal_model)
+
+DIC_temporal_anova
+#Temporal_status values
+#Sum Sq = 60.99
+#Mean Sq = 60.99  
+#F-value = 0.9
+#p-value = 0.34
+
+#Residuals values
+#Sum Sq = 3045.83
+#Mean Sq= 67.69
+
+DIC_temporal_prop_variance <- (60.99/(60.99+3045.83))*100
+DIC_temporal_prop_variance
+
+#Temporal_status explains about 1.9% of the total variation in DIC
+
+#F-value of 0.9 suggests that the effect of Temporal_status is about 0.9 times larger than the residual "noise" (AKA smaller than the noise)
+
+#late season DIC concentrations do not have a statistically significant difference between pre and post onset 
+
+
+# Fit the model using lm()
+early_season_DIC_temporal_model <- lm(DIC_mgC_per_l ~ Temporal_status, data = Agashashok_River_Data_filtered_no_2015_mod_early_season)
+
+# Run the ANOVA on the fitted model
+early_season_DIC_temporal_anova <- anova(early_season_DIC_temporal_model)
+
+early_season_DIC_temporal_anova
+#Temporal_status values
+#Sum Sq = 673.67
+#Mean Sq = 673.67  
+#F-value = 7.3
+#p-value = 0.01
+
+#Residuals values
+#Sum Sq = 2673.35
+#Mean Sq= 92.18
+
+DIC_temporal_prop_variance <- (Sum Sq/(Sum Sq+Residual Sum Sq))*100
+DIC_temporal_prop_variance
+
+#early season DIC concentrations have a statistically significant difference between pre and post onset of disturbance in the Agashashok River
+
+
+DIC_temporal_t_test <- 
+  pairwise_t_test(Agashashok_River_Data_filtered_no_2015_mod, DIC_mgC_per_l ~ Temporal_status)
+
+DIC_temporal_t_test
+```

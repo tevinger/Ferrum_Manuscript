@@ -586,7 +586,7 @@ can you rewrite this code multiple times so that where it says "Fe" it says "As"
 ## Create specific dataframes
 ```{r}
 # filter out samples without a New_Group - use for summary stats of the groups
-grouped_stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V7 %>%
+grouped_stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
   dplyr::select(ParkID,
                 Watershed,
                 New_Grouping,
@@ -642,7 +642,7 @@ f_Zn_mcg_per_l, p_Zn_mcg_per_l
 view(grouped_stats_working_Ferrum_data)
 
 # filter out seep samples - use for summary stats of all data, grouped by watershed, year, and month
-stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V7 %>%
+stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
   dplyr::select(ParkID,
                 Watershed,
                 New_Grouping,
@@ -867,9 +867,9 @@ for (i in seq_along(elements)) {
     #dplyr::select(4,9:70) %>% # Year
     #dplyr::select(5,9:70) %>% # Month
     #dplyr::select(6,9:70) %>% # Season
-    dplyr::select(3,9:70) %>% # New Grouping
+    dplyr::select(2,3,9:70) %>% # New Grouping
     filter(!is.na(.data[[column]])) %>%
-    group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
+    group_by(New_Grouping, Watershed) %>% #This is where you can change what variable you want to group the data by
     summarise(
     Variable = element,
     Mean = round(mean(.data[[column]], na.rm = TRUE), 2),
@@ -893,7 +893,7 @@ summary_stats_results <- do.call(rbind, summary_stats_list)
 
 view(summary_stats_results)
 
-write_xlsx(summary_stats_results, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/By Groups_seeps excluded.xlsx")
+write_xlsx(summary_stats_results, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/By Groups and Watershed_seeps included.xlsx")
 ```
 
 ```{r}

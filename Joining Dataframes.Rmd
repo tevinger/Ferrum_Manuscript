@@ -274,7 +274,7 @@ columns_to_check <- c(
 
 # count the number of cells in each qa column that is <DL to calculate the percent of total data
 DL_counts <- sapply(columns_to_check, function(col) {
-  sum(grepl("DL", Alaska_DataRelease_2022_2023_Ferrum_modified[[col]], ignore.case = TRUE), na.rm = TRUE)
+  sum(grepl("DL", Alaska_DataRelease_2022_2023_Ferrum_V8[[col]], ignore.case = TRUE), na.rm = TRUE)
 })
 
 print(DL_counts)
@@ -283,14 +283,14 @@ print(DL_counts)
 DL_counts_df <- data.frame(Column = names(DL_counts), DL_Count = DL_counts)
 
 # Add percent_DL column
-DL_counts_df$percent_DL <- (DL_counts_df$DL_Count / 135) * 100
+DL_counts_df$percent_DL <- (DL_counts_df$DL_Count / 124) * 100
 
 #view(DL_counts_df)
 
 # f_V and f_Ag had high censoring but these metals aren't going to be used in any analysis anyways
 
 # Save the percentage data frame
-write_xlsx(DL_counts_df, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/percent of data below DL.xlsx")
+write_xlsx(DL_counts_df, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/percent of data below DL for V8.xlsx")
 ```
 
 

@@ -712,6 +712,14 @@ view(Alaska_DataRelease_2022_2023_Ferrum_V7)
 write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V7, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V7.xlsx")
 
 #Manually added year, month and season for the Salmon 2022 sites in excel and then reload to R
+# Manually fixed the Watershed names in excel too
 
 Alaska_DataRelease_2022_2023_Ferrum_V7 <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V7.xlsx")
+```
+
+```{r}
+Alaska_DataRelease_2022_2023_Ferrum_V8 <- Alaska_DataRelease_2022_2023_Ferrum_V7 %>%
+  filter(Watershed %in% c("Agashashok River", "Tukpahlearik Creek", "Nakolikurok Creek", "Salmon River", "Anaktok River", "Kugururok River"))
+
+write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V8, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V8.xlsx")
 ```

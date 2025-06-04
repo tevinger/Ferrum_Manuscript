@@ -700,4 +700,6 @@ Alaska_DataRelease_2022_2023_Ferrum_V7 <- Alaska_DataRelease_2022_2023_Ferrum_V6
   relocate(sample_collection_year, sample_collection_month, .after = SamplingEventID)
 
 view(Alaska_DataRelease_2022_2023_Ferrum_V7)
+
+write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V7, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V7.xlsx")
 ```

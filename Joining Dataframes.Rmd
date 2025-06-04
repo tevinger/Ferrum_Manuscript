@@ -688,3 +688,16 @@ view(Alaska_DataRelease_2022_2023_Ferrum_V6)
 write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V6, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_V6.xlsx")
 
 ```
+
+#Final data sheet modifications
+```{r}
+# Add a column that extracts the year and a column for month 
+Alaska_DataRelease_2022_2023_Ferrum_V7 <- Alaska_DataRelease_2022_2023_Ferrum_V6 %>%
+  mutate(
+    sample_collection_year = year(as.Date(sample_collection_date_mm_dd_yy)),
+    sample_collection_month = month(as.Date(sample_collection_date_mm_dd_yy), label = TRUE, abbr = FALSE)
+  ) %>%
+  relocate(sample_collection_year, sample_collection_month, .after = SamplingEventID)
+
+view(Alaska_DataRelease_2022_2023_Ferrum_V7)
+```

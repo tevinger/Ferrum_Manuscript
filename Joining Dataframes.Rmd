@@ -697,9 +697,21 @@ Alaska_DataRelease_2022_2023_Ferrum_V7 <- Alaska_DataRelease_2022_2023_Ferrum_V6
     sample_collection_year = year(as.Date(sample_collection_date_mm_dd_yy)),
     sample_collection_month = month(as.Date(sample_collection_date_mm_dd_yy), label = TRUE, abbr = FALSE)
   ) %>%
-  relocate(sample_collection_year, sample_collection_month, .after = SamplingEventID)
+  mutate(
+    sample_collection_season = case_when(
+      sample_collection_month %in% c("May", "June") ~ "early",
+      sample_collection_month == "July" ~ "middle",
+      sample_collection_month %in% c("August", "September") ~ "late",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  relocate(sample_collection_year, sample_collection_month, sample_collection_season, .after = SamplingEventID)
 
 view(Alaska_DataRelease_2022_2023_Ferrum_V7)
 
 write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V7, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V7.xlsx")
+
+#Manually added year, month and season for the Salmon 2022 sites in excel and then reload to R
+
+Alaska_DataRelease_2022_2023_Ferrum_V7 <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V7.xlsx")
 ```

@@ -610,6 +610,7 @@ grouped_stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V7 %>%
                 f_Na_mg_l,
                 f_K_mg_l,
                 f_SiO2_mg_per_l,
+                f_Pb_mcg_per_l, p_Pb_mcg_per_l,
                 f_Ag_mcg_per_l, p_Ag_mcg_per_l,
 f_Al_mcg_per_l, p_Al_mcg_per_l,
 f_As_mcg_per_l, p_As_mcg_per_l,
@@ -664,6 +665,7 @@ stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V7 %>%
                 f_Na_mg_l,
                 f_K_mg_l,
                 f_SiO2_mg_per_l,
+                f_Pb_mcg_per_l, p_Pb_mcg_per_l,
                 f_Ag_mcg_per_l, p_Ag_mcg_per_l,
 f_Al_mcg_per_l, p_Al_mcg_per_l,
 f_As_mcg_per_l, p_As_mcg_per_l,
@@ -779,13 +781,14 @@ library(dplyr)
 
 elements <- c(
   "pH", "Temp", "Diss_oxy", "Diss_oxy_percent_sat", "Spec_Cond", "DIC", 
-  "Alk", "DOC", "f_Cl", "f_NO3", "f_SO4", "f_Ca", "f_Mg", "f_Na", "f_K", 
+  "Alk", "DOC", "f_Cl", "f_NO3", "f_SO4", "f_Ca", "f_Mg", "f_Na", "f_K",
+  "f_SiO2",
  "f_Pb", "p_Pb", 
  "f_Ag", "p_Ag",
 "f_Al", "p_Al",
 "f_As", "p_As",
 "f_Ba", "p_Ba",
-"f_Be", "p_Be",
+#"f_Be", "p_Be",
 "f_Cd", "p_Cd",
 "f_Ce", "p_Ce",
 "f_Co", "p_Co",
@@ -809,14 +812,15 @@ elements <- c(
 
 columns <- c(
   "pH", "Temp_deg_celsius", "Diss_oxy_mg_per_l", "Diss_oxy_percent_sat", "Spec_Cond_microS_per_cm", 
-  "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mg_per_l", 
+  "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mgN_per_l", 
   "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l",
+  "f_SiO2_mg_per_l",
   "f_Pb_mcg_per_l", "p_Pb_mcg_per_l", 
   "f_Ag_mcg_per_l", "p_Ag_mcg_per_l",
 "f_Al_mcg_per_l", "p_Al_mcg_per_l",
 "f_As_mcg_per_l", "p_As_mcg_per_l",
 "f_Ba_mcg_per_l", "p_Ba_mcg_per_l",
-"f_Be_mcg_per_l", "p_Be_mcg_per_l",
+#"f_Be_mcg_per_l", "p_Be_mcg_per_l",
 #"f_Br_mcg_per_l", "p_Br_mcg_per_l",
 "f_Cd_mcg_per_l", "p_Cd_mcg_per_l",
 "f_Ce_mcg_per_l", "p_Ce_mcg_per_l",
@@ -851,6 +855,7 @@ for (i in seq_along(elements)) {
   
   # Perform the summary operation for the current element
   summary_stats <- stats_working_Ferrum_data %>%
+    dplyr::select(8:69) %>% # all data
     filter(!is.na(.data[[column]])) %>%
     #group_by(New_Groups) %>% #This is where you can change what variable you want to group the data by
     summarise(
@@ -892,7 +897,7 @@ summary_stats_wide <-  summary_stats_wide %>%
 view(summary_stats_wide)
 
 
-write_xlsx(summary_stats_wide, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/uncorrected DL summary stats.xlsx")
+write_xlsx(summary_stats_results, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/All Data_seeps excluded.xlsx")
 
 ```
 

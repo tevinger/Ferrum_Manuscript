@@ -269,7 +269,19 @@ columns_to_check <- c(
   "u_Ce_mcg_per_l_qa", "u_Pr_mcg_per_l_qa", 
   "u_Nd_mcg_per_l_qa", "u_Dy_mcg_per_l_qa", 
   "u_Tl_mcg_per_l_qa", "u_U_mcg_per_l_qa", 
-  "u_Pb_mcg_per_l_qa"
+  "u_Pb_mcg_per_l_qa",
+  "p_Al_mcg_per_l_qa", "p_V_mcg_per_l_qa", 
+"p_Cr_mcg_per_l_qa", "p_Mn_mcg_per_l_qa", 
+"p_Fe_mcg_per_l_qa", "p_Co_mcg_per_l_qa", 
+"p_Ni_mcg_per_l_qa", "p_Cu_mcg_per_l_qa", 
+"p_Zn_mcg_per_l_qa", "p_As_mcg_per_l_qa", 
+"p_Se_mcg_per_l_qa", "p_Y_mcg_per_l_qa", 
+"p_Ag_mcg_per_l_qa", "p_Cd_mcg_per_l_qa", 
+"p_Ba_mcg_per_l_qa", "p_La_mcg_per_l_qa", 
+"p_Ce_mcg_per_l_qa", "p_Pr_mcg_per_l_qa", 
+"p_Nd_mcg_per_l_qa", "p_Dy_mcg_per_l_qa", 
+"p_Tl_mcg_per_l_qa", "p_U_mcg_per_l_qa", 
+"p_Pb_mcg_per_l_qa"
 )
 
 # count the number of cells in each qa column that is <DL to calculate the percent of total data

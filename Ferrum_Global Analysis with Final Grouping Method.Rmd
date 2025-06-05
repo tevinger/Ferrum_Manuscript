@@ -86,6 +86,7 @@ Grouped_Ferrum_2022_2023_data <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
                 Watershed,
                 #Subcatchment,
                 New_Groups,
+                New_Grouping,
                 `Field label`,
                 Latitude,
                 Longitude,
@@ -97,7 +98,6 @@ Grouped_Ferrum_2022_2023_data <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
                 SamplingEventID,
                 VisualDescription,
                 Site_Classification,
-                Hyd_Site_Classification,
                 Hyd_Classification,
                 Distance_km,
                 Elevation_ft,
@@ -158,73 +158,7 @@ view(Grouped_Ferrum_2022_2023_data)
 
 ## Create Initial Filtered Dataframe for Plotting
 ```{r}
-working_Ferrum_data <- Ferrum_2022_2023_data
-```
-
-### Metal data
-``` {r}
-# Code for when I have 2022 data
-filtered_metal_df_2022 <- practice_metal_df %>%
-  mutate(Extracted_ID = str_extract(SamplingEventID, "\\d{8}_\\d{4}$")) %>%
-  mutate(Year = substr(Extracted_ID, 1, 4)) %>%
-  filter(Year == "2022") %>%
-  dplyr::select(-Extracted_ID, -Year)
-
-view(filtered_metal_df_2022)
-```
-
-### Join metal data into df
-this won't need to happen once I bring the metal data into the master spreadsheet
-```{r}
-# This is not using current metal data, but is being used to compare to what I showed in the project meeting 
-# The most current metal data needs to be used after all sample data has been acquired (note left on 4/24/25)
-
-FAM_UAM_dL_corrected_df <- read_excel("C:/Users/tayta/OneDrive/Desktop/Lab/Alaska Projects/Master Spreadsheet/Final Metal Data/FAM_UAM_dL_corrected_data_20250314.xlsx")
-
-# join metal data with the rest of the data
-new_working_Ferrum_data <- left_join(working_Ferrum_data, FAM_UAM_dL_corrected_df, by = "SamplingEventID")
-
-#view(new_working_Ferrum_data)
-
-#save this data frame to calculate particulate metal concentrations outside of R
-write_xlsx(new_working_Ferrum_data, "C:/Users/tayta/Downloads/new working Ferrum data.xlsx")
-```
-
-
-## Bring the modified df back into R - OLD
-```{r}
-# I calculated the particulate metal concentrations in excel to make sure it was correct and detection limit flags were correctly assigned
-
-# bring that dataframe back into R
-working_metal_data <- read_excel("C:/Users/tayta/OneDrive/Desktop/Lab/Alaska Projects/working Ferrum data with p.metals_highlighted_V2_with data analysis.xlsx")
-
-# join new groups with the data
-proximity_groups_to_join <- proximity_groups %>%
-  dplyr::select(SamplingEventID, New_Groups)
-
-new_working_Ferrum_data <- working_Ferrum_data %>%
-left_join(proximity_groups_to_join, by = "SamplingEventID") %>% relocate(New_Groups, .after = SamplingEventID) %>%
-  dplyr::select(-Site_Grouping, -Site_Group)
-
-# make things numeric that should be
-new_working_Ferrum_data$New_Groups <- as.numeric(new_working_Ferrum_data$New_Groups)
-new_working_Ferrum_data$Latitude <- as.numeric(new_working_Ferrum_data$Latitude)
-new_working_Ferrum_data$Longitude <- as.numeric(new_working_Ferrum_data$Longitude)
-new_working_Ferrum_data$DOC_mgC_per_l <- as.numeric(new_working_Ferrum_data$DOC_mgC_per_l)
-#Ferrum_2022_2023_data$sample_collection_date_mm_dd_yy <- as.Date(Ferrum_2022_2023_data$sample_collection_date_mm_dd_yy)
-
-new_working_Ferrum_data <- new_working_Ferrum_data %>%
-  mutate(    
-    Site_Grouping = case_when(
-    New_Groups == 1 ~ "Upstream",
-    New_Groups == 2 ~ "Seep",
-    New_Groups == 3 ~ "Impaired Tributary",
-    New_Groups == 4 ~ "Unimpaired Tributary",
-    New_Groups == 5 ~ "Downstream MS 1",
-    New_Groups == 6 ~ "Downstream MS 2"
-  )) %>%
-  relocate(Site_Grouping, Distance_km, Elevation_ft, .after = New_Groups)
-
+working_Ferrum_data <- Grouped_Ferrum_2022_2023_data
 ```
 
 ##REE Calculation

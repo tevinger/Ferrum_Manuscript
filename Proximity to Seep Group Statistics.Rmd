@@ -927,6 +927,54 @@ view(summary_stats_wide)
 
 ```
 
+```{r}
+# Trying to make a loop for summary stats using rstatix instead of base R
+library(dplyr)
+library(rstatix)
+
+# Initialize an empty list to store results
+summary_stats_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the summary operation for the current element
+  summary <- grouped_stats_working_Ferrum_data %>%
+    dplyr::select(2,3,9:70) %>%  # adjust as needed
+    filter(!is.na(.data[[column]])) %>%
+    group_by(New_Grouping) %>%    # group by your variable
+    get_summary_stats(vars = column, type = "common")
+  
+  # Now calculate Q1 and Q3 for the same groups and variable
+  q1_q3 <- grouped_stats_working_Ferrum_data %>%
+    dplyr::select(2,3,9:70) %>%  # adjust as needed
+    filter(!is.na(.data[[column]])) %>%
+    group_by(New_Grouping) %>%
+    summarise(
+      variable = column,
+      Q1 = round(quantile(.data[[column]], probs = 0.25, na.rm = TRUE), 2),
+      Q3 = round(quantile(.data[[column]], probs = 0.75, na.rm = TRUE), 2),
+      .groups = "drop"  # ensures summarise drops the group after summarising
+    )
+  
+  # Combine rstatix summary with Q1 and Q3 using left_join
+  summary_combined <- summary %>%
+    left_join(q1_q3, by = c("New_Grouping", "variable"))
+  
+  # Store result
+  summary_stats_list[[i]] <- summary_combined
+}
+
+# Combine into one dataframe
+summary_df <- do.call(rbind, summary_stats_list)
+
+view(summary_df)
+
+write_xlsx(summary_df, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/Grouped_rstatis.xlsx")
+```
+
 ## With watershed
 ```{r}
 library(dplyr)

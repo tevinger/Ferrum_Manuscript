@@ -1631,7 +1631,7 @@ combined_plot
 ```{r}
 # Select Fe data
 Cu_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, Prox_Groups, RelAcc_Groups, New_Groups, Prox_Grouping, RelAcc_Grouping, New_Grouping, f_Cu_mcg_per_l, p_Cu_mcg_per_l)
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Cu_mcg_per_l, p_Cu_mcg_per_l)
 
 # Filter NA values in the grouping variable, filter particulate concentrations and make long format
 Cu_long <- Cu_df %>%
@@ -1667,20 +1667,11 @@ Cu_plot <- ggplot(Cu_long, aes(x = x_group, y = Metal_conc)) +
     pattern_spacing = 0.015,
     pattern_angle = 45,
     width = 0.75,
-    alpha = 0.5
-  ) +
-  geom_jitter(
-    aes(fill = Watershed),
-    #position = position_dodge(width = 0.75),
-    shape = 21,
-    size = 2,
-    stroke = 0.3,
-    color = "black",
-    width = 0.15
+    alpha = 0.85
   ) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
-  scale_pattern_fill_manual(values = c("f" = NA, "p" = "white")) +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
   #scale_shape_manual(values = c("f" = 21, "p" = 21)) +
   scale_y_log10(
     limits = c(0.1, 100000),

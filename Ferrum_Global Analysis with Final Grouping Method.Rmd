@@ -1531,7 +1531,7 @@ for (i in seq_along(plots_list)) {
 ```{r}
 # Select Fe data
 Fe_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, Prox_Groups, RelAcc_Groups, New_Groups, Prox_Grouping, RelAcc_Grouping, New_Grouping, f_Fe_mcg_per_l, p_Fe_mcg_per_l)
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Fe_mcg_per_l, p_Fe_mcg_per_l)
 
 # Filter NA values in the grouping variable, filter particulate concentrations and make long format
 Fe_long <- Fe_df %>%
@@ -1568,21 +1568,12 @@ Fe_plot <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc)) +
     pattern_spacing = 0.015,
     pattern_angle = 45,
     width = 0.75,
-    alpha = 0.5
+    alpha = 0.85
     #,color = "black"
-  ) +
-  geom_jitter(
-    aes(fill = Watershed),
-    #position = position_dodge(width = 0.75),
-    shape = 21,
-    size = 2,
-    stroke = 0.3,
-    color = "black",
-    width = 0.15
   ) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
-  scale_pattern_fill_manual(values = c("f" = NA, "p" = "black")) +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
   #scale_shape_manual(values = c("f" = 21, "p" = 21)) +
   scale_y_log10(
     limits = c(0.5, 1000000),

@@ -649,6 +649,8 @@ f_Y_mcg_per_l, p_Y_mcg_per_l,
 f_Zn_mcg_per_l, p_Zn_mcg_per_l) %>%
   filter(New_Grouping != "NA") 
 
+Grouped_Ferrum_2022_2023_data <- Grouped_Ferrum_2022_2023_data %>%
+  mutate(across(17:80, as.numeric))
 view(Grouped_Ferrum_2022_2023_data)
 
 # filter out seep samples - use for summary stats of all data, grouped by watershed, year, and month
@@ -1130,7 +1132,7 @@ library(dplyr)
 #elements <- c("pH", "SpC", "SO4", "DIC", "Alk", "DOC", "Ca", "Mg", "Na", "K", "Cl", "NO3", "DO")
 #columns <- c("pH", "Spec_Cond_microS_per_cm", "f_SO4_mg_per_l", "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l", "f_Cl_mg_per_l", "f_NO3_mg_per_l", "Diss_oxy_mg_per_l")
 
-elements <- c(
+elements_2 <- c(
   "pH",  "Spec_Cond", "DIC", 
   "Alk", "DOC", "f_Cl", "f_NO3", "f_SO4", "f_Ca", "f_Mg", "f_Na", "f_K",
   "f_SiO2",
@@ -1157,7 +1159,7 @@ elements <- c(
 "f_Zn", "p_Zn"
 )
 
-columns <- c(
+columns_2 <- c(
   "pH", "Spec_Cond_microS_per_cm", 
   "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mgN_per_l", 
   "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l",
@@ -1188,18 +1190,19 @@ columns <- c(
 
 ```{r}
 # Elements and Columns defined in previous chunk
+library(rstatix)
 
 # Initialize an empty list to store results
 shapiro_test_results <- list()
 
 # Loop through elements and columns
 for (i in seq_along(elements)) {
-  element <- elements[i]
-  column <- columns[i]
+  element <- elements_2[i]
+  column <- columns_2[i]
   
   # Perform the Shapiro-Wilk test
   test_result <- tryCatch(
-    shapiro.test(Grouped_Ferrum_2022_2023_data[[column]]),
+    shapiro_test(Grouped_Ferrum_2022_2023_data[[column]]),
     error = function(e) NULL # Handle cases where the test cannot be performed
   )
   
@@ -1235,22 +1238,30 @@ view(shapiro_results)
 ## Kruskal only
 ```{r}
 # Initialize a dataframe to store Kruskal-Wallis test results
-kruskal_results <- data.frame(Element = character(), Kruskal_P_Value = numeric(), stringsAsFactors = FALSE)
+kruskal_results <- data.frame(Variable = character(), Kruskal_P_Value = numeric(), stringsAsFactors = FALSE)
 
 # Loop through each element and perform Kruskal-Wallis test
 for (i in seq_along(elements)) {
-  element <- elements[i]
-  column <- columns[i]
+  element <- elements_2[i]
+  column <- columns_2[i]
   
-  # Perform Kruskal-Wallis test
-  kruskal_test_result <- kruskal.test(as.formula(paste(column, "~ Site_Group")), data = Grouped_Ferrum_2022_2023_data)
+  # Perform Kruskal-Wallis test with backticks around variable name
+  kruskal_test_result <- tryCatch({
+    kruskal.test(as.formula(paste0("`", column, "` ~ New_Grouping")), data = Grouped_Ferrum_2022_2023_data)
+  }, error = function(e) NULL)
   
   # Store the result in a dataframe
-  kruskal_results <- rbind(kruskal_results, data.frame(Variable = element, Kruskal_P_Value = kruskal_test_result$p.value))
+  kruskal_results <- rbind(
+    kruskal_results, 
+    data.frame(
+      Variable = element,
+      Kruskal_P_Value = if (!is.null(kruskal_test_result)) kruskal_test_result$p.value else NA
+    )
+  )
 }
 
 # Print Kruskal-Wallis results
-print(kruskal_results)
+view(kruskal_results)
 
 # Merge Kruskal-Wallis results into shapiro_results by "Element"
 shapiro_results <- merge(shapiro_results, kruskal_results, by = "Variable", all.x = TRUE)
@@ -1272,7 +1283,7 @@ shapiro_results <- shapiro_results %>%
 # Print the updated shapiro_results dataframe
 view(shapiro_results)
 
-write_xlsx(shapiro_results, "C:/Users/tayta/Downloads/Shapiro and Kruskal proximity results.xlsx")
+write_xlsx(shapiro_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/group comparison - test for differences between groups.xlsx")
 
 ```
 
@@ -1289,20 +1300,20 @@ cld_results_list <- list()  # For compact letter display (CLD)
 # Loop through each element and perform the analysis
 for (i in seq_along(elements)) {
   # Element name and column name
-  element <- elements[i]
-  column <- columns[i]
+  element <- elements_2[i]
+  column <- columns_2[i]
   
   # Perform Kruskal-Wallis test
-  kruskal_test_result <- kruskal.test(as.formula(paste(column, "~ Site_Group")), data = stats_working_Ferrum_data)
+  kruskal_test_result <- kruskal.test(as.formula(paste(column, "~ New_Grouping")), data = Grouped_Ferrum_2022_2023_data)
   
   # Check if Kruskal-Wallis p-value is < 0.05
   if (kruskal_test_result$p.value < 0.05) {
     # Perform Dunn's post-hoc test with Bonferroni adjustment
-    dunn_result <- dunn.test(stats_working_Ferrum_data[[column]], stats_working_Ferrum_data$Site_Group, 
+    dunn_result <- dunn.test(Grouped_Ferrum_2022_2023_data[[column]], Grouped_Ferrum_2022_2023_data$New_Grouping, 
                              method = "bonferroni")
     
     # Extract unique group levels
-    groups <- unique(stats_working_Ferrum_data$Site_Group)
+    groups <- unique(Grouped_Ferrum_2022_2023_data$New_Grouping)
     
     # Create a matrix of adjusted p-values
     comparison_matrix <- matrix(NA, nrow = length(groups), ncol = length(groups))
@@ -1339,8 +1350,8 @@ for (i in seq_along(elements)) {
     )
     
     # Merge CLD letters into the Dunn's test comparison dataframe
-    comparison_df <- merge(comparison_df, letters_df, by.x = "Group1", by.y = "Site_Group", all.x = TRUE)
-    comparison_df <- merge(comparison_df, letters_df, by.x = "Group2", by.y = "Site_Group", all.x = TRUE, suffixes = c("_Group1", "_Group2"))
+    comparison_df <- merge(comparison_df, letters_df, by.x = "Group1", by.y = "New_Grouping", all.x = TRUE)
+    comparison_df <- merge(comparison_df, letters_df, by.x = "Group2", by.y = "New_Grouping", all.x = TRUE, suffixes = c("_Group1", "_Group2"))
     
     # Store in results list
     results_list[[i]] <- comparison_df

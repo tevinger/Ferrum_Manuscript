@@ -586,15 +586,26 @@ can you rewrite this code multiple times so that where it says "Fe" it says "As"
 ## Create specific dataframes
 ```{r}
 # filter out samples without a New_Group - use for summary stats of the groups
-grouped_stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+Grouped_Ferrum_2022_2023_data <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
   dplyr::select(ParkID,
                 Watershed,
+                #Subcatchment,
+                New_Groups,
                 New_Grouping,
+                `Field label`,
+                Latitude,
+                Longitude,
                 sample_collection_year,
                 sample_collection_month,
                 sample_collection_season,
                 Watershed_Area,
                 Relative_MS_Watershed_Area,
+                SamplingEventID,
+                VisualDescription,
+                Site_Classification,
+                Hyd_Classification,
+                Distance_km,
+                Elevation_ft,
                 pH,
                 Temp_deg_celsius,
                 Diss_oxy_mg_per_l,
@@ -635,11 +646,10 @@ f_Tl_mcg_per_l, p_Tl_mcg_per_l,
 f_U_mcg_per_l, p_U_mcg_per_l,
 f_V_mcg_per_l, p_V_mcg_per_l,
 f_Y_mcg_per_l, p_Y_mcg_per_l,
-f_Zn_mcg_per_l, p_Zn_mcg_per_l
-) %>%
-  filter(New_Grouping != "NA")
+f_Zn_mcg_per_l, p_Zn_mcg_per_l) %>%
+  filter(New_Grouping != "NA") 
 
-view(grouped_stats_working_Ferrum_data)
+view(Grouped_Ferrum_2022_2023_data)
 
 # filter out seep samples - use for summary stats of all data, grouped by watershed, year, and month
 stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
@@ -774,7 +784,7 @@ column_order <- c(
 
 ```
 
-### set elements and columns for stats loop
+### set elements and columns for summary stats loop
 ```{r}
 #summary stats
 library(dplyr)
@@ -1111,6 +1121,70 @@ write_xlsx(summary_stats_wide, "C:/Users/tayta/Downloads/Reference Site Summary 
 ```
 
 # Shapiro Test Loop
+### set elements and columns for group comparison stats loop
+```{r}
+#summary stats
+library(dplyr)
+
+# Define the elements and corresponding column names
+#elements <- c("pH", "SpC", "SO4", "DIC", "Alk", "DOC", "Ca", "Mg", "Na", "K", "Cl", "NO3", "DO")
+#columns <- c("pH", "Spec_Cond_microS_per_cm", "f_SO4_mg_per_l", "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l", "f_Cl_mg_per_l", "f_NO3_mg_per_l", "Diss_oxy_mg_per_l")
+
+elements <- c(
+  "pH",  "Spec_Cond", "DIC", 
+  "Alk", "DOC", "f_Cl", "f_NO3", "f_SO4", "f_Ca", "f_Mg", "f_Na", "f_K",
+  "f_SiO2",
+"f_Al", "p_Al",
+"f_As", "p_As",
+"f_Ba", "p_Ba",
+"f_Cd", "p_Cd",
+"f_Ce", "p_Ce",
+"f_Co", "p_Co",
+"f_Cr", "p_Cr",
+"f_Cu", "p_Cu",
+"f_Dy", "p_Dy",
+"f_Fe", "p_Fe",
+"f_La", "p_La",
+"f_Mn", "p_Mn",
+"f_Nd", "p_Nd",
+"f_Ni", "p_Ni",
+ "f_Pb", "p_Pb",
+"f_Pr", "p_Pr",
+"f_Se", "p_Se",
+"f_Tl", "p_Tl",
+"f_U", "p_U",
+"f_Y", "p_Y",
+"f_Zn", "p_Zn"
+)
+
+columns <- c(
+  "pH", "Spec_Cond_microS_per_cm", 
+  "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mgN_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l",
+  "f_SiO2_mg_per_l",
+"f_Al_mcg_per_l", "p_Al_mcg_per_l",
+"f_As_mcg_per_l", "p_As_mcg_per_l",
+"f_Ba_mcg_per_l", "p_Ba_mcg_per_l",
+"f_Cd_mcg_per_l", "p_Cd_mcg_per_l",
+"f_Ce_mcg_per_l", "p_Ce_mcg_per_l",
+"f_Co_mcg_per_l", "p_Co_mcg_per_l",
+"f_Cr_mcg_per_l", "p_Cr_mcg_per_l",
+"f_Cu_mcg_per_l", "p_Cu_mcg_per_l",
+"f_Dy_mcg_per_l", "p_Dy_mcg_per_l",
+"f_Fe_mcg_per_l", "p_Fe_mcg_per_l",
+"f_La_mcg_per_l", "p_La_mcg_per_l",
+"f_Mn_mcg_per_l", "p_Mn_mcg_per_l",
+"f_Nd_mcg_per_l", "p_Nd_mcg_per_l",
+"f_Ni_mcg_per_l", "p_Ni_mcg_per_l",
+"f_Pb_mcg_per_l", "p_Pb_mcg_per_l", 
+"f_Pr_mcg_per_l", "p_Pr_mcg_per_l",
+"f_Se_mcg_per_l", "p_Se_mcg_per_l",
+"f_Tl_mcg_per_l", "p_Tl_mcg_per_l",
+"f_U_mcg_per_l", "p_U_mcg_per_l",
+"f_Y_mcg_per_l", "p_Y_mcg_per_l",
+"f_Zn_mcg_per_l", "p_Zn_mcg_per_l"
+)
+```
 
 ```{r}
 # Elements and Columns defined in previous chunk
@@ -1125,7 +1199,7 @@ for (i in seq_along(elements)) {
   
   # Perform the Shapiro-Wilk test
   test_result <- tryCatch(
-    shapiro.test(stats_working_Ferrum_data[[column]]),
+    shapiro.test(Grouped_Ferrum_2022_2023_data[[column]]),
     error = function(e) NULL # Handle cases where the test cannot be performed
   )
   
@@ -1169,7 +1243,7 @@ for (i in seq_along(elements)) {
   column <- columns[i]
   
   # Perform Kruskal-Wallis test
-  kruskal_test_result <- kruskal.test(as.formula(paste(column, "~ Site_Group")), data = stats_working_Ferrum_data)
+  kruskal_test_result <- kruskal.test(as.formula(paste(column, "~ Site_Group")), data = Grouped_Ferrum_2022_2023_data)
   
   # Store the result in a dataframe
   kruskal_results <- rbind(kruskal_results, data.frame(Variable = element, Kruskal_P_Value = kruskal_test_result$p.value))

@@ -972,7 +972,19 @@ summary_df <- do.call(rbind, summary_stats_list)
 
 view(summary_df)
 
-write_xlsx(summary_df, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/Grouped_rstatis.xlsx")
+write_xlsx(summary_df, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/Grouped_rstatix.xlsx")
+```
+
+```{r}
+# filter to keep only upstream and seep
+summary_df_filtered <- summary_df %>%
+  filter(New_Grouping %in% c("Upstream", "Seep")) %>%
+  mutate(New_Grouping = factor(New_Grouping, levels = c("Upstream", "Seep"))) %>%
+  arrange(variable, New_Grouping)
+
+view(summary_df_filtered)
+
+write_xlsx(summary_df_filtered, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/Upstream and seeps_rstatix.xlsx")
 ```
 
 ## With watershed

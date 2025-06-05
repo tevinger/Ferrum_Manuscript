@@ -289,7 +289,7 @@ DL_counts <- sapply(columns_to_check, function(col) {
   sum(grepl("DL", Alaska_DataRelease_2022_2023_Ferrum_V8[[col]], ignore.case = TRUE), na.rm = TRUE)
 })
 
-print(DL_counts)
+print(DL_counts_df)
 
 #Convert to dataframe
 DL_counts_df <- data.frame(Column = names(DL_counts), DL_Count = DL_counts)

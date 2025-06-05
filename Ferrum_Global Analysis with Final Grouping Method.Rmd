@@ -414,19 +414,34 @@ boxplot_colors <- c(
     "Nakolikurok" = "#F87FC7",
     "Tukpahlearik Creek" = "#FDDE74",
     "Tukpahlearik" = "#FDDE74",
+  #"Upstream" = "#72D9FF",
+  #"Seep" = "darkred",
+  #"Impaired Tributary" = "indianred2",
+  #"Downstream MS 1" = "sienna1",
+  #"Downstream MS 2" = "orange2",
+  #"Downstream MS" = "orange2",
+  #"Unimpaired Tributary" = "darkblue",
+   "Unimpaired Tributary" = "#00589b",
   "Upstream" = "#72D9FF",
-  "Seep" = "darkred",
+  "Seep" = "#c81600",
   "Impaired Tributary" = "indianred2",
-  "Downstream MS 1" = "sienna1",
-  "Downstream MS 2" = "orange2",
-  "Downstream MS" = "orange2",
-  "Unimpaired Tributary" = "darkblue",
+  "Downstream MS" = "#f5a678",
+  #"1" = "#72D9FF",
+  #"2" = "darkred",
+  #"3" = "indianred2",
+  #"5" = "sienna1",
+  #"6" = "orange2",
+  #"4" = "darkblue"
+  #"4" = "#003b68",
+  "4" = "#00589b",
   "1" = "#72D9FF",
-  "2" = "darkred",
+  "2" = "#c81600",
   "3" = "indianred2",
-  "5" = "sienna1",
-  "6" = "orange2",
-  "4" = "darkblue"
+  #"6" = "sienna1"
+  #"6" = "#ffb367",
+  #"6" = "#f4a460",
+  "6" = "#f5a678"
+  
 )
 
 ```
@@ -823,7 +838,8 @@ pH_long <- pH_df %>%
 
 # Factor the grouping variable to set plotting order
 pH_long <- pH_long %>%
-  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6"))) %>%
+  mutate(New_Grouping = factor(New_Grouping, levels = c("Unimpaired Tributary", "Upstream", "Seep", "Impaired Tributary", "Downstream MS")))
 ```
 
 ```{r}
@@ -856,8 +872,8 @@ pH_plot_jitter
 ```
 
 ```{r}
-pH_plot_no_jitter <- ggplot(pH_long, aes(x = New_Groups, y = Conc)) +
-  geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = NA, alpha = 0.5) +
+pH_plot_no_jitter <- ggplot(pH_long, aes(x = New_Grouping, y = Conc)) +
+  geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = NA, alpha = 0.8) +
   #geom_jitter(aes(fill = Watershed), 
   #            shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.75) +
   scale_fill_manual(values = boxplot_colors) +
@@ -992,6 +1008,27 @@ SO4_New_df_6 <- working_Ferrum_data %>%
   filter(New_Groups == 6) %>%
   filter(!is.na(f_SO4_mg_per_l))
 
+# Select pH data
+SO4_df <- working_Ferrum_data %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_SO4_mg_per_l)
+
+# Filter NA values in the grouping variable and make long format
+SO4_long <- SO4_df %>%
+  filter(!(New_Groups == "NA")) %>%
+  pivot_longer(
+    cols = c(f_SO4_mg_per_l),
+    names_to = "Variable",
+    #names_pattern = "^(.)_mgC_per_l",
+    values_to = "Conc"
+  ) %>%
+  filter(!is.na(Conc))
+
+view(SO4_long)
+
+# Factor the grouping variable to set plotting order
+SO4_long <- SO4_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+
 ```
 
 
@@ -1011,36 +1048,10 @@ print(f_SO4_mg_per_l_counts)
 ```
 
 ```{r}
-f_SO4_mg_per_l_plot <- ggplot() + 
-
-  # Boxplot and jitter for New_df_4
-  geom_boxplot(data = SO4_New_df_4, aes(x = factor(New_Grouping), y = f_SO4_mg_per_l, fill = factor(New_Groups)),
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = SO4_New_df_4, aes(x = factor(New_Grouping), y = f_SO4_mg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for New_df_1
-  geom_boxplot(data = SO4_New_df_1, aes(x = factor(New_Grouping), y = f_SO4_mg_per_l, fill = factor(New_Groups)),
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = SO4_New_df_1, aes(x = factor(New_Grouping), y = f_SO4_mg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for New_seep_df
-  geom_boxplot(data = SO4_New_seep_df, aes(x = factor(New_Grouping), y = f_SO4_mg_per_l, fill = factor(New_Groups)), width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = SO4_New_seep_df, aes(x = factor(New_Grouping), y = f_SO4_mg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for New_df_3
-  geom_boxplot(data = SO4_New_df_3, aes(x = factor(New_Grouping), y = f_SO4_mg_per_l, fill = factor(New_Groups)),
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = SO4_New_df_3, aes(x = factor(New_Grouping), y = f_SO4_mg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for New_df_6
-  geom_boxplot(data = SO4_New_df_6, aes(x = factor(New_Grouping), y = f_SO4_mg_per_l, fill = factor(New_Groups)),
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = SO4_New_df_6, aes(x = factor(New_Grouping), y = f_SO4_mg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
+f_SO4_mg_per_l_plot <- ggplot(SO4_long, aes(x = New_Groups, y = Conc)) +
+  geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = NA, alpha = 0.85) +
+  #geom_jitter(aes(fill = Watershed), 
+  #            shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.75) +
 
   # Manual fill colors for New Group (Boxplots)
   scale_fill_manual(name = "Site Group", values = boxplot_colors) +
@@ -1050,7 +1061,7 @@ f_SO4_mg_per_l_plot <- ggplot() +
                 minor_breaks = NULL) +
   annotation_logticks(sides = "l") +
   labs(
-    #title = "Method 3 - sulfate",
+    #title = "Method 3 - sulfate",red
     title = NULL,
     x = "Site Group",
     y = "Sulfate Concentration (mg/L)"

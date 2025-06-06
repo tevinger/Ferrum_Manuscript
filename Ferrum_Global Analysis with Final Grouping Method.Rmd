@@ -1800,13 +1800,9 @@ Al_plot <- ggplot(Al_long, aes(x = x_group, y = Metal_conc)) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
-  scale_y_log10(
-    limits = c(1, 10000000),
-    labels = scales::comma,
-    breaks = c(1, 10, 100, 1000, 10000, 100000, 1000000, 10000000),
-    minor_breaks = NULL
-  ) +
-  annotation_logticks(sides = "l") +
+  coord_trans(y="log10") +
+  
+  #annotation_logticks(sides = "l") +
   labs(
     title = NULL,
     x = NULL,
@@ -1825,6 +1821,13 @@ Al_plot <- ggplot(Al_long, aes(x = x_group, y = Metal_conc)) +
   scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
 
 Al_plot
+
+scale_y_log10(
+    limits = c(1, 10000000),
+    labels = scales::comma,
+    breaks = c(1, 10, 100, 1000, 10000, 100000, 1000000, 10000000),
+    minor_breaks = NULL
+  ) +
 ```
 
 ## Cu

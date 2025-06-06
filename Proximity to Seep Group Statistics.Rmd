@@ -843,63 +843,238 @@ view(shapiro_results)
 ```
 
 ## Kruskal & Dunn 
-### Kruskal only
-```{r}
-# Initialize a dataframe to store Kruskal-Wallis test results
-kruskal_results <- data.frame(Variable = character(), Kruskal_P_Value = numeric(), stringsAsFactors = FALSE)
+### Kruskal
+Kruskal Wallis p-value < 0.05  →  Reject the null hypothesis that all groups come from the same distribution (or have the same median)
+This means at least one group differs significantly in median from at least one other group and proceed with post-hoc pairwise tests (like Dunn’s test) to figure out which groups differ.
 
-# Loop through each element and perform Kruskal-Wallis test
-for (i in seq_along(elements)) {
-  element <- elements_2[i]
-  column <- columns_2[i]
+The Kruskal-Wallis statistic (often denoted as H) is the test statistic calculated for the Kruskal-Wallis test.
+It measures the degree to which the ranks of your data differ between groups compared to what you’d expect if the groups were from the same distribution.
+
+```{r}
+library(dplyr)
+library(rstatix)
+
+# Initialize a results list
+kruskal_results_list <- list()
+
+# Loop through each variable in your list
+for (col in columns_to_model) {
   
-  # Perform Kruskal-Wallis test with backticks around variable name
-  kruskal_test_result <- tryCatch({
-    kruskal.test(as.formula(paste0("`", column, "` ~ New_Grouping")), data = Grouped_Ferrum_2022_2023_data)
-  }, error = function(e) NULL)
+  # Filter out NAs for the current variable
+  df_filtered <- Grouped_Ferrum_2022_2023_data %>%
+    filter(!is.na(.data[[col]]))
   
-  # Store the result in a dataframe
-  kruskal_results <- rbind(
-    kruskal_results, 
-    data.frame(
-      Variable = element,
-      Kruskal_P_Value = if (!is.null(kruskal_test_result)) kruskal_test_result$p.value else NA
-    )
+  # Perform Kruskal-Wallis test
+  test_result <- tryCatch(
+    {
+      kruskal_test(as.formula(paste(col, "~ New_Grouping")), data = df_filtered)
+    },
+    error = function(e) {
+      # Return a default result if test fails
+      data.frame(
+        variable = col,
+        statistic = NA,
+        p = NA,
+        df = NA
+      )
+    }
   )
+  
+  # Add the variable name explicitly
+  test_result$Variable <- col
+  
+ # Store the result
+  kruskal_results_list[[col]] <- test_result
 }
 
-# Print Kruskal-Wallis results
-view(kruskal_results)
+# Combine all results into a single dataframe
+kruskal_results_df <- bind_rows(kruskal_results_list)
 
-# Merge Kruskal-Wallis results into shapiro_results by "Element"
-shapiro_results <- merge(shapiro_results, kruskal_results, by = "Variable", all.x = TRUE)
-
-# add a kruskal wallis interpretation
-shapiro_results <- shapiro_results %>%
-  mutate(kruskal_interpretation = case_when(
-    !is.na(Kruskal_P_Value) & Kruskal_P_Value >= 0.05 ~ "No significant differences between groups",
-    !is.na(Kruskal_P_Value) & Kruskal_P_Value < 0.05  ~ "At least one group is significantly different",
-    TRUE ~ "Test could not be performed due to insufficient data or errors."
-  ))
-
-shapiro_results <- shapiro_results %>%
-  mutate(
-    P_Value = round(P_Value, 5),
-    Kruskal_P_Value = round(as.numeric(Kruskal_P_Value), 5)
-  )
-
-# Print the updated shapiro_results dataframe
-view(shapiro_results)
-
-write_xlsx(shapiro_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/group comparison - test for differences between groups.xlsx")
-
+# Print the results
+view(kruskal_results_df)
 ```
 
-### Kruskal and Dunn Loop
+```{r}
+# Merge Kruskal-Wallis results into shapiro_results by "Element"
+shapiro_kruskal_results <- merge(shapiro_results, kruskal_df, by = "Variable", all.x = TRUE)
+
+# add a kruskal wallis interpretation
+shapiro_kruskal_results <- shapiro_kruskal_results %>%
+  dplyr::rename(nonparametric_method = method) %>%
+  dplyr::rename(shap_p_value = p_value) %>%
+  dplyr::rename(KW_p_value = p) %>%
+  dplyr::rename(KW_statistic = statistic) %>%
+  mutate(kruskal_interpretation = case_when(
+    !is.na(KW_p_value) & KW_p_value >= 0.05 ~ "No significant differences between groups",
+    !is.na(KW_p_value) & KW_p_value < 0.05  ~ "At least one group is significantly different",
+    TRUE ~ "Test could not be performed due to insufficient data or errors."
+  )) %>%
+  mutate(
+    shap_p_value = round(shap_p_value, 5),
+    KW_p_value = round(as.numeric(KW_p_value), 5)
+  )
+
+view(shapiro_kruskal_results)
+```
+
+### post hoc Dunn test 
+```{r}
+# List of columns to do the dunn post hoc test for 
+# I removed analytes that did not have any differences identified by the kruskal wallis 
+columns_for_dunn <- c("pH", "Spec_Cond_microS_per_cm", 
+  "DIC_mgC_per_l", 
+  #"Alk_mgCaCO3_per_l", 
+  "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mgN_per_l", 
+  "f_SO4_mg_per_l", 
+  #"f_Ca_mg_l", 
+  "f_Mg_mg_l", 
+  #"f_Na_mg_l", "f_K_mg_l",
+  #"f_SiO2_mg_per_l",
+"f_Al_mcg_per_l", "p_Al_mcg_per_l",
+"f_As_mcg_per_l", 
+#"p_As_mcg_per_l",
+#"f_Ba_mcg_per_l", "p_Ba_mcg_per_l",
+"f_Cd_mcg_per_l", 
+#"p_Cd_mcg_per_l",
+"f_Ce_mcg_per_l", "p_Ce_mcg_per_l",
+"f_Co_mcg_per_l", 
+#"p_Co_mcg_per_l",
+#"f_Cr_mcg_per_l", 
+"p_Cr_mcg_per_l",
+"f_Cu_mcg_per_l", 
+#"p_Cu_mcg_per_l",
+"f_Dy_mcg_per_l", "p_Dy_mcg_per_l",
+"f_Fe_mcg_per_l", "p_Fe_mcg_per_l",
+"f_La_mcg_per_l", 
+#"p_La_mcg_per_l",
+"f_Mn_mcg_per_l", 
+#"p_Mn_mcg_per_l",
+"f_Nd_mcg_per_l", "p_Nd_mcg_per_l",
+"f_Ni_mcg_per_l", 
+#"p_Ni_mcg_per_l",
+"f_Pb_mcg_per_l", "p_Pb_mcg_per_l", 
+"f_Pr_mcg_per_l", "p_Pr_mcg_per_l",
+"f_Se_mcg_per_l", 
+#"p_Se_mcg_per_l",
+"f_Tl_mcg_per_l", 
+#"p_Tl_mcg_per_l",
+#"f_U_mcg_per_l", 
+"p_U_mcg_per_l",
+"f_Y_mcg_per_l", 
+#"p_Y_mcg_per_l",
+"f_Zn_mcg_per_l" 
+#"p_Zn_mcg_per_l"
+)
+```
+
+```{r}
+library(dplyr)
+library(rstatix)
+library(multcompView)
+
+# Initialize a results list
+dunn_results_list <- list()
+
+# Loop through each variable in columns_for_dunn
+for (col in columns_for_dunn) {
+  
+  # Filter out NAs for the current variable
+  df_filtered <- Grouped_Ferrum_2022_2023_data %>%
+    filter(!is.na(.data[[col]]))
+  
+  # Try performing Dunn's test with Bonferroni adjustment
+  test_result <- tryCatch(
+    {
+      df_filtered %>%
+        dunn_test(as.formula(paste(col, "~ New_Grouping")), p.adjust.method = "bonferroni")
+    },
+    error = function(e) {
+      # Return a default result if test fails
+      data.frame(
+        Variable = col,
+        group1 = NA,
+        group2 = NA,
+        Z = NA,
+        p = NA,
+        p.adj = NA
+      )
+    }
+  )
+  
+  # Add the variable name to each row
+  test_result$Variable <- col
+  
+  # Store the result
+  dunn_results_list[[col]] <- test_result
+  
+  # If there is at least one valid pairwise comparison, generate the CLD
+  if (!all(is.na(test_result$p.adj))) {
+     # Build a matrix of p-values manually
+    groups <- unique(c(test_result$group1, test_result$group2))
+    pval_matrix <- matrix(1, nrow = length(groups), ncol = length(groups),
+                          dimnames = list(groups, groups))
+    
+    for (i in seq_len(nrow(test_result))) {
+      g1 <- as.character(test_result$group1[i])
+      g2 <- as.character(test_result$group2[i])
+      pval <- test_result$p.adj[i]
+      
+      pval_matrix[g1, g2] <- pval
+      pval_matrix[g2, g1] <- pval  # symmetric
+    }
+    
+    # Generate CLD using multcompView
+    cld <- multcompLetters(pval_matrix)
+    
+    # Convert to a tidy data frame
+    cld_df <- data.frame(
+      Variable = col,
+      Group = names(cld$Letters),
+      Letters = cld$Letters
+    )
+    
+    # Store the CLD result
+    cld_results_list[[col]] <- cld_df
+  }
+}
+
+# Combine all Dunn's test results into a single dataframe
+dunn_results_df <- bind_rows(dunn_results_list)
+
+# Combine all CLD results into a single dataframe
+cld_results_df <- bind_rows(cld_results_list)
+
+# Print the results
+view(dunn_results_df)
+view(cld_results_df)
+```
+
+```{r}
+# First, merge the letters for group1
+dunn_results_df <- dunn_results_df %>%
+  left_join(
+    cld_results_df %>%
+      dplyr::rename(group1 = Group, CLD_group1 = Letters),
+    by = c("Variable", "group1")
+  )
+
+# Then, merge the letters for group2
+dunn_results_df <- dunn_results_df %>%
+  left_join(
+    cld_results_df %>%
+      dplyr::rename(group2 = Group, CLD_group2 = Letters),
+    by = c("Variable", "group2")
+  )
+
+# Print the updated Dunn’s test results
+view(dunn_results_df)
+```
+
+old code
 ```{r}
 # Load necessary package
 library(multcompView)
-library(dunn.test)
+library(rstatix)
 
 # Initialize lists to store results
 results_list <- list()  # For pairwise comparisons (Dunn's test)

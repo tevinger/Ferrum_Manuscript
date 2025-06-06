@@ -699,10 +699,65 @@ columns_2 <- c(
 )
 ```
 
-## Shapiro Test Loop
+## Loop model residuals and shapiro test
 The Shapiro-Wilk measures the residuals to determine whether the data is normally distributed. If the p-value is significant (p-value \< 0.05), then the data is not normally distributed and non-parameteric tests must be used.
 
 If the Shapiro-Wilk determines the data to be not normally distributed (p-value \< 0.05), run the Kruskal-Wallis test to determine significant differences between group means. If the p-value is significant, then there are statistically significant differences between the groups and a pairwise test needs to be conducted. If there are only two groups of comparison, a Mann-Whitney-U/Wilcox test can substitute the Kruskal-Wallis test and then a pairwise analysis is not needed. The Kruskal-Wallis test is used when the data has one independent variable (i.e., treatment group) with 3+ levels and a continuous variable that is not normally distributed. It ranks observations within each group and compares the average ranks across the groups.
+
+```{r}
+library(dplyr)
+library(purrr)
+library(broom)
+library(rstatix)
+
+# List of columns to analyze
+columns_to_model <- names(df)[which(names(df) == "pH") + 1:length(names(df))]
+
+# Initialize a results list
+model_results <- list()
+
+# Loop through each variable
+for (col in columns_to_model) {
+  
+  # Fit the model (example: linear model with New_Grouping as predictor)
+  model <- lm(df[[col]] ~ df$New_Grouping, data = df)
+  
+  # Extract residuals
+  residuals <- resid(model)
+  
+  # Perform Shapiro-Wilk test on residuals
+  test_result <- tryCatch(
+    shapiro.test(residuals),
+    error = function(e) NULL
+  )
+  
+  # Create the interpretation
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The residuals are likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store the results in a data frame
+  model_results[[col]] <- data.frame(
+    Variable = col,
+    W = if (!is.null(test_result)) test_result$statistic else NA,
+    p_value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+}
+
+# Combine all results into a single data frame
+shapiro_results <- bind_rows(model_results)
+
+# Print results
+print(shapiro_results)
+
+```
+
+### Shapiro Test Loop for raw data
 ```{r}
 # Elements and Columns defined in previous chunk
 library(rstatix)

@@ -850,6 +850,7 @@ This means at least one group differs significantly in median from at least one 
 The Kruskal-Wallis statistic (often denoted as H) is the test statistic calculated for the Kruskal-Wallis test.
 It measures the degree to which the ranks of your data differ between groups compared to what you’d expect if the groups were from the same distribution.
 
+### Loop
 ```{r}
 library(dplyr)
 library(rstatix)
@@ -880,11 +881,42 @@ for (col in columns_to_model) {
     }
   )
   
-  # Add the variable name explicitly
-  test_result$Variable <- col
+   # Calculate effect size using kruskal_effsize()
+  effect_size_result <- tryCatch(
+    {
+      df_filtered %>%
+        kruskal_effsize(as.formula(paste(col, "~ New_Grouping")), ci = TRUE)
+    },
+    error = function(e) {
+      data.frame(
+        .y. = col,
+        effsize = NA,
+        conf.low = NA,
+        conf.high = NA
+      )
+    }
+  )
   
- # Store the result
-  kruskal_results_list[[col]] <- test_result
+  # Merge test result and effect size result
+  merged_result <- left_join(
+    test_result %>% mutate(Variable = col),
+    effect_size_result %>% dplyr::select(.y., effsize, conf.low, conf.high),
+    by = c(".y." = ".y.")
+  )
+  
+  # Create interpretation
+  interpretation <- if (!is.null(merged_result$p) && merged_result$p < 0.05) {
+    "Significant difference among groups (reject H0)."
+  } else if (!is.null(merged_result$p)) {
+    "No significant difference among groups (fail to reject H0)."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  merged_result$Interpretation <- interpretation
+  
+  # Store the result
+  kruskal_results_list[[col]] <- merged_result
 }
 
 # Combine all results into a single dataframe
@@ -894,9 +926,93 @@ kruskal_results_df <- bind_rows(kruskal_results_list)
 view(kruskal_results_df)
 ```
 
+### function
+```{r}
+library(dplyr)
+library(rstatix)
+
+run_kruskal_analysis <- function(data, columns_to_model, grouping_var = "New_Grouping") {
+  
+  results_list <- list()
+  
+  for (col in columns_to_model) {
+    # Filter out NAs for the current variable
+    df_filtered <- data %>%
+      filter(!is.na(.data[[col]]))
+    
+    # Perform Kruskal-Wallis test
+    test_result <- tryCatch(
+      {
+        df_filtered %>%
+          kruskal_test(as.formula(paste(col, "~", grouping_var)))
+      },
+      error = function(e) {
+        data.frame(
+          .y. = col,
+          statistic = NA,
+          df = NA,
+          p = NA
+        )
+      }
+    )
+    
+    # Calculate effect size using kruskal_effsize()
+    effect_size_result <- tryCatch(
+      {
+        df_filtered %>%
+          kruskal_effsize(as.formula(paste(col, "~", grouping_var)), ci = TRUE)
+      },
+      error = function(e) {
+        data.frame(
+          .y. = col,
+          effsize = NA,
+          conf.low = NA,
+          conf.high = NA
+        )
+      }
+    )
+    
+    # Rename .y. to Variable before joining
+    effect_size_result <- effect_size_result %>%
+      rename(Variable = .y.)
+    
+    # Merge test result and effect size result
+    merged_result <- left_join(
+      test_result %>% mutate(Variable = col),
+      effect_size_result %>% select(Variable, effsize, conf.low, conf.high),
+      by = "Variable"
+    )
+    
+    # Create interpretation
+    interpretation <- if (!is.null(merged_result$p) && merged_result$p < 0.05) {
+      "Significant difference among groups (reject H0)."
+    } else if (!is.null(merged_result$p)) {
+      "No significant difference among groups (fail to reject H0)."
+    } else {
+      "Test could not be performed due to insufficient data or errors."
+    }
+    
+    merged_result$Interpretation <- interpretation
+    
+    # Store the result
+    results_list[[col]] <- merged_result
+  }
+  
+  # Combine all results into a single dataframe
+  final_results_df <- bind_rows(results_list)
+  
+  return(final_results_df)
+}
+
+# Usage example:
+# my_results <- run_kruskal_analysis(df, columns_to_model)
+# print(my_results)
+
+```
+
 ```{r}
 # Merge Kruskal-Wallis results into shapiro_results by "Element"
-shapiro_kruskal_results <- merge(shapiro_results, kruskal_df, by = "Variable", all.x = TRUE)
+shapiro_kruskal_results <- merge(shapiro_results, kruskal_results_df, by = "Variable", all.x = TRUE)
 
 # add a kruskal wallis interpretation
 shapiro_kruskal_results <- shapiro_kruskal_results %>%

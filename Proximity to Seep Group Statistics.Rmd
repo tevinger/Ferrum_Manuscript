@@ -57,10 +57,6 @@ Alaska_DataRelease_2022_2023_Ferrum_V1 <- read_excel("C:/Users/tevinger/OneDrive
 
 # Statistics Codes
 
-The Shapiro-Wilk measures the residuals to determine whether the data is normally distributed. If the p-value is significant (p-value \< 0.05), then the data is not normally distributed and non-parameteric tests must be used.
-
-If the Shapiro-Wilk determines the data to be not normally distributed (p-value \< 0.05), run the Kruskal-Wallis test to determine significant differences between group means. If the p-value is significant, then there are statistically significant differences between the groups and a pairwise test needs to be conducted. If there are only two groups of comparison, a Mann-Whitney-U/Wilcox test can substitute the Kruskal-Wallis test and then a pairwise analysis is not needed. The Kruskal-Wallis test is used when the data has one independent variable (i.e., treatment group) with 3+ levels and a continuous variable that is not normally distributed. It ranks observations within each group and compares the average ranks across the groups.
-
 #Summary Stats Set Up
 ## Create specific dataframes
 ### Site Classification Group
@@ -639,8 +635,7 @@ write_xlsx(summary_stats_wide, "C:/Users/tayta/Downloads/Reference Site Summary 
 
 
 # Site Classification Group Comparison Statistics
-## Shapiro Test Loop
-### set elements and columns for group comparison stats loop
+## set elements and columns for group comparison stats loop
 ```{r}
 library(dplyr)
 
@@ -704,6 +699,10 @@ columns_2 <- c(
 )
 ```
 
+## Shapiro Test Loop
+The Shapiro-Wilk measures the residuals to determine whether the data is normally distributed. If the p-value is significant (p-value \< 0.05), then the data is not normally distributed and non-parameteric tests must be used.
+
+If the Shapiro-Wilk determines the data to be not normally distributed (p-value \< 0.05), run the Kruskal-Wallis test to determine significant differences between group means. If the p-value is significant, then there are statistically significant differences between the groups and a pairwise test needs to be conducted. If there are only two groups of comparison, a Mann-Whitney-U/Wilcox test can substitute the Kruskal-Wallis test and then a pairwise analysis is not needed. The Kruskal-Wallis test is used when the data has one independent variable (i.e., treatment group) with 3+ levels and a continuous variable that is not normally distributed. It ranks observations within each group and compares the average ranks across the groups.
 ```{r}
 # Elements and Columns defined in previous chunk
 library(rstatix)
@@ -933,7 +932,7 @@ view(final_cld_df)
 
 ```
 
-### ANOVA loop
+## ANOVA loop
 ```{r}
 
 

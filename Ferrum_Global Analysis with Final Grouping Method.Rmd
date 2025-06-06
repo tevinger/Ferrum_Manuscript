@@ -463,7 +463,7 @@ ylab_Cu <- expression(bold(Cu)~bold((μg~L^-1)))
 ylab_Fe <- expression(bold(Fe)~bold((μg~L^-1)))
 ylab_Ni <- expression(bold(Ni)~bold((μg~L^-1)))
 ylab_Mn <- expression(bold(Mn)~bold((μg~L^-1)))
-
+ylab_Cd <- expression(bold(Cd)~bold((μg~L^-1)))
 
 ylab_SUVA <- expression(bold(SUVA[254~nm])~(L/mg~m)) 
 ylab_Sulfate_log <- expression(bold(log[10])~bold(SO[4]^-2)~bold((mg~L^-1)))
@@ -2133,166 +2133,77 @@ metal_combo_plot
 
 ##Cd
 ```{r}
-## Cd
+# Select Cd data
 Cd_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, Site_Group, Site_Grouping, f_Cd_mcg_per_l, p_Cd_mcg_per_l) %>% 
-  mutate(p_Cd_mcg_per_l = ifelse(p_Cd_mcg_per_l <= 0.01, NA, p_Cd_mcg_per_l))
-  
-  filter(f_Cd_mcg_per_l > 0.01) %>%
-  filter(p_Cd_mcg_per_l > 0.01)
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Cd_mcg_per_l, p_Cd_mcg_per_l)
 
-view(Cd_df)
+# Filter NA values in the grouping variable, filter particulate concentrations and make long format
+Cd_long <- Cd_df %>%
+  filter(!(New_Groups == "NA")) %>%
+  pivot_longer(
+    cols = c(f_Cd_mcg_per_l, p_Cd_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Cd_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(Metal_conc >= 0.01)
 
+# Factor the grouping variable to set plotting order
+Cd_long <- Cd_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3",  "6")))
+
+# Create a new variable that combines the groups and metal_type for plotting order
+Cd_long <- Cd_long %>%
+  mutate(
+    x_group = factor(
+      interaction(New_Groups, Metal_type, sep = "_"),
+      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
+    )
+  )
 ```
 
-```{r}
-Cd_df_1_metal <- Cd_df %>%
-  filter(Site_Grouping == 1) 
-
-Cd_seep_df_metal <- Cd_df %>%
-  filter(Site_Grouping == 2)
-
-view(Cd_seep_df_metal)
-
-Cd_df_3_metal <- Cd_df %>%
-  filter(Site_Grouping == 3) 
-
-Cd_df_4_metal <- Cd_df %>%
-  filter(Site_Grouping == 4)
-
-Cd_df_5_metal <- Cd_df %>%
-  filter(Site_Grouping == 5) 
-
-Cd_df_6_metal <- Cd_df %>%
-  filter(Site_Grouping == 6)
-
-```
 
 ```{r}
-Cd_plot <- ggplot() + 
-  # Boxplot and jitter for Site_Grouping 1
-  geom_boxplot(data = Cd_df_1_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Cd_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Cd_df_1_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Cd_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Cd_df_1_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Cd_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Cd_df_1_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Cd_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 2
-  geom_boxplot(data = Cd_seep_df_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Cd_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Cd_seep_df_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Cd_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Cd_seep_df_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Cd_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Cd_seep_df_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Cd_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 3
-  geom_boxplot(data = Cd_df_3_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Cd_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Cd_df_3_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Cd_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  geom_boxplot(data = Cd_df_3_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Cd_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Cd_df_3_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Cd_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 5
-  geom_boxplot(data = Cd_df_5_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Cd_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Cd_df_5_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Cd_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Cd_df_5_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Cd_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Cd_df_5_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Cd_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 6
-  geom_boxplot(data = Cd_df_6_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Cd_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Cd_df_6_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Cd_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Cd_df_6_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Cd_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Cd_df_6_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Cd_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-   # Boxplot and jitter for Site_Grouping 6
-  geom_boxplot(data = Cd_df_4_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Cd_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Cd_df_4_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Cd_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Cd_df_4_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Cd_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Cd_df_4_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Cd_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  # Manual fill colors
-  scale_fill_manual(name = "Site Group", values = boxplot_colors) +
-  
-  ylim(.001, 1000) +
-  scale_y_log10(limits = c(.001, 1000), labels = scales::comma,
-                breaks = scales::trans_breaks("log10", function(x)10^x)) +
+Cd_plot <- ggplot(Cd_long, aes(x = x_group, y = Metal_conc)) +
+  geom_boxplot_pattern(
+    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
+    pattern_density = 0.35,
+    pattern_spacing = 0.015,
+    pattern_angle = 45,
+    width = 0.75,
+    alpha = 0.85
+  ) +
+  scale_fill_manual(values = boxplot_colors) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "black")) +
+  scale_y_log10(
+    limits = c(0.01, 300),
+    labels = scales::comma,
+    breaks = c(0.01, 0.1, 1, 10, 100, 1000),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
   labs(
-    title = "Cadmium Concentration by Site Group",
-    x = "Site Grouping",
-    y = "Cadmium Concentration (mcg/L)",
-    fill = "Particulate metal"
+    title = NULL,
+    x = NULL,
+    y = ylab_Cd,  
+    fill = "Metal Type"
   ) +
   theme_minimal() +
+  boxplot_theme +
   theme(
-      axis.text.x = element_blank(),  
-      axis.title.x = element_blank(),
-      axis.title.y = element_blank(),
-      axis.text.y = element_text(size = 24, color = "black", face = "bold", margin = margin(r = 10)),
-      axis.ticks.y = element_line(size = 0.8, color = "black"),
-      plot.title = element_blank(),
-      legend.position = "none",
-      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
-      panel.background = element_rect(fill = "transparent"),  
-      plot.background = element_rect(fill = "transparent", color = NA),
-      axis.ticks.x = element_line(size = 0.8, color = "black"),  # Make x-axis ticks visible
-      axis.ticks.length = unit(5, "pt")
-    ) +
-  scale_x_discrete(expand = expansion(mult = c(0.11, 0.08))) +
-  annotation_logticks(sides = "l")
+    legend.position = "none",
+    axis.title.y = element_text(margin = margin(r = 1)),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
 
 Cd_plot
-
-ggsave("C:/Users/tayta/Downloads/Cd bp proximity_V1.png", Cd_plot, bg = "transparent", width = 5, height = 4.5, dpi = 300)
 
 
 ```

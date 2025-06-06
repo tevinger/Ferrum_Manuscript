@@ -451,7 +451,7 @@ boxplot_colors <- c(
 ylab_DOC <- expression(bold(DOC)~(mg~L^-1))
 ylab_DIC <- expression(bold(DIC)~(mgC~L^-1))
 ylab_Ca <- expression(bold(Ca)~(mg~L^-1))
-ylab_Mg <- expression(bold(Mg)~(mg~L^-1))
+ylab_Mg <- expression(bold(Mg)~bold((mg~L^-1)))
 ylab_Chloride <- expression(bold(Chloride)~(mg~L^-1))
 ylab_Sulfate <- expression(bold(SO[4]^-2)~bold((mg~L^-1)))
 ylab_SpC <- expression(bold(Specific~Conductivity)~(μS~cm^-1))
@@ -1118,7 +1118,7 @@ DIC_long <- DIC_df %>%
 DIC_long <- DIC_long %>%
   mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
 
-DIC_breaks <- seq(0,50, by = 5)
+DIC_breaks <- seq(0,55, by = 5)
 DIC_labels <- c(0,"",10,"",20,"",30,"",40,"",50,"")
 DIC_labels
 ```
@@ -1313,7 +1313,7 @@ DOC_plot <- ggplot(DOC_long, aes(x = New_Groups, y = Conc)) +
   labs(
     title = NULL,
     x = NULL,
-    y = "DOC (mgC/L)"
+    y = ylab_DOC
   ) +
   theme_minimal() +
   boxplot_theme +
@@ -1393,13 +1393,13 @@ Ca_plot
 ```{r}
 # Select alkalinity data
 Mg_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Ca_mg_l)
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Mg_mg_l)
 
 # Filter NA values in the grouping variable and make long format
 Mg_long <- Mg_df %>%
   filter(!(New_Groups == "NA")) %>%
   pivot_longer(
-    cols = c(f_Ca_mg_l),
+    cols = c(f_Mg_mg_l),
     names_to = "Variable",
     #names_pattern = "^(.)_mgC_per_l",
     values_to = "Conc"
@@ -1410,25 +1410,25 @@ Mg_long <- Mg_df %>%
 Mg_long <- Mg_long %>%
   mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
 
-Mg_breaks <- seq(0,450, by = 50)
-Mg_labels <- c(0,"",100,"",200,"",300,"",400,"")
+Mg_breaks <- seq(0,1000, by = 100)
+Mg_labels <- c(0,"",200,"",400,"",600,"",800,"",1000)
 Mg_labels
 ```
 
 ```{r}
 Mg_plot <- ggplot(Mg_long, aes(x = New_Groups, y = Conc)) +
-  geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(aes(fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.5) +
+  geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = 16,
+               outlier.color = "black",
+               outlier.size = 2, alpha = 0.85) +
   scale_fill_manual(values = boxplot_colors) +
   labs(
     title = NULL,
     x = NULL,
-    y = "Mg (mg/L)"
+    y = ylab_Mg
   ) +
   #scale_y_log10(breaks = c(50, 100, 500)) +
   #annotation_logticks(sides = "l") +
-  scale_y_continuous(breaks = Ca_breaks, labels = Ca_labels) +
+  scale_y_continuous(breaks = Mg_breaks, labels = Mg_labels) +
   theme_minimal() +
   boxplot_theme +
   theme(

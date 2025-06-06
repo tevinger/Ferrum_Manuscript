@@ -448,14 +448,15 @@ boxplot_colors <- c(
 
 ## Labels
 ```{r}
-ylab_DOC <- expression(bold(DOC)~(mg~L^-1))
-ylab_DIC <- expression(bold(DIC)~(mgC~L^-1))
-ylab_Ca <- expression(bold(Ca)~(mg~L^-1))
+ylab_DOC <- expression(bold(DOC)~bold((mgC~L^-1)))
+ylab_DIC <- expression(bold(DIC)~bold((mgC~L^-1)))
+                       
+ylab_Ca <- expression(bold(Ca)~bold((mg~L^-1)))
 ylab_Mg <- expression(bold(Mg)~bold((mg~L^-1)))
-ylab_Chloride <- expression(bold(Chloride)~(mg~L^-1))
+ylab_Chloride <- expression(bold(Chloride)~bold((mg~L^-1)))
 ylab_Sulfate <- expression(bold(SO[4]^-2)~bold((mg~L^-1)))
-ylab_SpC <- expression(bold(Specific~Conductivity)~(μS~cm^-1))
-ylab_Alk <- expression(bold(Alkalinity~(mgCaCO[3]~L^-1)))
+ylab_SpC <- expression(bold(Specific~Conductivity)~bold((μS~cm^-1)))
+ylab_Alk <- expression(bold(Alkalinity~bold((mgCaCO[3]~L^-1))))
 
 ylab_Zn <- expression(bold(Zn)~bold((μg~L^-1)))
 ylab_Cu <- expression(bold(Cu)~bold((μg~L^-1)))

@@ -464,6 +464,7 @@ ylab_Fe <- expression(bold(Fe)~bold((μg~L^-1)))
 ylab_Ni <- expression(bold(Ni)~bold((μg~L^-1)))
 ylab_Mn <- expression(bold(Mn)~bold((μg~L^-1)))
 ylab_Cd <- expression(bold(Cd)~bold((μg~L^-1)))
+ylab_Al <- expression(bold(Al)~bold((μg~L^-1)))
 
 ylab_SUVA <- expression(bold(SUVA[254~nm])~(L/mg~m)) 
 ylab_Sulfate_log <- expression(bold(log[10])~bold(SO[4]^-2)~bold((mg~L^-1)))
@@ -1747,6 +1748,83 @@ combined_plot <- plot_grid(
   rel_widths = c(0.8, 0.95, 1.5))
 
 combined_plot
+```
+
+##Al
+```{r}
+# Select Al data
+Al_df <- working_Ferrum_data %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Al_mcg_per_l, p_Al_mcg_per_l)
+
+# Filter NA values in the grouping variable, filter particulate concentrations, and make long format
+Al_long <- Al_df %>%
+  filter(!(New_Groups == "NA")) %>%
+  #filter(p_Al_mcg_per_l >= 0.01) %>%
+  pivot_longer(
+    cols = c(f_Al_mcg_per_l, p_Al_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Al_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+# Factor the grouping variable to set plotting order
+Al_long <- Al_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+
+# Create a new variable that combines the groups and metal_type for plotting order
+Al_long <- Al_long %>%
+  mutate(
+    x_group = factor(
+      interaction(New_Groups, Metal_type, sep = "_"),
+      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
+    )
+  )
+
+```
+
+```{r}
+Al_plot <- ggplot(Al_long, aes(x = x_group, y = Metal_conc)) +
+  geom_boxplot_pattern(
+    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
+    pattern_density = 0.35,
+    pattern_spacing = 0.015,
+    pattern_angle = 45,
+    width = 0.75,
+    alpha = 0.85
+    #,color = "black"
+  ) +
+  scale_fill_manual(values = boxplot_colors) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
+  scale_y_log10(
+    limits = c(1, 10000000),
+    labels = scales::comma,
+    breaks = c(1, 10, 100, 1000, 10000, 100000, 1000000, 10000000),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = ylab_Al,  # make sure ylab_Al is defined!
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_text(margin = margin(r = 1)),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
+
+Al_plot
 ```
 
 ## Cu

@@ -1097,6 +1097,63 @@ f_SO4_mg_per_l_plot
 
 ```
 
+## SpC
+```{r}
+# Select DOC data
+SpC_df <- working_Ferrum_data %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, Spec_Cond_microS_per_cm)
+
+# Filter NA values in the grouping variable and make long format
+SpC_long <- SpC_df %>%
+  filter(!(New_Groups == "NA")) %>%
+  pivot_longer(
+    cols = c(Spec_Cond_microS_per_cm),
+    names_to = "Variable",
+    #names_pattern = "^(.)_mgC_per_l",
+    values_to = "Conc"
+  ) %>%
+  filter(!is.na(Conc))
+
+# Factor the grouping variable to set plotting order
+SpC_long <- SpC_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+
+SpC_breaks <- seq(0,8000, by = 1000)
+SpC_labels <- c(0,"",2000,"",4000,"",6000,"",8000)
+SpC_labels
+```
+
+```{r}
+SpC_plot <- ggplot(SpC_long, aes(x = New_Groups, y = Conc)) +
+  geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = 16,
+               outlier.color = "black",
+               outlier.size = 2, alpha = 0.85) +
+  #geom_jitter(aes(fill = Watershed), 
+              #shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.5) +
+  scale_fill_manual(values = boxplot_colors) +
+  scale_y_continuous(breaks = SpC_breaks, labels = SpC_labels) +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = ylab_SpC
+  ) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_text(margin = margin(r = 6)),
+    #axis.ticks.length = unit(1, "cm"),
+    legend.title = element_text(size = 14),   # legend title size
+    legend.text = element_text(size = 12),    # legend item labels
+    legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.2, 0.15)))
+
+SpC_plot
+
+```
+
+
 ## Chloride
 ```{r}
 # Select DOC data

@@ -1682,7 +1682,9 @@ Fe_long <- Fe_long %>%
 Fe_plot <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc)) +
   geom_boxplot_pattern(
     aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
-    outlier.shape = NA,
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
     pattern_density = 0.35,
     pattern_spacing = 0.015,
     pattern_angle = 45,
@@ -1705,7 +1707,8 @@ Fe_plot <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc)) +
     #title = "Method 3 - Fe",
     title = NULL,
     x = NULL,
-    y = "Concentration (µg/L)",
+    #y = "Concentration (µg/L)",
+    y = ylab_Fe,
     fill = "Metal Type"
   ) +
   theme_minimal() +
@@ -1732,7 +1735,7 @@ library(grid)
 
 grid.draw(proximity_metal_plot_legend)
 
-ggsave('C:/Users/tayta/Downloads/proximity_metal_plot_legend.png', 
+ggsave('C:/Users/tevinger/Downloads/proximity_metal_plot_legend.png', 
        proximity_metal_plot_legend, width = 5, height = 8, bg = "transparent", dpi = 250)
 ```
 
@@ -1781,7 +1784,9 @@ Cu_long <- Cu_long %>%
 Cu_plot <- ggplot(Cu_long, aes(x = x_group, y = Metal_conc)) +
   geom_boxplot_pattern(
     aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
-    outlier.shape = NA,
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
     pattern_density = 0.35,
     pattern_spacing = 0.015,
     pattern_angle = 45,
@@ -1803,8 +1808,9 @@ Cu_plot <- ggplot(Cu_long, aes(x = x_group, y = Metal_conc)) +
     #title = "Method 3 - Cu",
     title = NULL,
     x = NULL,
+    y = ylab_Cu,
     #y = NULL,
-    y = "Concentration (µg/L)",
+    #y = "Concentration (µg/L)",
     fill = "Metal Type"
   ) +
   theme_minimal() +
@@ -1826,7 +1832,7 @@ Cu_plot
 ```{r}
 # Select Fe data
 Zn_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, Prox_Groups, RelAcc_Groups, New_Groups, Prox_Grouping, RelAcc_Grouping, New_Grouping, f_Zn_mcg_per_l, p_Zn_mcg_per_l)
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Zn_mcg_per_l, p_Zn_mcg_per_l)
 
 # Filter NA values in the grouping variable, filter particulate concentrations and make long format
 Zn_long <- Zn_df %>%
@@ -1857,21 +1863,14 @@ Zn_long <- Zn_long %>%
 Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc)) +
   geom_boxplot_pattern(
     aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
-    outlier.shape = NA,
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
     pattern_density = 0.35,
     pattern_spacing = 0.015,
     pattern_angle = 45,
     width = 0.75,
-    alpha = 0.5
-  ) +
-  geom_jitter(
-    aes(fill = Watershed),
-    #position = position_dodge(width = 0.75),
-    shape = 21,
-    size = 2,
-    stroke = 0.3,
-    color = "black",
-    width = 0.15
+    alpha = 0.85
   ) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
@@ -1889,14 +1888,15 @@ Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc)) +
     #title = "Dissolved and Particulate Zn",
     title = NULL,
     x = NULL,
-    y = NULL,
+    #y = NULL,
+    y = ylab_Zn,
     fill = "Metal Type"
   ) +
   theme_minimal() +
   boxplot_theme +
   theme(
     legend.position = "none",
-    axis.text.y = element_blank(),
+    #axis.text.y = element_blank(),
     axis.title.y = element_text(margin = margin(r = 1)),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels
@@ -1912,7 +1912,7 @@ Zn_plot
 ```{r}
 # Select Fe data
 Ni_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, Prox_Groups, RelAcc_Groups, New_Groups, Prox_Grouping, RelAcc_Grouping, New_Grouping, f_Ni_mcg_per_l, p_Ni_mcg_per_l)
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Ni_mcg_per_l, p_Ni_mcg_per_l)
 
 # Filter NA values in the grouping variable, filter particulate concentrations and make long format
 Ni_long <- Ni_df %>%
@@ -1943,21 +1943,14 @@ Ni_long <- Ni_long %>%
 Ni_plot <- ggplot(Ni_long, aes(x = x_group, y = Metal_conc)) +
   geom_boxplot_pattern(
     aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
-    outlier.shape = NA,
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
     pattern_density = 0.35,
     pattern_spacing = 0.015,
     pattern_angle = 45,
     width = 0.75,
-    alpha = 0.5
-  ) +
-  geom_jitter(
-    aes(fill = Watershed),
-    #position = position_dodge(width = 0.75),
-    shape = 21,
-    size = 2,
-    stroke = 0.3,
-    color = "black",
-    width = 0.15
+    alpha = 0.85
   ) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
@@ -1975,14 +1968,14 @@ Ni_plot <- ggplot(Ni_long, aes(x = x_group, y = Metal_conc)) +
     #title = "Dissolved and Particulate Ni",
     title = NULL,
     x = NULL,
-    y = NULL,
+    y = ylab_Ni,
     fill = "Metal Type"
   ) +
   theme_minimal() +
   boxplot_theme +
   theme(
     legend.position = "none",
-    axis.text.y = element_blank(),
+    #axis.text.y = element_blank(),
     axis.title.y = element_text(margin = margin(r = 1)),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels

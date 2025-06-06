@@ -737,6 +737,8 @@ columns_to_model <- c("pH", "Spec_Cond_microS_per_cm",
 "f_Y_mcg_per_l", "p_Y_mcg_per_l",
 "f_Zn_mcg_per_l", "p_Zn_mcg_per_l")
 
+pdf("residuals_plots.pdf")  # Start a new PDF file
+
 # Initialize a results list
 model_results <- list()
 
@@ -748,6 +750,13 @@ for (col in columns_to_model) {
   
   # Extract residuals
   residuals <- resid(model)
+  
+  # Plot histogram
+  hist(residuals, main = paste("Residuals Histogram:", col), xlab = "Residuals")
+  
+  # Plot QQ plot
+  qqnorm(residuals, main = paste("QQ Plot of Residuals:", col))
+  qqline(residuals)
   
   # Perform Shapiro-Wilk test on residuals
   test_result <- tryCatch(
@@ -772,6 +781,8 @@ for (col in columns_to_model) {
     Interpretation = interpretation
   )
 }
+
+dev.off()  # Close the PDF device
 
 # Combine all results into a single data frame
 shapiro_results <- bind_rows(model_results)

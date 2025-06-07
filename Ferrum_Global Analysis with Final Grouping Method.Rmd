@@ -465,6 +465,7 @@ ylab_Ni <- expression(bold(Ni)~bold((μg~L^-1)))
 ylab_Mn <- expression(bold(Mn)~bold((μg~L^-1)))
 ylab_Cd <- expression(bold(Cd)~bold((μg~L^-1)))
 ylab_Al <- expression(bold(Al)~bold((μg~L^-1)))
+ylab_Co <- expression(bold(Co)~bold((μg~L^-1)))
 
 ylab_SUVA <- expression(bold(SUVA[254~nm])~(L/mg~m)) 
 ylab_Sulfate_log <- expression(bold(log[10])~bold(SO[4]^-2)~bold((mg~L^-1)))
@@ -1650,13 +1651,16 @@ for (i in seq_along(plots_list)) {
 ### Fe 
 ```{r}
 # Select Fe data
-Fe_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Fe_mcg_per_l, p_Fe_mcg_per_l)
+Fe_df <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Fe_mcg_per_l, f_Fe_mcg_per_l_qa, p_Fe_mcg_per_l, p_Fe_mcg_per_l_qa) %>%
+  filter(if_all(c(New_Grouping, f_Fe_mcg_per_l), ~ !is.na(.)))
+
+view(Fe_df)
 
 # Filter NA values in the grouping variable, filter particulate concentrations and make long format
 Fe_long <- Fe_df %>%
   filter(!(New_Groups == "NA")) %>%
-  filter(p_Fe_mcg_per_l >= 0.01) %>%
+  #filter(p_Fe_mcg_per_l >= 0.01) %>%
   pivot_longer(
     cols = c(f_Fe_mcg_per_l, p_Fe_mcg_per_l),
     names_to = "Metal_type",
@@ -1664,6 +1668,8 @@ Fe_long <- Fe_df %>%
     values_to = "Metal_conc"
   ) %>%
   filter(!is.na(Metal_conc))
+
+view(Fe_long)
 
 # Factor the grouping variable to set plotting order
 Fe_long <- Fe_long %>%
@@ -1698,9 +1704,9 @@ Fe_plot <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc)) +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
   #scale_shape_manual(values = c("f" = 21, "p" = 21)) +
   scale_y_log10(
-    limits = c(0.5, 1000000),
+    limits = c(0.1, 1000000),
     labels = scales::comma,
-    breaks = c(1, 10, 100, 1000, 10000, 100000, 1000000),
+    breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000, 1000000),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +
@@ -1755,6 +1761,8 @@ combined_plot
 # Select Al data
 Al_df <- working_Ferrum_data %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Al_mcg_per_l, p_Al_mcg_per_l)
+
+view(Al_df)
 
 # Filter NA values in the grouping variable, filter particulate concentrations, and make long format
 Al_long <- Al_df %>%
@@ -2285,6 +2293,83 @@ Cd_plot <- ggplot(Cd_long, aes(x = x_group, y = Metal_conc)) +
   scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
 
 Cd_plot
+
+
+```
+
+##Co
+```{r}
+# Select Co data
+Co_df <- working_Ferrum_data %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Co_mcg_per_l, p_Co_mcg_per_l)
+
+# Filter NA values in the grouping variable, filter particulate concentrations and make long format
+Co_long <- Co_df %>%
+  filter(!(New_Groups == "NA")) %>%
+  pivot_longer(
+    cols = c(f_Co_mcg_per_l, p_Co_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Co_mcg_per_l",
+    values_to = "Metal_conc"
+  )
+  #filter(Metal_conc >= 0.01)
+
+# Factor the grouping variable to set plotting order
+Co_long <- Co_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+
+# Create a new variable that combines the groups and metal_type for plotting order
+Co_long <- Co_long %>%
+  mutate(
+    x_group = factor(
+      interaction(New_Groups, Metal_type, sep = "_"),
+      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
+    )
+  )
+
+```
+
+```{r}
+Co_plot <- ggplot(Co_long, aes(x = x_group, y = Metal_conc)) +
+  geom_boxplot_pattern(
+    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
+    pattern_density = 0.35,
+    pattern_spacing = 0.015,
+    pattern_angle = 45,
+    width = 0.75,
+    alpha = 0.85
+  ) +
+  scale_fill_manual(values = boxplot_colors) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
+  scale_y_log10(
+    limits = c(0.1, 100000),
+    labels = scales::comma,
+    breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = ylab_Co,  # Make sure ylab_Co is defined!
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_text(margin = margin(r = 1)),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
+
+Co_plot
 
 
 ```

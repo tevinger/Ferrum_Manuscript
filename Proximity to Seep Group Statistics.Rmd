@@ -881,31 +881,8 @@ for (col in columns_to_model) {
     }
   )
   
-   # Calculate effect size using kruskal_effsize()
-  effect_size_result <- tryCatch(
-    {
-      df_filtered %>%
-        kruskal_effsize(as.formula(paste(col, "~ New_Grouping")), ci = TRUE)
-    },
-    error = function(e) {
-      data.frame(
-        .y. = col,
-        effsize = NA,
-        conf.low = NA,
-        conf.high = NA
-      )
-    }
-  )
-  
-  # Merge test result and effect size result
-  merged_result <- left_join(
-    test_result %>% mutate(Variable = col),
-    effect_size_result %>% dplyr::select(.y., effsize, conf.low, conf.high),
-    by = c(".y." = ".y.")
-  )
-  
   # Create interpretation
-  interpretation <- if (!is.null(merged_result$p) && merged_result$p < 0.05) {
+  interpretation <- if (!is.null(test_result$p) && test_result$p < 0.05) {
     "Significant difference among groups (reject H0)."
   } else if (!is.null(merged_result$p)) {
     "No significant difference among groups (fail to reject H0)."
@@ -913,10 +890,10 @@ for (col in columns_to_model) {
     "Test could not be performed due to insufficient data or errors."
   }
   
-  merged_result$Interpretation <- interpretation
+  test_result$Interpretation <- interpretation
   
   # Store the result
-  kruskal_results_list[[col]] <- merged_result
+  kruskal_results_list[[col]] <- test_result
 }
 
 # Combine all results into a single dataframe
@@ -924,6 +901,8 @@ kruskal_results_df <- bind_rows(kruskal_results_list)
 
 # Print the results
 view(kruskal_results_df)
+
+write_xlsx(kruskal_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Kruskal Wallis results.xlsx")
 ```
 
 ### function
@@ -1031,6 +1010,8 @@ shapiro_kruskal_results <- shapiro_kruskal_results %>%
   )
 
 view(shapiro_kruskal_results)
+
+write_xlsx(shapiro_kruskal_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Shapiro and Kruskal Wallis results.xlsx")
 ```
 
 ### post hoc Dunn test 
@@ -1163,6 +1144,8 @@ cld_results_df <- bind_rows(cld_results_list)
 # Print the results
 view(dunn_results_df)
 view(cld_results_df)
+
+write_xlsx(cld_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/CLD results.xlsx")
 ```
 
 ```{r}
@@ -1184,6 +1167,8 @@ dunn_results_df <- dunn_results_df %>%
 
 # Print the updated Dunn’s test results
 view(dunn_results_df)
+
+write_xlsx(dunn_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Dunns Test results with CLD.xlsx")
 ```
 
 old code

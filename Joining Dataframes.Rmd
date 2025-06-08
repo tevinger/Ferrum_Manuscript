@@ -730,12 +730,71 @@ write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V7, "C:/Users/tevinger/OneDrive -
 Alaska_DataRelease_2022_2023_Ferrum_V7 <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V7.xlsx")
 ```
 
+
+# Study Watersheds only
 ```{r}
 Alaska_DataRelease_2022_2023_Ferrum_V8 <- Alaska_DataRelease_2022_2023_Ferrum_V7 %>%
   filter(Watershed %in% c("Agashashok River", "Tukpahlearik Creek", "Nakolikurok Creek", "Salmon River", "Anaktok River", "Kugururok River"))
 
-write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V8, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V8.xlsx")
+Alaska_DataRelease_2022_2023_Ferrum_V8 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V8.xlsx")
+
+# reorganize metal columns to compare f, u and p
+# remove metal columns from V8 and put into a new df
+metals_cols_names <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+  dplyr::select(c(160:297)) # use this df to create the desired columns order
+metals_cols <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+  dplyr::select(c(26, 160:297)) # use this df to reorder because it has the SamplingEventID column for adding the data back
+Alaska_DataRelease_2022_2023_Ferrum_V8 <- Alaska_DataRelease_2022_2023_Ferrum_V8[, -c(160:297)]
+
+# Extract metals
+metals <- names(metals_cols_names) %>%
+  str_extract("(?<=_[fup]_|[fup]_)\\w+(?=_mcg_per_l)") %>%
+  unique() %>%
+  na.omit()
+
+print(metals)
+
+# Define prefixes and suffixes in desired order
+prefix_suffix_order <- c("f_mcg_per_l", "f_mcg_per_l_qa",
+                         "u_mcg_per_l", "u_mcg_per_l_qa",
+                         "p_mcg_per_l", "p_mcg_per_l_qa")
+
+# Build desired column order
+desired_cols <- unlist(lapply(metals, function(metal) {
+  paste0(sub("_mcg_per_l.*", "_", prefix_suffix_order), metal, "_mcg_per_l", sub(".*(_qa)", "\\1", prefix_suffix_order))
+}))
+
+# Tidy that up (some parts may have double "_mcg_per_l" etc. so let's do it more robustly)
+desired_cols <- unlist(lapply(metals, function(metal) {
+  c(
+    paste0("f_", metal, "_mcg_per_l"),
+    paste0("f_", metal, "_mcg_per_l_qa"),
+    paste0("u_", metal, "_mcg_per_l"),
+    paste0("u_", metal, "_mcg_per_l_qa"),
+    paste0("p_", metal, "_mcg_per_l"),
+    paste0("p_", metal, "_mcg_per_l_qa")
+  )
+}))
+
+print(desired_cols)
+
+# Reorder metals_cols while keeping first column intact
+metals_cols_reordered <- metals_cols %>%
+  dplyr::select(
+    1,                       # Keep the first column as-is
+    all_of(desired_cols),    # Apply reordering to the rest
+    everything()             # Append any columns not matched at the end
+  )
+
+view(metals_cols_reordered)
+
+Alaska_DataRelease_2022_2023_Ferrum_V8 <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>% 
+  left_join(metals_cols_reordered, by = "SamplingEventID")
+
+
+write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V8, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V8.xlsx")
 ```
+
 
 
 # Conversion to molar and equivalents units

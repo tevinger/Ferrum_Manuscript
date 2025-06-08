@@ -76,7 +76,7 @@ library(ggpattern)
 ```{r}
 # Start from Alaska_DataRelease_2022_2023_Ferrum_V8
 # Load if necessary
-Alaska_DataRelease_2022_2023_Ferrum_V8 <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V8.xlsx")
+Alaska_DataRelease_2022_2023_Ferrum_V8 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V8.xlsx")
 ```
 
 ##### Keep only the columns with data
@@ -1697,7 +1697,7 @@ scale_y_log10(
 ```{r}
 # Select Fe data
 Fe_df <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
-  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Fe_mcg_per_l, f_Fe_mcg_per_l_qa, p_Fe_mcg_per_l, p_Fe_mcg_per_l_qa) %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Fe_mcg_per_l, f_Fe_mcg_per_l_qa, p_Fe_mcg_per_l, p_Fe_mcg_per_l_qa) 
   filter(if_all(c(New_Grouping, f_Fe_mcg_per_l), ~ !is.na(.)))
 
 view(Fe_df)

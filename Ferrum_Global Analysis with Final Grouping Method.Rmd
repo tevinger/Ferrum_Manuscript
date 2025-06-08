@@ -1667,7 +1667,7 @@ Fe_long <- Fe_df %>%
     names_pattern = "^(.)_Fe_mcg_per_l",
     values_to = "Metal_conc"
   ) %>%
-  filter(!is.na(Metal_conc))
+  filter(!is.na(Metal_conc)) # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
 
 view(Fe_long)
 
@@ -1744,6 +1744,54 @@ grid.draw(proximity_metal_plot_legend)
 
 ggsave('C:/Users/tevinger/Downloads/proximity_metal_plot_legend.png', 
        proximity_metal_plot_legend, width = 5, height = 8, bg = "transparent", dpi = 250)
+```
+
+### Fe Violin
+```{r}
+Fe_plot_violin <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc)) +
+  geom_violin(
+    aes(fill = New_Groups),
+    scale = "width",
+    trim = FALSE,
+    alpha = 0.85
+  ) +
+  # Median line overlay
+  stat_summary(
+    fun = median, fun.min = median, fun.max = median,
+    geom = "crossbar", width = 0.6, color = "black", size = 0.5
+  ) +
+  scale_fill_manual(values = boxplot_colors) +
+  scale_pattern_manual(
+    values = c("f" = "none", "p" = "stripe"),
+    guide = "none"
+  ) +
+  scale_y_log10(
+    limits = c(0.1, 1000000),
+    labels = scales::comma,
+    breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000, 1000000),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = ylab_Fe,
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_text(margin = margin(r = 1)),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
+
+Fe_plot_violin
+
+
 ```
 
 ####Combo plot

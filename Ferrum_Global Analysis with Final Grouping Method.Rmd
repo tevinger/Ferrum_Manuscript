@@ -1878,22 +1878,31 @@ combined_plot
 ##Al
 ```{r}
 # Select Al data
-Al_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Al_mcg_per_l, p_Al_mcg_per_l)
+Al_df <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
+                f_Al_mcg_per_l, f_Al_mcg_per_l_qa, p_Al_mcg_per_l, p_Al_mcg_per_l_qa) %>%
+  filter(!(is.na(New_Grouping)))
 
 view(Al_df)
 
-# Filter NA values in the grouping variable, filter particulate concentrations, and make long format
+# Filter NA values in the grouping variable, filter particulate concentrations and make long format
 Al_long <- Al_df %>%
-  filter(!(New_Groups == "NA")) %>%
-  #filter(p_Al_mcg_per_l >= 0.01) %>%
   pivot_longer(
     cols = c(f_Al_mcg_per_l, p_Al_mcg_per_l),
     names_to = "Metal_type",
     names_pattern = "^(.)_Al_mcg_per_l",
     values_to = "Metal_conc"
   ) %>%
-  filter(!is.na(Metal_conc))
+  filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
+  mutate(Metal_conc_plot = Metal_conc + 0.0001)
+
+view(Al_long)
+
+Al_counts_df <- Al_long %>%
+  group_by(New_Grouping, Metal_type) %>%
+  summarise(count = n(), .groups = "drop")
+
+view(Al_counts_df)
 
 # Factor the grouping variable to set plotting order
 Al_long <- Al_long %>%
@@ -1908,10 +1917,11 @@ Al_long <- Al_long %>%
     )
   )
 
+
 ```
 
 ```{r}
-Al_plot <- ggplot(Al_long, aes(x = x_group, y = Metal_conc)) +
+Al_plot <- ggplot(Al_long, aes(x = x_group, y = Metal_conc_plot)) +
   geom_boxplot_pattern(
     aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
     outlier.shape = 16,
@@ -1921,18 +1931,23 @@ Al_plot <- ggplot(Al_long, aes(x = x_group, y = Metal_conc)) +
     pattern_spacing = 0.015,
     pattern_angle = 45,
     width = 0.75,
-    alpha = 0.85
-    #,color = "black"
+    alpha = 0.85,
+    size = 0.75
   ) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
-  #coord_trans(y="log10") +
-  
+scale_y_log10(
+    limits = c(0.0001, 10000000),
+    labels = scales::comma,
+    breaks = c(0.0001, 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
   labs(
     title = NULL,
     x = NULL,
-    y = ylab_Al,  # make sure ylab_Al is defined!
+    y = ylab_Al,  # make sure ylab_Al is defined
     fill = "Metal Type"
   ) +
   theme_minimal() +
@@ -1948,49 +1963,54 @@ Al_plot <- ggplot(Al_long, aes(x = x_group, y = Metal_conc)) +
 
 Al_plot
 
-scale_y_log10(
-    limits = c(1, 10000000),
-    labels = scales::comma,
-    breaks = c(1, 10, 100, 1000, 10000, 100000, 1000000, 10000000),
-    minor_breaks = NULL
-  ) +
-  annotation_logticks(sides = "l") +
-
 ```
 
 ## Cu
 ```{r}
-# Select Fe data
-Cu_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Cu_mcg_per_l, p_Cu_mcg_per_l)
+# Select Cu data
+Cu_df <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
+                f_Cu_mcg_per_l, f_Cu_mcg_per_l_qa, p_Cu_mcg_per_l, p_Cu_mcg_per_l_qa) %>%
+  filter(!(is.na(New_Grouping)))
+
+view(Cu_df)
 
 # Filter NA values in the grouping variable, filter particulate concentrations and make long format
 Cu_long <- Cu_df %>%
-  filter(!(New_Groups == "NA")) %>%
   pivot_longer(
     cols = c(f_Cu_mcg_per_l, p_Cu_mcg_per_l),
     names_to = "Metal_type",
     names_pattern = "^(.)_Cu_mcg_per_l",
     values_to = "Metal_conc"
   ) %>%
-  filter(Metal_conc >= 0.01)
+  filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
+  mutate(Metal_conc_plot = Metal_conc + 0.0001)
+
+view(Cu_long)
+
+Cu_counts_df <- Cu_long %>%
+  group_by(New_Grouping, Metal_type) %>%
+  summarise(count = n(), .groups = "drop")
+
+view(Cu_counts_df)
 
 # Factor the grouping variable to set plotting order
 Cu_long <- Cu_long %>%
-  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3",  "6")))
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
 
 # Create a new variable that combines the groups and metal_type for plotting order
 Cu_long <- Cu_long %>%
   mutate(
     x_group = factor(
       interaction(New_Groups, Metal_type, sep = "_"),
-      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p","3_f", "3_p", "6_f", "6_p")
+      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
     )
   )
+
 ```
 
 ```{r}
-Cu_plot <- ggplot(Cu_long, aes(x = x_group, y = Metal_conc)) +
+Cu_plot <- ggplot(Cu_long, aes(x = x_group, y = Metal_conc_plot)) +
   geom_boxplot_pattern(
     aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
     outlier.shape = 16,
@@ -2000,37 +2020,33 @@ Cu_plot <- ggplot(Cu_long, aes(x = x_group, y = Metal_conc)) +
     pattern_spacing = 0.015,
     pattern_angle = 45,
     width = 0.75,
-    alpha = 0.85
+    alpha = 0.85,
+    size = 0.75
   ) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
-  #scale_shape_manual(values = c("f" = 21, "p" = 21)) +
   scale_y_log10(
-    limits = c(0.1, 100000),
+    limits = c(0.0001, 10000),
     labels = scales::comma,
-    breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000),
+    breaks = c(0.0001, 0.1, 1, 10, 100, 1000, 10000),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +
   labs(
-    #title = "Method 3 - Cu",
     title = NULL,
     x = NULL,
-    y = ylab_Cu,
-    #y = NULL,
-    #y = "Concentration (µg/L)",
+    y = ylab_Cu,  # make sure ylab_Cu is defined
     fill = "Metal Type"
   ) +
   theme_minimal() +
   boxplot_theme +
   theme(
     legend.position = "none",
-    #axis.text.y = element_blank(),
     axis.title.y = element_text(margin = margin(r = 1)),
-    legend.title = element_text(size = 14),   # legend title size
-    legend.text = element_text(size = 12),    # legend item labels
-    legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
   ) +
   scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
 
@@ -2039,37 +2055,50 @@ Cu_plot
 
 ## Zn 
 ```{r}
-# Select Fe data
-Zn_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Zn_mcg_per_l, p_Zn_mcg_per_l)
+# Select Zn data
+Zn_df <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
+                f_Zn_mcg_per_l, f_Zn_mcg_per_l_qa, p_Zn_mcg_per_l, p_Zn_mcg_per_l_qa) %>%
+  filter(!(is.na(New_Grouping)))
+
+view(Zn_df)
 
 # Filter NA values in the grouping variable, filter particulate concentrations and make long format
 Zn_long <- Zn_df %>%
-  filter(!(New_Groups == "NA")) %>%
   pivot_longer(
     cols = c(f_Zn_mcg_per_l, p_Zn_mcg_per_l),
     names_to = "Metal_type",
     names_pattern = "^(.)_Zn_mcg_per_l",
     values_to = "Metal_conc"
   ) %>%
-  filter(Metal_conc >= 0.01)
+  filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
+  mutate(Metal_conc_plot = Metal_conc + 0.0001)
+
+view(Zn_long)
+
+Zn_counts_df <- Zn_long %>%
+  group_by(New_Grouping, Metal_type) %>%
+  summarise(count = n(), .groups = "drop")
+
+view(Zn_counts_df)
 
 # Factor the grouping variable to set plotting order
 Zn_long <- Zn_long %>%
-  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3",  "6")))
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
 
 # Create a new variable that combines the groups and metal_type for plotting order
 Zn_long <- Zn_long %>%
   mutate(
     x_group = factor(
       interaction(New_Groups, Metal_type, sep = "_"),
-      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p","3_f", "3_p", "6_f", "6_p")
+      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
     )
   )
+
 ```
 
 ```{r}
-Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc)) +
+Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc_plot)) +
   geom_boxplot_pattern(
     aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
     outlier.shape = 16,
@@ -2079,37 +2108,33 @@ Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc)) +
     pattern_spacing = 0.015,
     pattern_angle = 45,
     width = 0.75,
-    alpha = 0.85
+    alpha = 0.85,
+    size = 0.75
   ) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
-  scale_pattern_fill_manual(values = c("f" = NA, "p" = "black")) +
-  #scale_shape_manual(values = c("f" = 21, "p" = 21)) +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
   scale_y_log10(
-    limits = c(0.1, 100000),
+    limits = c(0.0001, 1000000),
     labels = scales::comma,
-    breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000),
+    breaks = c(0.0001, 0.1, 1, 10, 100, 1000, 10000, 100000, 1000000),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +
   labs(
-    #title = "Method 3 - Zn",
-    #title = "Dissolved and Particulate Zn",
     title = NULL,
     x = NULL,
-    #y = NULL,
-    y = ylab_Zn,
+    y = ylab_Zn,  # make sure ylab_Zn is defined
     fill = "Metal Type"
   ) +
   theme_minimal() +
   boxplot_theme +
   theme(
     legend.position = "none",
-    #axis.text.y = element_blank(),
     axis.title.y = element_text(margin = margin(r = 1)),
-    legend.title = element_text(size = 14),   # legend title size
-    legend.text = element_text(size = 12),    # legend item labels
-    legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
   ) +
   scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
 

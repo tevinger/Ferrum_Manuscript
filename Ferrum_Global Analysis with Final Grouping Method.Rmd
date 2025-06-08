@@ -1755,11 +1755,10 @@ Fe_plot <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc_plot)) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
-  #scale_shape_manual(values = c("f" = 21, "p" = 21)) +
   scale_y_log10(
-    limits = c(0.1, 1000000),
+    limits = c(0.0001, 10000000),
     labels = scales::comma,
-    breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000, 1000000),
+    breaks = c(0.0001, 0.01, 1, 100, 10000, 1000000, 10000000),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +
@@ -1829,7 +1828,7 @@ Fe_plot_violin <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc_plot)) +
   scale_y_log10(
     limits = c(0.0001, 100000000),
     labels = scales::comma,
-    breaks = c(0.0001, 0.001, 0.1, 10, 100, 1000, 10000, 100000000),
+    breaks = c(0.0001, 0.01, 1, 100, 10000, 1000000, 100000000),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +

@@ -1697,14 +1697,14 @@ scale_y_log10(
 ```{r}
 # Select Fe data
 Fe_df <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
-  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Fe_mcg_per_l, f_Fe_mcg_per_l_qa, p_Fe_mcg_per_l, p_Fe_mcg_per_l_qa) 
-  filter(if_all(c(New_Grouping, f_Fe_mcg_per_l), ~ !is.na(.)))
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Fe_mcg_per_l, f_Fe_mcg_per_l_qa, p_Fe_mcg_per_l, p_Fe_mcg_per_l_qa) %>%
+  filter(!(is.na(New_Grouping)))
 
 view(Fe_df)
 
 # Filter NA values in the grouping variable, filter particulate concentrations and make long format
 Fe_long <- Fe_df %>%
-  filter(!(New_Groups == "NA")) %>%
+  #filter(!(New_Groups == "NA")) %>%
   #filter(p_Fe_mcg_per_l >= 0.01) %>%
   pivot_longer(
     cols = c(f_Fe_mcg_per_l, p_Fe_mcg_per_l),
@@ -1823,19 +1823,16 @@ Fe_plot_violin <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc_plot)) +
     size = .75
     #,color = "black"
   ) +
-  geom_jitter(
-    aes(fill = Watershed),
-    shape = 21,        # Hollow circles with fill color
-    size = 2,          # Adjust size as needed
-    width = 0.15,      # Horizontal jitter (adjust as needed)
-    alpha = 0.7        # Slight transparency
-  ) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
-  #scale_shape_manual(values = c("f" = 21, "p" = 21)) +
-  coord_trans(y = 'log10', ylim = c(10^-4, 2*10^6)) +
-  #scale_y_continuous(breaks=10^seq(-1,0,2)) +
+  scale_y_log10(
+    limits = c(0.0001, 100000000),
+    labels = scales::comma,
+    breaks = c(0.0001, 0.001, 0.1, 10, 100, 1000, 10000, 100000000),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
   labs(
     #title = "Method 3 - Fe",
     title = NULL,
@@ -1856,6 +1853,17 @@ Fe_plot_violin <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc_plot)) +
   scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
 
 Fe_plot_violin
+```
+
+# jitter code
+```{r}
+geom_jitter(
+    aes(fill = Watershed),
+    shape = 21,        # Hollow circles with fill color
+    size = 2,          # Adjust size as needed
+    width = 0.15,      # Horizontal jitter (adjust as needed)
+    alpha = 0.7        # Slight transparency
+  ) +
 ```
 
 ####Combo plot

@@ -76,20 +76,19 @@ Alaska_DataRelease_2022_2023_Ferrum_V9 <- read_excel("C:/Users/tevinger/Box/Poul
 SalmonR_2023_river_data <-  Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
   dplyr::filter(Watershed == "Salmon River" | `Field label` == "Anaktok_1") %>%
   dplyr::filter(sample_collection_year == "2023") %>%
-  dplyr::filter(sample_collection_month == "July")
+  dplyr::filter(sample_collection_month == "July") %>%
+  arrange(Distance_km)
 
 view(SalmonR_2023_river_data)
+
+write_xlsx(SalmonR_2023_river_data, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Salmon River July 2023 Data.xlsx")
 ```
 
 ```{r}
-# Modify distance and classification value for Anaktok to reflect this sample site as a tributary on the Salmon
-SalmonR_2023_river_data <- SalmonR_2023_river_data %>%
-  mutate(
-    Distance_km = if_else(`Field label` == "Anaktok_1", 28.8, Distance_km)
-  ) %>%
-  mutate(
-    Hyd_Classification = if_else(`Field label` == "Anaktok_1", "Tributary", Hyd_Classification)
-  )
+# Modified distance downstream values and classification value for Anaktok to reflect this sample site as a tributary on the Salmon in excel then brought back into R
+
+SalmonR_2023_river_data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Salmon River July 2023 Data_updated.xlsx")
+
 ```
 
 ## Plot theme
@@ -325,6 +324,49 @@ ggsave('C:/Users/tayta/Downloads/SalmonR downstream legend.png', SalmonR_downstr
 ```
 
 ## For figure
+Basic plot to test everything
+```{r}
+SalmonR_pH <- ggplot() +
+  # Line plot for SalmonR_filtered_MS
+  geom_line(data = SalmonR_filtered_MS, aes(x = Distance_km, y = pH), color = "black", size = 1) +
+geom_point(data = SalmonR_filtered_MS, aes(x = Distance_km, y = pH), pch = 21, color = "black", 
+           #fill = "#2DAA9E",
+           fill = "#28968b",
+           size = 5, stroke = 1.2) +
+  # Points for SalmonR_filtered_Trib
+  geom_point(data = SalmonR_filtered_Trib, aes(x = Distance_km, y = pH), pch = 24, color = "black", 
+             #fill = "#c0eeea",
+             fill = "#a1e6ce",
+             #fill = "#92e2c6",
+             #fill = "#b1ead6",
+             size = 3.5, stroke = 1.2) +
+  # Points for impaired tribs
+  #geom_point(data = SalmonR_filtered_Trib, aes(x = Distance_km, y = pH), pch = 8, color = "indianred2", 
+             #fill = "#B2DF8A", 
+             #size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 105), y = c(4, 8.7)) +
+  scale_x_continuous(breaks = c(0,25,50,75,100)) +
+  labs(
+    title = NULL,
+    x = "Distance Downstream (km)",
+    y = NULL,
+    color = "Legend"
+  ) +
+   #scale_x_continuous(breaks = c(0,25,50,75,100,115)) +
+  #scale_y_break(c(4.7, 7.25), scales = 7) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.title.x = element_blank(),
+    #axis.ticks.x = element_blank(),
+    #axis.text.x = element_blank(),
+    panel.background = element_rect(fill = "transparent", color = NA), # Panel background
+    plot.background = element_rect(fill = "transparent", color = NA) # Plot background
+  )
+
+SalmonR_pH
+```
+
 ### Top plot
 ```{r}
 SalmonR_Downstream_analysis_of_pH_top <- 

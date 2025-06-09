@@ -2391,7 +2391,7 @@ Cd_df <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
                 f_Cd_mcg_per_l, f_Cd_mcg_per_l_qa, p_Cd_mcg_per_l, p_Cd_mcg_per_l_qa) %>%
   filter(!(is.na(New_Grouping)))
 
-#view(Cd_df)
+view(Cd_df)
 
 # Filter NA values in the grouping variable, filter particulate concentrations and make long format
 Cd_long <- Cd_df %>%
@@ -2402,7 +2402,7 @@ Cd_long <- Cd_df %>%
     values_to = "Metal_conc"
   ) %>%
   filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
-  mutate(Metal_conc_plot = Metal_conc + 0.01)
+  mutate(Metal_conc_plot = Metal_conc + 0.001)
 
 #view(Cd_long)
 
@@ -2429,7 +2429,7 @@ Cd_long <- Cd_long %>%
 
 
 ```{r}
-Cd_plot <- ggplot(Cd_long, aes(x = x_group, y = Metal_conc)) +
+Cd_plot <- ggplot(Cd_long, aes(x = x_group, y = Metal_conc_plot)) +
   geom_boxplot_pattern(
     aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
     outlier.shape = 16,
@@ -2439,22 +2439,23 @@ Cd_plot <- ggplot(Cd_long, aes(x = x_group, y = Metal_conc)) +
     pattern_spacing = 0.015,
     pattern_angle = 45,
     width = 0.75,
-    alpha = 0.85
+    alpha = 0.85,
+    size = 0.75
   ) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
-  scale_pattern_fill_manual(values = c("f" = NA, "p" = "black")) +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
   scale_y_log10(
-    limits = c(0.01, 300),
+    limits = c(0.001, 1000),
     labels = scales::comma,
-    breaks = c(0.01, 0.1, 1, 10, 100, 1000),
+    breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +
   labs(
     title = NULL,
     x = NULL,
-    y = ylab_Cd,  
+    y = ylab_Cd,  # make sure ylab_Cd is defined
     fill = "Metal Type"
   ) +
   theme_minimal() +
@@ -2470,25 +2471,36 @@ Cd_plot <- ggplot(Cd_long, aes(x = x_group, y = Metal_conc)) +
 
 Cd_plot
 
-
 ```
 
 ##Co
 ```{r}
 # Select Co data
-Co_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Co_mcg_per_l, p_Co_mcg_per_l)
+Co_df <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
+                f_Co_mcg_per_l, f_Co_mcg_per_l_qa, p_Co_mcg_per_l, p_Co_mcg_per_l_qa) %>%
+  filter(!(is.na(New_Grouping)))
+
+#view(Co_df)
 
 # Filter NA values in the grouping variable, filter particulate concentrations and make long format
 Co_long <- Co_df %>%
-  filter(!(New_Groups == "NA")) %>%
   pivot_longer(
     cols = c(f_Co_mcg_per_l, p_Co_mcg_per_l),
     names_to = "Metal_type",
     names_pattern = "^(.)_Co_mcg_per_l",
     values_to = "Metal_conc"
-  )
-  #filter(Metal_conc >= 0.01)
+  ) %>%
+  filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
+  mutate(Metal_conc_plot = Metal_conc + 0.01)
+
+#view(Co_long)
+
+Co_counts_df <- Co_long %>%
+  group_by(New_Grouping, Metal_type) %>%
+  summarise(count = n(), .groups = "drop")
+
+#view(Co_counts_df)
 
 # Factor the grouping variable to set plotting order
 Co_long <- Co_long %>%
@@ -2503,10 +2515,11 @@ Co_long <- Co_long %>%
     )
   )
 
+
 ```
 
 ```{r}
-Co_plot <- ggplot(Co_long, aes(x = x_group, y = Metal_conc)) +
+Co_plot <- ggplot(Co_long, aes(x = x_group, y = Metal_conc_plot)) +
   geom_boxplot_pattern(
     aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
     outlier.shape = 16,
@@ -2516,22 +2529,23 @@ Co_plot <- ggplot(Co_long, aes(x = x_group, y = Metal_conc)) +
     pattern_spacing = 0.015,
     pattern_angle = 45,
     width = 0.75,
-    alpha = 0.85
+    alpha = 0.85,
+    size = 0.75
   ) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
   scale_y_log10(
-    limits = c(0.1, 100000),
+    limits = c(0.01, 100000),
     labels = scales::comma,
-    breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000),
+    breaks = c(0.01, 0.1, 1, 10, 100, 1000, 10000, 100000),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +
   labs(
     title = NULL,
     x = NULL,
-    y = ylab_Co,  # Make sure ylab_Co is defined!
+    y = ylab_Co,  # make sure ylab_Co is defined
     fill = "Metal Type"
   ) +
   theme_minimal() +
@@ -2564,28 +2578,6 @@ view(Se_df)
 
 ```
 
-```{r}
-Se_df_1_metal <- Se_df %>%
-  filter(Site_Grouping == 1) 
-
-Se_seep_df_metal <- Se_df %>%
-  filter(Site_Grouping == 2)
-
-view(Se_seep_df_metal)
-
-Se_df_3_metal <- Se_df %>%
-  filter(Site_Grouping == 3) 
-
-Se_df_4_metal <- Se_df %>%
-  filter(Site_Grouping == 4)
-
-Se_df_5_metal <- Se_df %>%
-  filter(Site_Grouping == 5) 
-
-Se_df_6_metal <- Se_df %>%
-  filter(Site_Grouping == 6)
-
-```
 
 ```{r}
 Se_plot <- ggplot() + 

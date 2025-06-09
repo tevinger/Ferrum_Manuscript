@@ -510,16 +510,16 @@ view(summary_df_filtered)
 write_xlsx(summary_df_filtered, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/Upstream and seeps_rstatix.xlsx")
 
 summary_df_filtered_wide <- summary_df_filtered %>%
-  dplyr::select(1,2,8) %>%
+  dplyr::select(1,2,6) %>%
   pivot_wider(
   id_cols = variable,
   names_from = New_Grouping,
-  values_from = mean
+  values_from = median
 )
 
 view(summary_df_filtered_wide)
 
-write_xlsx(summary_df_filtered_wide, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/Upstream, seeps, downstream_means.xlsx")
+write_xlsx(summary_df_filtered_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Ferrum Manuscript Summary Stats/Upstream, seep, downstream_medians.xlsx")
 ```
 
 ## With watershed

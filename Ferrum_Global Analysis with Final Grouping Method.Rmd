@@ -466,6 +466,7 @@ ylab_Mn <- expression(bold(Mn)~bold((μg~L^-1)))
 ylab_Cd <- expression(bold(Cd)~bold((μg~L^-1)))
 ylab_Al <- expression(bold(Al)~bold((μg~L^-1)))
 ylab_Co <- expression(bold(Co)~bold((μg~L^-1)))
+ylab_Se <- expression(bold(Se)~bold((μg~L^-1)))
 
 ylab_SUVA <- expression(bold(SUVA[254~nm])~(L/mg~m)) 
 ylab_Sulfate_log <- expression(bold(log[10])~bold(SO[4]^-2)~bold((mg~L^-1)))
@@ -2492,7 +2493,7 @@ Co_long <- Co_df %>%
     values_to = "Metal_conc"
   ) %>%
   filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
-  mutate(Metal_conc_plot = Metal_conc + 0.01)
+  mutate(Metal_conc_plot = Metal_conc + 0.001)
 
 #view(Co_long)
 
@@ -2536,9 +2537,9 @@ Co_plot <- ggplot(Co_long, aes(x = x_group, y = Metal_conc_plot)) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
   scale_y_log10(
-    limits = c(0.01, 100000),
+    limits = c(0.001, 100000),
     labels = scales::comma,
-    breaks = c(0.01, 0.1, 1, 10, 100, 1000, 10000, 100000),
+    breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000, 100000),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +
@@ -2564,145 +2565,93 @@ Co_plot
 
 ```
 
-## Se filtered and particulate
+## Se 
 ```{r}
-## Se
-Se_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, Site_Group, Site_Grouping, f_Se_mcg_per_l, p_Se_mcg_per_l) %>%
-  mutate(p_Se_mcg_per_l = ifelse(p_Se_mcg_per_l <= 0.01, NA, p_Se_mcg_per_l))
+# Select Se data
+Se_df <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
+                f_Se_mcg_per_l, f_Se_mcg_per_l_qa, p_Se_mcg_per_l, p_Se_mcg_per_l_qa) %>%
+  filter(!(is.na(New_Grouping)))
 
-  filter(f_Se_mcg_per_l > 0.01) %>%
-  filter(p_Se_mcg_per_l > 0.01)
+#view(Se_df)
 
-view(Se_df)
+# Filter NA values in the grouping variable, filter particulate concentrations and make long format
+Se_long <- Se_df %>%
+  pivot_longer(
+    cols = c(f_Se_mcg_per_l, p_Se_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Se_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
+  mutate(Metal_conc_plot = Metal_conc + 0.001)
+
+#view(Se_long)
+
+Se_counts_df <- Se_long %>%
+  group_by(New_Grouping, Metal_type) %>%
+  summarise(count = n(), .groups = "drop")
+
+#view(Se_counts_df)
+
+# Factor the grouping variable to set plotting order
+Se_long <- Se_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+
+# Create a new variable that combines the groups and metal_type for plotting order
+Se_long <- Se_long %>%
+  mutate(
+    x_group = factor(
+      interaction(New_Groups, Metal_type, sep = "_"),
+      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
+    )
+  )
 
 ```
 
 
 ```{r}
-Se_plot <- ggplot() + 
-  # Boxplot and jitter for Site_Grouping 1
-  geom_boxplot(data = Se_df_1_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Se_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Se_df_1_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Se_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Se_df_1_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Se_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Se_df_1_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Se_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 2
-  geom_boxplot(data = Se_seep_df_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Se_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Se_seep_df_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Se_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Se_seep_df_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Se_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Se_seep_df_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Se_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 3
-  geom_boxplot(data = Se_df_3_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Se_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Se_df_3_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Se_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  geom_boxplot(data = Se_df_3_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Se_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Se_df_3_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Se_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 5
-  geom_boxplot(data = Se_df_5_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Se_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Se_df_5_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Se_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Se_df_5_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Se_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Se_df_5_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Se_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 6
-  geom_boxplot(data = Se_df_6_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Se_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Se_df_6_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Se_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Se_df_6_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Se_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Se_df_6_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Se_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Se_df_4_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Se_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Se_df_4_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Se_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Se_df_4_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Se_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Se_df_4_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Se_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  # Manual fill colors
-  scale_fill_manual(name = "Site Group", values = boxplot_colors) +
-  
-  ylim(0.01, 1000) +
-  scale_y_log10(limits = c(.01, 1000), labels = scales::comma,
-                breaks = scales::trans_breaks("log10", function(x)10^x)) +
+Se_plot <- ggplot(Se_long, aes(x = x_group, y = Metal_conc_plot)) +
+  geom_boxplot_pattern(
+    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
+    pattern_density = 0.35,
+    pattern_spacing = 0.015,
+    pattern_angle = 45,
+    width = 0.75,
+    alpha = 0.85,
+    size = 0.75
+  ) +
+  scale_fill_manual(values = boxplot_colors) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
+  scale_y_log10(
+    limits = c(0.001, 2000),
+    labels = scales::comma,
+    breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
   labs(
-    title = "Selenium Concentration by Site Group",
-    x = "Site Grouping",
-    y = "Selenium Concentration (mcg/L)",
-    fill = "Particulate metal"
+    title = NULL,
+    x = NULL,
+    y = ylab_Se,  # make sure ylab_Se is defined
+    fill = "Metal Type"
   ) +
   theme_minimal() +
+  boxplot_theme +
   theme(
-      axis.text.x = element_blank(),  
-      axis.title.x = element_blank(),
-      axis.title.y = element_blank(),
-      axis.text.y = element_text(size = 24, color = "black", face = "bold", margin = margin(r = 10)),
-      axis.ticks.y = element_line(size = 0.8, color = "black"),
-      plot.title = element_blank(),
-      legend.position = "none",
-      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
-      panel.background = element_rect(fill = "transparent"),  
-      plot.background = element_rect(fill = "transparent", color = NA),
-      axis.ticks.x = element_line(size = 0.8, color = "black"), # Make x-axis ticks visible
-      axis.ticks.length = unit(5, "pt")
-    ) +
-  scale_x_discrete(expand = expansion(mult = c(0.11, 0.08))) +
-  annotation_logticks(sides = "l")
+    legend.position = "none",
+    axis.title.y = element_text(margin = margin(r = 1)),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
 
 Se_plot
-
-ggsave("C:/Users/tayta/Downloads/Se bp proximity_V1.png", Se_plot, bg = "transparent", width = 4.8, height = 4.5, dpi = 300)
 
 
 ```

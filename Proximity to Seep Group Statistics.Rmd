@@ -392,16 +392,16 @@ for (i in seq_along(elements)) {
   
   # Perform the summary operation for the current element
   summary_stats <- 
-    stats_working_Ferrum_data %>% # use for all data, watershed, year and month summary stats
-    #grouped_stats_working_Ferrum_data %>% # to group by New Grouping (seeps included)
+    #stats_working_Ferrum_data %>% # use for all data, watershed, year and month summary stats
+    Grouped_Ferrum_2022_2023_data %>% # to group by New Grouping (seeps included)
     #dplyr::select(9:70) %>% # all data
     #dplyr::select(2,9:70) %>% # Watershed
     #dplyr::select(4,9:70) %>% # Year
     #dplyr::select(5,9:70) %>% # Month
-    dplyr::select(6,9:70) %>% # Season
-    #dplyr::select(2,3,9:70) %>% # New Grouping
+    #dplyr::select(6,9:70) %>% # Season
+    dplyr::select(3,4,19:80) %>% # New Grouping
     filter(!is.na(.data[[column]])) %>%
-    group_by(sample_collection_season) %>% #This is where you can change what variable you want to group the data by
+    group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
     summarise(
     Variable = element,
     Mean = round(mean(.data[[column]], na.rm = TRUE), 2),
@@ -426,7 +426,7 @@ summary_stats_results <- do.call(rbind, summary_stats_list)
 
 view(summary_stats_results)
 
-write_xlsx(summary_stats_results, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/Season_seeps excluded.xlsx")
+write_xlsx(summary_stats_results, "C:/Users/tevinger/Downloads/Season_seeps excluded.xlsx")
 ```
 
 ```{r}
@@ -464,8 +464,8 @@ for (i in seq_along(elements)) {
   column <- columns[i]
   
   # Perform the summary operation for the current element
-  summary <- grouped_stats_working_Ferrum_data %>%
-    dplyr::select(2,3,9:70) %>%  # adjust as needed
+  summary <- Grouped_Ferrum_2022_2023_data %>%
+    dplyr::select(3,4,19:80) %>%  # adjust as needed
     filter(!is.na(.data[[column]])) %>%
     group_by(New_Grouping) %>%    # group by your variable
     get_summary_stats(vars = column, type = "common")
@@ -495,7 +495,7 @@ summary_df <- do.call(rbind, summary_stats_list)
 
 view(summary_df)
 
-write_xlsx(summary_df, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/Grouped_rstatix.xlsx")
+write_xlsx(summary_df, "C:/Users/tevinger/Downloads/Group summary stats_rstatix.xlsx")
 ```
 
 ```{r}

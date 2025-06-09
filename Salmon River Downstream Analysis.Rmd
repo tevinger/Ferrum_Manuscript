@@ -105,7 +105,7 @@ DA_theme <-
     legend.position = "right",
     legend.text = element_text(size = 15),
     legend.title = element_text(size = 17, face = "bold", hjust = 0.5),
-    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
     panel.background = element_rect(fill = "transparent"), # Panel background
     plot.background = element_rect(fill = "transparent", color = NA) # Plot background
   )
@@ -133,7 +133,7 @@ ylab_Cd <- expression(bold(Cd)~bold((μg~L^-1)))
 ylab_Al <- expression(bold(Al)~bold((μg~L^-1)))
 ylab_Co <- expression(bold(Co)~bold((μg~L^-1)))
 ylab_Se <- expression(bold(Se)~bold((μg~L^-1)))
-ylab_REE <- expression(bold(Σ REE)~bold((μg~L^-1)))
+ylab_REE <- expression(bold(Sigma~REE)~bold((μg~L^-1)))
 ylab_Tl <- expression(bold(Tl)~bold((μg~L^-1)))
 ylab_Pb <- expression(bold(Pb)~bold((μg~L^-1)))
 ylab_As <- expression(bold(As)~bold((μg~L^-1)))
@@ -145,7 +145,7 @@ ylab_FTHg <- expression(bold(FTHg)~(ng~L^-1))
 ylab_PMeHg <- expression(bold(PMeHg)~(ng~L^-1))
 ylab_PTHg <- expression(bold(PTHg)~(ng~L^-1))
 ylab_SPM <- expression(bold(SPM)~(ng~L^-1))
-ylab_Mn <- expression(bold(Manganese)~(μg~L^-1))
+#ylab_Mn <- expression(bold(Manganese)~(μg~L^-1))
 ylab_SUVA <- expression(bold(SUVA[254~nm])~(L/mg~m)) 
 ylab_Sulfide <- expression(bold(Sulfide)~(mg~L^-1))
 ```
@@ -174,11 +174,34 @@ boxplot_colors <- c(
     "Nakolikurok" = "#F87FC7",
     "Tukpahlearik Creek" = "#FDDE74",
     "Tukpahlearik" = "#FDDE74",
+  #"Upstream" = "#72D9FF",
+  #"Seep" = "darkred",
+  #"Impaired Tributary" = "indianred2",
+  #"Downstream MS 1" = "sienna1",
+  #"Downstream MS 2" = "orange2",
+  #"Downstream MS" = "orange2",
+  #"Unimpaired Tributary" = "darkblue",
+   "Unimpaired Tributary" = "#00589b",
   "Upstream" = "#72D9FF",
-  "Seep" = "darkred",
+  "Seep" = "#c81600",
   "Impaired Tributary" = "indianred2",
-  "Nearest Downstream MS" = "sienna1",
-  "Furthest Downstream MS" = "orange2"
+  "Downstream MS" = "#f5a678",
+  #"1" = "#72D9FF",
+  #"2" = "darkred",
+  #"3" = "indianred2",
+  #"5" = "sienna1",
+  #"6" = "orange2",
+  #"4" = "darkblue"
+  #"4" = "#003b68",
+  "4" = "#00589b",
+  "1" = "#72D9FF",
+  "2" = "#c81600",
+  "3" = "indianred2",
+  #"6" = "sienna1"
+  #"6" = "#ffb367",
+  #"6" = "#f4a460",
+  "6" = "#f5a678"
+  
 )
 
 ```

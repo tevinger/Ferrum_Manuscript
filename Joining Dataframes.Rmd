@@ -801,7 +801,7 @@ Alaska_DataRelease_2022_2023_Ferrum_V8 <- read_excel("C:/Users/tevinger/Box/Poul
 
 Alaska_DataRelease_2022_2023_Ferrum_V9 <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
   mutate(
-    REE = ifelse(
+    f_REE = ifelse(
       rowSums(is.na(dplyr::select(., 
                            f_Ce_mcg_per_l, 
                            f_Dy_mcg_per_l, 
@@ -819,13 +819,42 @@ Alaska_DataRelease_2022_2023_Ferrum_V9 <- Alaska_DataRelease_2022_2023_Ferrum_V8
                      f_Y_mcg_per_l), 
               na.rm = TRUE)
     ),
-    REE_qa = apply(dplyr::select(., 
+    f_REE_qa = apply(dplyr::select(., 
                           f_Ce_mcg_per_l_qa, 
                           f_Dy_mcg_per_l_qa, 
                           f_La_mcg_per_l_qa, 
                           f_Nd_mcg_per_l_qa, 
                           f_Pr_mcg_per_l_qa, 
                           f_Y_mcg_per_l_qa), 
+                   1, 
+                   function(x) paste(na.omit(x), collapse = ","))
+  ) %>%
+  mutate(
+    p_REE = ifelse(
+      rowSums(is.na(dplyr::select(., 
+                           p_Ce_mcg_per_l, 
+                           p_Dy_mcg_per_l, 
+                           p_La_mcg_per_l, 
+                           p_Nd_mcg_per_l, 
+                           p_Pr_mcg_per_l, 
+                           p_Y_mcg_per_l))) > 0,
+      NA,
+      rowSums(dplyr::select(., 
+                     p_Ce_mcg_per_l, 
+                           p_Dy_mcg_per_l, 
+                           p_La_mcg_per_l, 
+                           p_Nd_mcg_per_l, 
+                           p_Pr_mcg_per_l, 
+                           p_Y_mcg_per_l), 
+              na.rm = TRUE)
+    ),
+    p_REE_qa = apply(dplyr::select(., 
+                          p_Ce_mcg_per_l_qa, 
+                          p_Dy_mcg_per_l_qa, 
+                          p_La_mcg_per_l_qa, 
+                          p_Nd_mcg_per_l_qa, 
+                          p_Pr_mcg_per_l_qa, 
+                          p_Y_mcg_per_l_qa), 
                    1, 
                    function(x) paste(na.omit(x), collapse = ","))
   )

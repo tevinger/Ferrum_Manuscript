@@ -1,0 +1,877 @@
+---
+title: "Ferrum_Downstream Analysis"
+output: html_document
+date: "2025-01-29"
+editor_options: 
+  chunk_output_type: console
+---
+
+# Load Packages
+
+```{r}
+library(tidyverse)
+library(cowplot)
+library(ggplot2)
+library(lubridate)
+library(emmeans)
+library(lme4)
+library(ggeasy)
+library(lattice)
+library(rstatix)
+library(ggsignif)
+library(outliers)
+library(ggpmisc)
+library(ggpubr)
+library(r2symbols)
+library(stargazer)
+library(ggbreak)
+library(writexl)
+library(ggrepel)
+library(stringr)
+library(ggthemes)
+library(reshape)
+library(RColorBrewer)
+library(readxl)
+library(dplyr)
+library(gridExtra)
+library(scales)
+library(dbscan)
+library(mclust)
+library(devtools)
+library(factoextra)
+library(corrplot)
+library(ggbiplot)
+library(ggcorrplot)
+library(GGally)
+library(Hmisc)
+library(ggbiplot)
+library(ggfortify)
+library(emmeans)
+library(lme4)
+library(lmerTest)
+library(multcomp)
+library(readxl)
+library(learnr)
+library(scatterplot3d)
+library(vegan)
+library(ggtern)
+library(plotrix)
+library(colorBlindness)
+library(flextable)
+library(officer)
+library(dunn.test)
+library(multcompView)
+library(patchwork)
+library(ggbreak)
+library(ggpattern)
+```
+
+# Load Data
+```{r}
+Alaska_DataRelease_2022_2023_Ferrum_V9 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V9_REE.xlsx")
+```
+
+```{r}
+# Select data for Salmon River July 2023 trip
+SalmonR_2023_river_data <-  Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+  dplyr::filter(Watershed == "Salmon River" | `Field label` == "Anaktok_1") %>%
+  dplyr::filter(sample_collection_year == "2023") %>%
+  dplyr::filter(sample_collection_month == "July")
+
+view(SalmonR_2023_river_data)
+```
+
+```{r}
+# Modify distance and classification value for Anaktok to reflect this sample site as a tributary on the Salmon
+SalmonR_2023_river_data <- SalmonR_2023_river_data %>%
+  mutate(
+    Distance_km = if_else(`Field label` == "Anaktok_1", 28.8, Distance_km)
+  ) %>%
+  mutate(
+    Hyd_Classification = if_else(`Field label` == "Anaktok_1", "Tributary", Hyd_Classification)
+  )
+```
+
+## Plot theme
+
+```{r}
+DA_theme <- 
+  theme(
+    axis.text.y = element_text(size = 16, color = "black", face = "bold"),
+    axis.text.x = element_text(size = 16, color = "black", face = "bold", 
+                               #angle = 45, 
+                               hjust = 0.5),
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "black"),
+    legend.position = "right",
+    legend.text = element_text(size = 15),
+    legend.title = element_text(size = 17, face = "bold", hjust = 0.5),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    panel.background = element_rect(fill = "transparent"), # Panel background
+    plot.background = element_rect(fill = "transparent", color = NA) # Plot background
+  )
+```
+
+## Labels
+
+```{r}
+ylab_DOC <- expression(bold(DOC)~(mg~L^-1))
+ylab_DIC <- expression(bold(DIC)~(mgC~L^-1))
+ylab_Ca <- expression(bold(Ca)~(mg~L^-1))
+ylab_Mg <- expression(bold(Mg)~(mg~L^-1))
+ylab_Chloride <- expression(bold(Chloride)~(mg~L^-1))
+ylab_Sulfate <- expression(bold(SO[4]^-2)~bold((mg~L^-1)))
+ylab_Sulfate_log <- expression(bold(log[10])~bold(SO[4]^-2)~bold((mg~L^-1)))
+
+ylab_Fe <- expression(bold(Iron)~(μg~L^-1))
+ylab_Zn <- expression(bold(Zinc)~(μg~L^-1))
+ylab_SpC <- expression(bold(Specific~Conductivity)~(μS/cm))
+
+
+ylab_Salinity <- expression(bold(Salinity)~(ppt))
+ylab_FMeHg <- expression(bold(FMeHg)~(ng~L^-1))
+ylab_FTHg <- expression(bold(FTHg)~(ng~L^-1))
+ylab_PMeHg <- expression(bold(PMeHg)~(ng~L^-1))
+ylab_PTHg <- expression(bold(PTHg)~(ng~L^-1))
+ylab_SPM <- expression(bold(SPM)~(ng~L^-1))
+ylab_Mn <- expression(bold(Manganese)~(μg~L^-1))
+ylab_SUVA <- expression(bold(SUVA[254~nm])~(L/mg~m)) 
+ylab_Sulfide <- expression(bold(Sulfide)~(mg~L^-1))
+```
+
+## Colors
+```{r}
+watershed_colors <- c(  
+    "Agashashok River" = "#A1E3F9",   
+    "Anaktok River" = "#9F8383",
+    "Salmon River Watershed" = "#9F8383",
+    "Salmon River" = "#2DAA9E",   
+    "Kugururok River" = "#2D3D85",  
+    "Nakolikurok Creek" = "#F87FC7",
+    "Nakolikurok" = "#F87FC7",
+    "Tukpahlearik Creek" = "#FDDE74",
+    "Tukpahlearik" = "#FDDE74"
+    )
+
+boxplot_colors <- c(
+  "Agashashok River" = "#A1E3F9",   
+    "Anaktok River" = "#9F8383",
+    "Salmon River Watershed" = "#9F8383",
+    "Salmon River" = "#2DAA9E",   
+    "Kugururok River" = "#2D3D85",  
+    "Nakolikurok Creek" = "#F87FC7",
+    "Nakolikurok" = "#F87FC7",
+    "Tukpahlearik Creek" = "#FDDE74",
+    "Tukpahlearik" = "#FDDE74",
+  "Upstream" = "#72D9FF",
+  "Seep" = "darkred",
+  "Impaired Tributary" = "indianred2",
+  "Nearest Downstream MS" = "sienna1",
+  "Furthest Downstream MS" = "orange2"
+)
+
+```
+
+
+# Downstream Analysis
+
+#### Filter Data
+```{r}
+SalmonR_filtered_MS <- SalmonR_2023_river_data %>%
+  filter(Hyd_Classification == "Mainstem")
+
+SalmonR_filtered_Trib <- SalmonR_2023_river_data %>%
+  filter(Hyd_Classification == "Tributary")
+```
+
+
+## pH plot
+```{r}
+# Split data for top and bottom panels
+top_data_Trib <- SalmonR_filtered_Trib %>% filter(pH >= 7.8)
+bottom_data_Trib <- SalmonR_filtered_Trib %>% filter(pH < 4.9)
+
+Salmon_impaired_tribs <- SalmonR_filtered_Trib %>% filter(pH < 7.8 & pH > 5)
+```
+
+#### for legend
+```{r}
+SalmonR_Downstream_analysis_of_pH_top <- 
+  ggplot() +
+  
+  # Line plot for SalmonR_filtered_MS
+  geom_line(data = SalmonR_filtered_MS, 
+            aes(x = Distance_km, y = pH, 
+                #color = "black"
+                ), color = "black", size = 1) +  # Move color inside aes()
+  
+  # Points for Main Stem
+  geom_point(data = SalmonR_filtered_MS, 
+             aes(x = Distance_km, y = pH, 
+                 color = "Mainstem", 
+                 fill = "Mainstem"
+                 ), 
+             pch = 21, size = 5, 
+             stroke = 1.2
+             ) +
+  
+  # Points for Tributary
+  geom_point(data = top_data_Trib, 
+             aes(x = Distance_km, y = pH, 
+                 color = "Unimpaired Tributary"
+                 , fill = "Tributary"
+                 ), 
+             pch = 24, size = 4.5, 
+             stroke = 1.2
+             ) +
+  
+  geom_point(data = Salmon_impaired_tribs,
+             aes(x = Distance_km, y = pH,
+             color = "Impaired Tributary"),
+             pch = 8, size = 4.5, stroke = 1.2) +
+  
+  geom_point(data = Zn_SalmonR_filtered_MS, aes(x = Distance_km, y = p_Zn_mcg_per_l, color = "particulate", fill = "particulate_MS"), pch = 21, 
+           size = 5, stroke = 1.2) +
+  # Points for SalmonR_filtered_Trib
+  geom_point(data = p_Zn_bottom_data_Trib, aes(x = Distance_km, y = p_Zn_mcg_per_l, color = "particulate", fill = "particulate_Trib"), pch = 25, 
+             size = 4, stroke = 1.2) +
+    geom_point(data = p_Zn_impaired_trib_1, aes(x = Distance_km, y = p_Zn_mcg_per_l, color = "particulate", fill = "particulate_Imp"), pch = 8, 
+             size = 4, stroke = 1.2) +
+
+  # Set axis limits
+  coord_cartesian(xlim = c(0, 270), ylim = c(min(SalmonR_filtered_MS$pH) - 0.1, max(SalmonR_filtered_Trib$pH) + 0.1)) +
+
+  # Labels
+  labs(
+    title = "Salmon River Downstream",
+    x = "Distance Downstream (km)",
+    y = NULL,
+    color = "Legend",
+    fill = "Legend"
+  ) +
+  
+  # Set custom colors for legend
+  scale_color_manual(values = c("Mainstem" = "black", "Unimpaired Tributary" = "black", "Impaired Tributary" = "indianred2", "particulate" = "black"),
+                     guide = guide_legend(byrow = TRUE)) +  # Set outline colors
+  scale_fill_manual(values = c("Mainstem" = "#2DAA9E", "Tributary" = "#B2DF8A", "particulate_MS" = "black", "particulate_Trib" = "black", "particulate_Imp" = "black")) +  # Set fill colors
+  
+  # Apply theme
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    legend.position = "right",
+    legend.text = element_text(size = 20, face = "bold"),
+    legend.title = element_blank(),
+    legend.key.height = unit(1, "cm"),
+    legend.justification = 0.5
+  )
+
+SalmonR_Downstream_analysis_of_pH_top
+```
+
+```{r}
+#extract legend from the plot above and save separately
+#build a function to extract legend
+g_legend <- function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+#extracting plot legend
+SalmonR_downstream_pH_legend <- g_legend(SalmonR_Downstream_analysis_of_pH_top)
+
+ggsave('C:/Users/tayta/Downloads/SalmonR downstream legend.png', SalmonR_downstream_pH_legend, width = 5, height = 8, dpi = 300)
+
+"#A6CEE3" "#1F78B4" "#B2DF8A" "#33A02C" "#FB9A99" "#E31A1C" "#CAB2D6" "#6A3D9A" "#FFFF99" "#B15928" "#B3B3B3" "#666666"
+```
+
+## For figure
+### Top plot
+```{r}
+SalmonR_Downstream_analysis_of_pH_top <- 
+  ggplot() +
+  # Line plot for SalmonR_filtered_MS
+  geom_line(data = SalmonR_filtered_MS, aes(x = Distance_km, y = pH), color = "black", size = 1) +
+geom_point(data = SalmonR_filtered_MS, aes(x = Distance_km, y = pH), pch = 21, color = "black", 
+           fill = "#2DAA9E", 
+           size = 5, stroke = 1.2) +
+  # Points for SalmonR_filtered_Trib
+  geom_point(data = top_data_Trib, aes(x = Distance_km, y = pH), pch = 24, color = "black", 
+             fill = "#B2DF8A", 
+             size = 4, stroke = 1.2) +
+  geom_point(data = Salmon_impaired_tribs, aes(x = Distance_km, y = pH), pch = 8, color = "indianred2", 
+             #fill = "#B2DF8A", 
+             size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 115), y = c(6.5, 8.7)) +
+  scale_x_continuous(breaks = c(0,25,50,75,100,115)) +
+  labs(
+    title = NULL,
+    x = "Distance Downstream (km)",
+    y = NULL,
+    color = "Legend"
+  ) +
+  #scale_y_break(c(4.7, 7.25), scales = 7) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    #legend.position = "none",
+    panel.background = element_rect(fill = "transparent"), # Panel background
+    plot.background = element_rect(fill = "transparent", color = NA) # Plot background
+    )
+
+SalmonR_Downstream_analysis_of_pH_top
+```
+
+### Bottom Plot
+```{r}
+SalmonR_Downstream_analysis_of_pH_bottom <- 
+  ggplot() +
+  geom_point(data = bottom_data_Trib, aes(x = Distance_km, y = pH), pch = 8, color = "indianred2", 
+             #fill = "#B2DF8A", 
+             size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 115), y = c(4.6, 4.7)) +
+  scale_y_continuous(
+    breaks = c(4.6,4.7)  # Positions of ticks
+    #labels = c()  # Custom labels
+  ) +
+  labs(
+    title = NULL,
+    x = "Distance Downstream (km)",
+    y = NULL,
+    color = "Legend"
+  ) +
+   scale_x_continuous(breaks = c(0,25,50,75,100,115)) +
+  #scale_y_break(c(4.7, 7.25), scales = 7) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.title.x = element_blank(),
+    #axis.ticks.x = element_blank(),
+    #axis.text.x = element_blank(),
+    panel.background = element_rect(fill = "transparent", color = NA), # Panel background
+    plot.background = element_rect(fill = "transparent", color = NA) # Plot background
+  )
+
+SalmonR_Downstream_analysis_of_pH_bottom
+
+
+#plot_grid(SalmonR_Downstream_analysis_of_pH_top, SalmonR_Downstream_analysis_of_pH_bottom, ncol = 1, align = "v", rel_heights = c(2, 1), vjust = 1)  # Adjust height ratio if needed
+
+```
+
+### Combined
+``` {r}
+library(patchwork)
+
+#SalmonR_downstream_pH <- SalmonR_Downstream_analysis_of_pH_top / SalmonR_Downstream_analysis_of_pH_bottom + plot_layout(heights = c(4, 1), guides = "collect") & theme(plot.margin = margin(0, 5, 0, 2))
+
+#SalmonR_downstream_pH
+
+SalmonR_downstream_pH_combo <- SalmonR_Downstream_analysis_of_pH_top / SalmonR_Downstream_analysis_of_pH_bottom + plot_layout(heights = c(4, 1), guides = "collect") & theme(plot.margin = margin(0, 5, 0, 2), panel.background = element_rect(fill = "NA", color = "NA"), # Panel background
+    plot.background = element_rect(fill = "NA", color = "NA") # Plot background
+    )
+
+SalmonR_downstream_pH_combo
+
+ggsave("C:/Users/tayta/Downloads/Salmon River Downstream pH.png", plot = SalmonR_downstream_pH_combo, width = 9, height = 4, bg = "transparent", dpi = 760)
+
+```
+
+## Sulfate Plot
+
+``` {r}
+# Split data for top and bottom panels
+#SO4_top_data_Trib <- SalmonR_filtered_Trib %>% filter(f_SO4_mg_per_l >= 7.8)
+SO4_bottom_data <- SalmonR_filtered_Trib %>% filter(f_SO4_mg_per_l < 300)
+#SO4_Salmon_impaired_1 <- SalmonR_filtered_Trib %>% filter(f_SO4_mg_per_l == 407.18 )
+SO4_Salmon_impaired_tribs <- SalmonR_filtered_Trib %>% filter(f_SO4_mg_per_l > 320)
+
+
+value <- SalmonR_2023_river_data$f_SO4_mg_per_l[SalmonR_2023_river_data$`Field label` == "Anaktok_1"]
+print(value)
+```
+
+#### Bottom Plot
+``` {r}
+SalmonR_Downstream_SO4_bottom <- 
+  ggplot() +
+  # Line plot for SalmonR_filtered_MS
+  geom_line(data = SalmonR_filtered_MS, aes(x = Distance_km, y = f_SO4_mg_per_l), color = "black", size = 1) +
+  #points for mainstem sites
+  geom_point(data = SalmonR_filtered_MS, aes(x = Distance_km, y = f_SO4_mg_per_l), pch = 21, fill = "#2DAA9E", color = "black", 
+             #fill = "#A6CEE3", 
+             size = 5, stroke = 1.2) +
+  # Points for unimpaired tributaries
+  geom_point(data = SO4_bottom_data, aes(x = Distance_km, y = f_SO4_mg_per_l), pch = 24, fill = "#B2DF8A", color = "black", 
+             #fill = "#B2DF8A", 
+             size = 4, stroke = 1.2) +
+  # points for impiared trib 1
+  geom_point(data = SO4_Salmon_impaired_tribs, aes(x = Distance_km, y = f_SO4_mg_per_l), pch = 8, color = "indianred2", 
+             #fill = "#B2DF8A", 
+             size = 4, stroke = 1.2) +
+  #scale_y_log10() +
+  coord_cartesian(x = c(0, 115), y = c(0, 450)) +
+  #scale_y_continuous(breaks = c(0,25,100,200,300,400,500,900)) +
+  scale_x_continuous(breaks = c(0,25,50,75,100,115)) +
+  labs(
+    title = NULL,
+    x = "Distance Downstream (km)",
+    y = ylab_Sulfate,
+    color = "Legend"
+  ) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    panel.background = element_rect(fill = "NA", color = "NA"), # Panel background
+    plot.background = element_rect(fill = "NA", color = "NA") # Plot background
+  )
+
+SalmonR_Downstream_SO4_bottom
+
+#ggsave("C:/Users/tayta/Downloads/Downstream Salmon Sulfate.png", plot = SalmonR_Downstream_analysis_of_SO4, width = 9, height = 4, bg = "transparent", dpi = 760)
+
+```
+
+### Top Plot
+``` {r}
+SalmonR_Downstream_SO4_top <- 
+  ggplot() +
+  geom_point(data = SO4_Salmon_impaired_tribs, aes(x = Distance_km, y = f_SO4_mg_per_l), pch = 8, 
+             color = "indianred2",
+             #fill = "#B2DF8A", 
+             size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 115), y = c(850, 900)) +
+  scale_x_continuous(breaks = c(0,25,50,75,100,115)) +
+  labs(
+    title = NULL,
+    x = "Distance Downstream (km)",
+    y = NULL,
+    color = "Legend"
+  ) +
+  #scale_y_break(c(4.7, 7.25), scales = 7) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    #legend.position = "none",
+    panel.background = element_rect(fill = "transparent"), # Panel background
+    plot.background = element_rect(fill = "transparent", color = NA) # Plot background
+    )
+
+SalmonR_Downstream_SO4_top
+```
+
+### Combined
+``` {r}
+SalmonR_downstream_SO4_combo <- SalmonR_Downstream_SO4_top / SalmonR_Downstream_SO4_bottom + plot_layout(
+  heights = c(1, 4), 
+  guides = "collect") & theme(plot.margin = margin(0, 5, 0, 2), panel.background = element_rect(fill = "NA", color = "NA"), # Panel background
+    plot.background = element_rect(fill = "NA", color = "NA") # Plot background
+    )
+
+SalmonR_downstream_SO4_combo
+
+ggsave("C:/Users/tayta/Downloads/Salmon River Downstream SO4.png", plot = SalmonR_downstream_SO4_combo, width = 9, height = 4, bg = "transparent", dpi = 760)
+
+```
+
+
+## Zn
+
+```{r}
+f_Zn_SalmonR_filtered_MS <- SalmonR_filtered_MS %>%
+  dplyr::select(Field_Label, Distance_km, f_Zn_mcg_per_l, p_Zn_mcg_per_l) %>%
+  filter(!is.na(f_Zn_mcg_per_l))
+
+f_Zn_SalmonR_filtered_MS$f_Zn_mcg_per_l <- as.numeric(Zn_SalmonR_filtered_MS$f_Zn_mcg_per_l)
+
+f_Zn_SalmonR_filtered_Trib <- SalmonR_filtered_Trib %>%
+  dplyr::select(Field_Label, Distance_km, f_Zn_mcg_per_l, p_Zn_mcg_per_l) %>%
+  filter(!is.na(f_Zn_mcg_per_l))
+
+f_Zn_SalmonR_filtered_Trib$f_Zn_mcg_per_l <- as.numeric(Zn_SalmonR_filtered_Trib$f_Zn_mcg_per_l)
+
+p_Zn_SalmonR_filtered_MS <- SalmonR_filtered_MS %>%
+  dplyr::select(Field_Label, Distance_km, f_Zn_mcg_per_l, p_Zn_mcg_per_l) %>%
+  filter(!is.na(p_Zn_mcg_per_l))
+
+p_Zn_SalmonR_filtered_MS$p_Zn_mcg_per_l <- as.numeric(p_Zn_SalmonR_filtered_MS$p_Zn_mcg_per_l)
+
+p_Zn_SalmonR_filtered_Trib <- SalmonR_filtered_Trib %>%
+  dplyr::select(Field_Label, Distance_km, f_Zn_mcg_per_l, p_Zn_mcg_per_l) %>%
+  filter(!is.na(p_Zn_mcg_per_l))
+
+p_Zn_SalmonR_filtered_Trib$p_Zn_mcg_per_l <- as.numeric(p_Zn_SalmonR_filtered_Trib$p_Zn_mcg_per_l)
+
+view(p_Zn_SalmonR_filtered_Trib)
+```
+
+### Split data for top and bottom panels
+```{r}
+# Split data for top and bottom panels
+f_Zn_top_data_Trib <- f_Zn_SalmonR_filtered_Trib %>% filter(f_Zn_mcg_per_l >= 1000)
+f_Zn_bottom_data_Trib <- f_Zn_SalmonR_filtered_Trib %>% filter(f_Zn_mcg_per_l < 60)
+f_Zn_impaired_trib_1 <- f_Zn_SalmonR_filtered_Trib %>% filter(f_Zn_mcg_per_l > 75 & f_Zn_mcg_per_l < 85)
+
+p_Zn_top_data_Trib <- p_Zn_SalmonR_filtered_Trib %>% filter(f_Zn_mcg_per_l >= 1000)
+p_Zn_bottom_data_Trib <- p_Zn_SalmonR_filtered_Trib %>% filter(f_Zn_mcg_per_l < 60)
+p_Zn_impaired_trib_1 <- p_Zn_SalmonR_filtered_Trib %>% filter(f_Zn_mcg_per_l > 75 & f_Zn_mcg_per_l < 85)
+
+```
+
+### Top Plot
+``` {r}
+SalmonR_Downstream_analysis_of_Zn_top <- 
+  ggplot() +
+  geom_vline(xintercept = c(17.01, 21.81), size = 0.5, color = "darkred") +
+  geom_point(data = f_Zn_top_data_Trib, aes(x = Distance_km, y = f_Zn_mcg_per_l), pch = 8, color = "indianred2", 
+             #fill = "#B2DF8A",
+             size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 115), y = c(1975,1976)) +
+  #scale_y_continuous(breaks = c(2215, 2215.5)) +
+  scale_x_continuous(breaks = c(0,25,50,75,100,115)) +
+  labs(
+    title = NULL,
+    x = "Distance Downstream (km)",
+    y = NULL,
+    color = "Legend"
+  ) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.background = element_rect(fill = "NA", color = "NA"), # Panel background
+    plot.background = element_rect(fill = "NA", color = "NA") # Plot background
+  )
+
+SalmonR_Downstream_analysis_of_Zn_top
+
+```
+
+### Bottom Plot
+``` {r}
+SalmonR_Downstream_analysis_of_Zn_bottom <- 
+  ggplot() +
+  geom_vline(xintercept = c(17.01, 21.81), size = 0.5, color = "darkred") +
+  geom_line(data = Zn_SalmonR_filtered_MS, aes(x = Distance_km, y = f_Zn_mcg_per_l), color = "black", size = 1) +
+geom_point(data = Zn_SalmonR_filtered_MS, aes(x = Distance_km, y = f_Zn_mcg_per_l), pch = 21, color = "black", 
+           fill = "#2DAA9E", 
+           size = 5, stroke = 1.2) +
+  # Points for SalmonR_filtered_Trib
+  geom_point(data = Zn_bottom_data_Trib, aes(x = Distance_km, y = f_Zn_mcg_per_l), pch = 24, color = "black", 
+             fill = "#B2DF8A", 
+             size = 4, stroke = 1.2) +
+    geom_point(data = Zn_impaired_trib_1, aes(x = Distance_km, y = f_Zn_mcg_per_l), pch = 8, color = "indianred2", 
+             #fill = "#B2DF8A", 
+             size = 4, stroke = 1.2) +
+  #geom_point(data = p_Zn_top_data_Trib, aes(x = Distance_km, y = p_Zn_mcg_per_l), pch = 8, color = "black", fill = "black", size = 4, stroke = 1.2) +
+  #geom_line(data = Zn_SalmonR_filtered_MS, aes(x = Distance_km, y = p_Zn_mcg_per_l), color = "darkgrey", size = 1) +
+#geom_point(data = Zn_SalmonR_filtered_MS, aes(x = Distance_km, y = p_Zn_mcg_per_l), pch = 21, color = "black", fill = "black", size = 5, stroke = 1.2) +
+  # Points for SalmonR_filtered_Trib
+  #geom_point(data = p_Zn_bottom_data_Trib, aes(x = Distance_km, y = p_Zn_mcg_per_l), pch = 25, color = "black", fill = "black", size = 4, stroke = 1.2) +
+    #geom_point(data = p_Zn_impaired_trib_1, aes(x = Distance_km, y = p_Zn_mcg_per_l), pch = 8, color = "black", size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 115), y = c(0,250)) +
+  labs(
+    title = NULL,
+    x = "Distance Downstream (km)",
+    y = NULL,
+    color = "Legend"
+  ) +
+  scale_x_continuous(breaks = c(0,25,50,75,100,115)) +
+  scale_y_continuous(breaks = c(0,25,50,75,100,150,200,250)) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.title.x = element_blank(),
+    panel.background = element_rect(fill = "NA", color = "NA"), # Panel background
+    plot.background = element_rect(fill = "NA", color = "NA"), # Plot background
+    axis.text.y = element_text(size = 24, color = "black", face = "bold", margin = margin(r = 7)),
+    axis.text.x = element_text(size = 24, color = "black", face = "bold", margin = margin(t = 7)),
+      axis.ticks.y = element_line(size = 0.8, color = "black"),
+      plot.title = element_blank(),
+      legend.position = "none",
+      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
+      axis.ticks.x = element_line(size = 0.8, color = "black"), # Make x-axis ticks visible
+      axis.ticks.length = unit(5, "pt")
+  )
+
+SalmonR_Downstream_analysis_of_Zn_bottom
+```
+
+### Combined Zn with axis break
+``` {r}
+SalmonR_downstream_Zn <- SalmonR_Downstream_analysis_of_Zn_top / SalmonR_Downstream_analysis_of_Zn_bottom + plot_layout(heights = c(1,5), guides = "collect") & theme(plot.margin = margin(0, 5, 0, 2), panel.background = element_rect(fill = "transparent", color = "NA"), # Panel background
+    plot.background = element_rect(fill = "transparent", color = "NA") # Plot background
+    )
+
+SalmonR_downstream_Zn
+
+ggsave("C:/Users/tayta/Downloads/Salmon River Downstream diss Zn_dissolved only.png", plot = SalmonR_downstream_Zn, width = 9, height = 4.5, bg = "transparent", dpi = 760)
+```
+
+### Export Zn CMC/CCC
+``` {r}
+Zn_CMC_CCC <- SalmonR_filtered_MS %>%
+  dplyr::select(dist_downstream_km, Field_Label, SamplingEventID, Zn_mcg_per_l, water_hardness, Zn_CMC, Zn_CCC)
+
+write_xlsx(Zn_CMC_CCC, "C:/Users/tayta/Downloads/Salmon River Mainstem CCC and CMC.xlsx")
+```
+
+## Se
+
+```{r}
+Se_SalmonR_filtered_MS <- SalmonR_filtered_MS %>%
+  filter(!is.na(f_Se_mcg_per_l))
+
+Se_SalmonR_filtered_MS$f_Se_mcg_per_l <- as.numeric(Se_SalmonR_filtered_MS$f_Se_mcg_per_l)
+
+Se_SalmonR_filtered_Trib <- SalmonR_filtered_Trib %>%
+  filter(!is.na(f_Se_mcg_per_l))
+
+Se_SalmonR_filtered_Trib$f_Se_mcg_per_l <- as.numeric(Se_SalmonR_filtered_Trib$f_Se_mcg_per_l)
+```
+
+### Split data for top and bottom panels
+```{r}
+# Split data for top and bottom panels
+Se_top_data_Trib <- Se_SalmonR_filtered_Trib %>% filter(f_Se_mcg_per_l >= 10)
+Se_bottom_data_Trib <- Se_SalmonR_filtered_Trib %>% filter(f_Se_mcg_per_l < 1.25)
+Se_impaired_trib_1 <- Se_SalmonR_filtered_Trib %>% filter(f_Se_mcg_per_l > 1.2 & f_Se_mcg_per_l < 1.3)
+
+```
+
+### Bottom Plot
+```{r}
+SalmonR_Downstream_analysis_of_Se_bottom <- 
+  ggplot() +
+  geom_line(data = Se_SalmonR_filtered_MS, aes(x = Distance_km, y = f_Se_mcg_per_l), color = "black", size = 1) +
+geom_point(data = Se_SalmonR_filtered_MS, aes(x = Distance_km, y = f_Se_mcg_per_l), pch = 21, color = "black", 
+           fill = "#2DAA9E", 
+           size = 5, stroke = 1.2) +
+  # Points for SalmonR_filtered_Trib
+  geom_point(data = Se_bottom_data_Trib, aes(x = Distance_km, y = f_Se_mcg_per_l), pch = 24, color = "black", 
+             fill = "#B2DF8A", 
+             size = 4, stroke = 1.2) +
+    geom_point(data = Se_impaired_trib_1, aes(x = Distance_km, y = f_Se_mcg_per_l), pch = 8, color = "indianred2", 
+             #fill = "#B2DF8A", 
+             size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 115)
+                  , y = c(0,10)
+                  ) +
+  labs(
+    title = NULL,
+    x = "Distance Downstream (km)",
+    y = NULL,
+    color = "Legend"
+  ) +
+  scale_x_continuous(breaks = c(0,25,50,75,100,115)) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.title.x = element_blank(),
+    panel.background = element_rect(fill = "NA", color = "NA"), # Panel background
+    plot.background = element_rect(fill = "NA", color = "NA") # Plot background
+  )
+
+SalmonR_Downstream_analysis_of_Se_bottom
+```
+
+### Top Plot
+``` {r}
+SalmonR_Downstream_analysis_of_Se_top <- 
+  ggplot() +
+  geom_point(data = Se_top_data_Trib, aes(x = dist_downstream_km, y = Se_mcg_per_l), pch = 8, color = "black", 
+             #fill = "#B2DF8A",
+             size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 270), y = c(37, 40)) +
+  #scale_y_continuous(breaks = c(2215, 2215.5)) +
+  scale_x_continuous(breaks = c(0, 50,100,150,200,250)) +
+  labs(
+    title = NULL,
+    x = "Distance Downstream (km)",
+    y = NULL,
+    color = "Legend"
+  ) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.background = element_rect(fill = "NA", color = "NA"), # Panel background
+    plot.background = element_rect(fill = "NA", color = "NA") # Plot background
+  )
+
+SalmonR_Downstream_analysis_of_Se_top
+
+```
+
+### Combined Se with axis break
+``` {r}
+SalmonR_downstream_Se <- SalmonR_Downstream_analysis_of_Se_top / SalmonR_Downstream_analysis_of_Se_bottom + plot_layout(heights = c(1,4), guides = "collect") & theme(plot.margin = margin(0, 5, 0, 2), panel.background = element_rect(fill = "transparent", color = "NA"), # Panel background
+    plot.background = element_rect(fill = "transparent", color = "NA") # Plot background
+    )
+
+SalmonR_downstream_Se
+
+ggsave("C:/Users/tayta/Downloads/Salmon River Downstream diss Se.png", plot = SalmonR_downstream_Se, width = 9, height = 4, bg = "transparent", dpi = 760)
+```
+
+## DIC Plot
+
+``` {r}
+SalmonR_Downstream_analysis_of_DIC <- 
+  ggplot() +
+  # Line plot for SalmonR_filtered_MS
+  geom_line(data = SalmonR_filtered_MS, aes(x = dist_downstream_km, y = DIC_mgC_per_l), color = "blue", size = 1) +
+  
+  # Points for SalmonR_filtered_Trib
+  geom_point(data = SalmonR_filtered_Trib, aes(x = dist_downstream_km, y = DIC_mgC_per_l), color = "red", size = 3) +
+  
+  # Labels and theme
+  labs(
+    title = "Salmon River Downstream",
+    x = "Distance Downstream (km)",
+    y = ylab_DIC,
+    color = "Legend"
+  ) +
+  theme_minimal() +
+  DA_theme
+
+SalmonR_Downstream_analysis_of_DIC
+
+```
+
+### Chloride Plot
+
+``` {r}
+SalmonR_Downstream_analysis_of_Cl <- 
+  ggplot() +
+  # Line plot for SalmonR_filtered_MS
+  geom_line(data = SalmonR_filtered_MS, aes(x = dist_downstream_km, y = f_Cl_mg_per_l), color = "blue", size = 1) +
+  
+  # Points for SalmonR_filtered_Trib
+  geom_point(data = SalmonR_filtered_Trib, aes(x = dist_downstream_km, y = f_Cl_mg_per_l), color = "red", size = 3) +
+  
+  # Labels and theme
+  labs(
+    title = "Salmon River Downstream",
+    x = "Distance Downstream (km)",
+    y = ylab_Chloride,
+    color = "Legend"
+  ) +
+  theme_minimal() +
+  DA_theme
+
+SalmonR_Downstream_analysis_of_Cl
+
+```
+
+
+### Sulfate by Year - modification from AGU analysis
+
+```{r}
+Agashashok_River_Data_filtered_no_early_2022 <- Agashashok_River_Data_filtered %>%
+  filter(!(Year == 2022 & Season == "Early"))
+
+# Calculate means and counts
+sulfate_season_stats <- Agashashok_River_Data_filtered_no_early_2022 %>%
+  group_by(Year, Season) %>%
+  dplyr::summarize(
+    mean_value = mean(f_SO4_mg_per_l, na.rm = TRUE),
+    count = n(),
+    .groups = 'drop'  # Ensures ungrouped data at the end
+  )
+
+# Calculate yearly means for each year (across all seasons)
+sulfate_yearly_means <- Agashashok_River_Data_filtered %>%
+  group_by(Year) %>%
+  dplyr::summarize(mean_value = mean(f_SO4_mg_per_l, na.rm = TRUE), .groups = 'drop')
+
+
+# Add the Temporal_status column
+Agashashok_River_Data_filtered_no_early_2022 <- Agashashok_River_Data_filtered_no_early_2022 %>%
+  mutate(
+    Temporal_status = ifelse(Year %in% c(2015, 2016, 2017, 2018), 'pre',
+                      ifelse(Year %in% c(2019, 2022, 2023), 'post', NA))
+  )
+```
+
+```{r}
+
+
+Sulfate_temporal_bp <- ggplot(Agashashok_River_Data_filtered, aes(x = as.factor(Year), y = f_SO4_mg_per_l, fill = Season)) +
+  geom_boxplot() +
+  #scale_y_log10() +
+  scale_fill_manual(
+    values = c("Early" = "#88CCEE", "Late" = "#0072B2")
+  ) +
+  # Add means as text
+  #geom_text(data = chloride_season_stats, aes(x = as.factor(Year), y = 0.5, 
+                                     #label = paste0("mean =", mean_value), group = Season),
+           # position = position_dodge(width = 0.75), size = 3) +
+  # Add counts as text
+  geom_text(data = sulfate_season_stats, aes(x = as.factor(Year), y = -20, 
+                                     label = paste0("N=", count), group = Season),
+            position = position_dodge(width = 0.75), size = 5, angle = 45) +
+  geom_text(data = sulfate_season_stats, aes(x = as.factor(Year), y = -27, 
+                                     label = count, group = Season),
+            position = position_dodge(width = 0.75), size = 1, color = "white") +
+   geom_text(data = sulfate_season_stats, aes(x = as.factor(Year), y = 240, 
+                                     label = count, group = Season),
+            position = position_dodge(width = 0.75), size = 1, color = "white") +
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "red", size = 1) +
+  labs(
+    title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    y = "Sulfate Concentration (mg/L)",
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(hjust = 1, size = 24, color = "black", face = "bold", angle = 45),  # Rotate x-axis labels
+    plot.title = element_blank(),  # Center and style title
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(size = 25, color = "black", face = "bold"),
+    legend.position = "none",
+    legend.text = element_text(size = 15),
+    legend.title = element_text(size = 17, face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    panel.background = element_rect(fill = "transparent"), # Panel background
+    plot.background = element_rect(fill = "transparent", color = NA) # Plot background
+  ) 
+
+Sulfate_temporal_bp
+
+# Save to Box
+#ggsave("C:/Users/tayta/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Agashashok Temporal Analysis/Sulfate_temporal_bp.png", plot = Sulfate_temporal_bp, bg = "transparent", dpi = 300)
+
+#save to downloads
+ggsave("C:/Users/tayta/Downloads/Sulfate_temporal_bp.png", plot = Sulfate_temporal_bp, width = 7, height = 4.5, bg = "transparent", dpi = 300)
+
+# Add means as points
+#geom_point(data = sulfate_season_stats, aes(x = as.factor(Year), y = mean_value, color = Season), position = position_dodge(width = 0.7), size = 3, shape = 16)
+```
+
+```{r}
+#extracting plot legend
+Sulfate_temporal_bp_legend <- g_legend(Sulfate_temporal_bp)
+
+Sulfate_temporal_bp_legend
+
+ggsave('C:/Users/tayta/Downloads/Aggie Seasons Legend.png', Sulfate_temporal_bp_legend, width = 4, height = 2, bg = "transparent", dpi = 300)
+```

@@ -324,7 +324,7 @@ ggsave('C:/Users/tayta/Downloads/SalmonR downstream legend.png', SalmonR_downstr
 ```
 
 ## For figure
-Basic plot to test everything
+Basic plot to test everything - distance
 ```{r}
 SalmonR_pH <- ggplot() +
   # Line plot for SalmonR_filtered_MS
@@ -354,6 +354,47 @@ geom_point(data = SalmonR_filtered_MS, aes(x = Distance_km, y = pH), pch = 21, c
   ) +
    #scale_x_continuous(breaks = c(0,25,50,75,100,115)) +
   #scale_y_break(c(4.7, 7.25), scales = 7) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.title.x = element_blank(),
+    #axis.ticks.x = element_blank(),
+    #axis.text.x = element_blank(),
+    panel.background = element_rect(fill = "transparent", color = NA), # Panel background
+    plot.background = element_rect(fill = "transparent", color = NA) # Plot background
+  )
+
+SalmonR_pH
+```
+
+Basic plot to test everything - relative watershed area
+```{r}
+SalmonR_pH <- ggplot() +
+  # Line plot for SalmonR_filtered_MS
+  geom_line(data = SalmonR_filtered_MS, aes(x = Rel_Water_Area_plotting, y = pH), color = "black", size = 1) +
+geom_point(data = SalmonR_filtered_MS, aes(x = Rel_Water_Area_plotting, y = pH), pch = 21, color = "black", 
+           #fill = "#2DAA9E",
+           fill = "#28968b",
+           size = 5, stroke = 1.2) +
+  # Points for SalmonR_filtered_Trib
+  geom_point(data = SalmonR_filtered_Trib, aes(x = Rel_Water_Area_plotting, y = pH), pch = 24, color = "black", 
+             #fill = "#c0eeea",
+             fill = "#a1e6ce",
+             #fill = "#92e2c6",
+             #fill = "#b1ead6",
+             size = 3.5, stroke = 1.2) +
+  # Points for impaired tribs
+  #geom_point(data = SalmonR_filtered_Trib, aes(x = Distance_km, y = pH), pch = 8, color = "indianred2", 
+             #fill = "#B2DF8A", 
+             #size = 4, stroke = 1.2) +
+  #coord_cartesian(x = c(0, 105), y = c(4, 8.7)) +
+  #scale_x_continuous(breaks = c(0,25,50,75,100)) +
+  labs(
+    title = NULL,
+    x = "Distance Downstream (km)",
+    y = NULL,
+    color = "Legend"
+  ) +
   theme_minimal() +
   DA_theme +
   theme(

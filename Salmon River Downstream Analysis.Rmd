@@ -98,11 +98,11 @@ SalmonR_2023_river_data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Pro
 ```{r}
 SalmonR_filtered_MS <- SalmonR_2023_river_data %>%
   filter(Hyd_Classification == "Mainstem") %>%
-  mutate(Hyd_Classification = ifelse(is.na(Hyd_Classification), "normal", Hyd_Classification))
+  mutate(New_Grouping = ifelse(is.na(New_Grouping), "normal", New_Grouping))
 
 SalmonR_filtered_Trib <- SalmonR_2023_river_data %>%
   filter(Hyd_Classification == "Tributary") %>%
-  mutate(Hyd_Classification = ifelse(Hyd_Classification == "Downstream MS", "trib", Hyd_Classification))
+  mutate(New_Grouping = ifelse(New_Grouping == "Downstream MS", "Impaired Tributary", New_Grouping))
 
 Salmon_impaired_tribs <- SalmonR_filtered_Trib %>%
   dplyr::filter(Site_Classification == "Impaired")
@@ -232,9 +232,7 @@ boxplot_colors <- c(
   #"6" = "#ffb367",
   #"6" = "#f4a460",
   "6" = "#f5a678",
-  "normal" = "#28968b",
-  "trib" = "#a1e6ce"
-  
+  "normal" = "#28968b"
 )
 
 ```
@@ -255,21 +253,28 @@ pH_y_labels <- c(4.4, "4.6", "", "5.0", 5.2, "", 5.6, "", 6.0, "", 6.4, "", 6.8 
 SalmonR_pH_top <- ggplot() +
   # Line plot for SalmonR_filtered_MS
   geom_line(data = SalmonR_filtered_MS, aes(x = Rel_Water_Area_plotting, y = pH), color = "black", size = 1.1) +
-geom_point(data = SalmonR_filtered_MS, aes(x = Rel_Water_Area_plotting, y = pH), pch = 21, color = "black", 
-           #fill = "#2DAA9E",
+geom_point(data = SalmonR_filtered_MS, aes(x = Rel_Water_Area_plotting, y = pH, 
+      #fill = New_Grouping
+      ), pch = 21, color = "black", 
            fill = "#28968b",
+           #fill = "#2DAA9E",
            size = 4, stroke = 1.3) +
   # Points for SalmonR_filtered_Trib
-  geom_point(data = Salmon_unimpaired_tribs, aes(x = Rel_Water_Area_plotting, y = pH), pch = 24, color = "black", 
-             #fill = "#c0eeea",
+  geom_point(data = Salmon_unimpaired_tribs, aes(x = Rel_Water_Area_plotting, y = pH, 
+      #fill = New_Grouping
+      ), pch = 24, color = "black", 
              fill = "#a1e6ce",
              #fill = "#92e2c6",
              #fill = "#b1ead6",
+             #fill = "#c0eeea",
              size = 3.4, stroke = 1.2) +
   # Points for impaired tribs
-  geom_point(data = Salmon_impaired_tribs, aes(x = Rel_Water_Area_plotting, y = pH), pch = 25, color = "black", 
+  geom_point(data = Salmon_impaired_tribs, aes(x = Rel_Water_Area_plotting, y = pH, 
+       #fill = New_Grouping
+       ), pch = 25, color = "black", 
              fill = "indianred2", 
              size = 3.3, stroke = 1.2) +
+  #scale_fill_manual(values = boxplot_colors) +
   coord_cartesian(x = c(0, 22), y = c(7.2, 8.6)) +
   scale_x_continuous( 
     breaks = DA_breaks,
@@ -287,12 +292,16 @@ geom_point(data = SalmonR_filtered_MS, aes(x = Rel_Water_Area_plotting, y = pH),
   theme_minimal() +
   DA_theme +
   theme(
+    #legend.position = "none",
     axis.title.x = element_blank(),
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank()
   )
 
 SalmonR_pH_top
+
+
+SalmonR_pH_top_boxplot_colors
 ```
 
 ```{r}

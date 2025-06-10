@@ -131,38 +131,6 @@ Grouped_Ferrum_2022_2023_data <- Grouped_Ferrum_2022_2023_data %>%
 view(Grouped_Ferrum_2022_2023_data)
 ```
 
-### Group comparison dataframes
-```{r}
-# make a dataframe for just the filtered metal 
-filtered_metal_groups_df <- Grouped_Ferrum_2022_2023_data %>%
-  dplyr::select(New_Grouping,
-                f_SiO2_mg_per_l,
-f_Pb_mcg_per_l,
-f_Ag_mcg_per_l,
-f_Al_mcg_per_l,
-f_As_mcg_per_l,
-f_Ba_mcg_per_l,
-f_Cd_mcg_per_l,
-f_Ce_mcg_per_l,
-f_Co_mcg_per_l,
-f_Cr_mcg_per_l,
-f_Cu_mcg_per_l,
-f_Dy_mcg_per_l,
-f_Fe_mcg_per_l,
-f_La_mcg_per_l,
-f_Mn_mcg_per_l,
-f_Nd_mcg_per_l,
-f_Ni_mcg_per_l,
-f_Pr_mcg_per_l,
-f_Se_mcg_per_l,
-f_Tl_mcg_per_l,
-f_U_mcg_per_l,
-f_V_mcg_per_l,
-f_Y_mcg_per_l,
-f_Zn_mcg_per_l)
-
-```
-
 ### All data excluding seeps
 ```{r}
 # filter out seep samples - use for summary stats of all data, grouped by watershed, year, and month
@@ -402,9 +370,9 @@ for (i in seq_along(elements)) {
     #dplyr::select(4,9:70) %>% # Year
     #dplyr::select(5,9:70) %>% # Month
     #dplyr::select(6,9:70) %>% # Season
-    dplyr::select(3,4,19:80) %>% # New Grouping
+    dplyr::select(2,4,19:82) %>% # New Grouping
     filter(!is.na(.data[[column]])) %>%
-    group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
+    group_by(New_Grouping, Watershed) %>% #This is where you can change what variable you want to group the data by
     summarise(
     Variable = element,
     Mean = round(mean(.data[[column]], na.rm = TRUE), 2),
@@ -429,7 +397,7 @@ summary_stats_results <- do.call(rbind, summary_stats_list)
 
 view(summary_stats_results)
 
-write_xlsx(summary_stats_results, "C:/Users/tevinger/Downloads/Season_seeps excluded.xlsx")
+write_xlsx(summary_stats_results, "C:/Users/tevinger/Downloads/Group summary stats with Watershed.xlsx")
 ```
 
 ```{r}
@@ -460,45 +428,64 @@ library(rstatix)
 
 # Initialize an empty list to store results
 summary_stats_list <- list()
+quartiles_list <- list()
 
 # Loop through elements and columns
 for (i in seq_along(elements)) {
   element <- elements[i]
   column <- columns[i]
   
-  # Perform the summary operation for the current element
+  # Perform summary operation with a default empty tibble if an error occurs
   summary <- Grouped_Ferrum_2022_2023_data %>%
-    dplyr::select(4,19:82) %>%  # adjust as needed
-    filter(!is.na(.data[[column]])) %>%
-    group_by(New_Grouping) %>%    # group by your variable
-    get_summary_stats(vars = column, type = "common")
+      dplyr::select(2,4,19:82) %>%
+      filter(!is.na(.data[[column]])) %>%
+      group_by(New_Grouping, Watershed) %>%
+      get_summary_stats(vars = column, type = "common")
+
   
-  # Now calculate Q1 and Q3 for the same groups and variable
+  # Calculate Q1 and Q3
   q1_q3 <- Grouped_Ferrum_2022_2023_data %>%
-    dplyr::select(4,19:82) %>%  # adjust as needed
-    filter(!is.na(.data[[column]])) %>%
-    group_by(New_Grouping) %>%
-    summarise(
-      variable = column,
-      Q1 = round(quantile(.data[[column]], probs = 0.25, na.rm = TRUE), 2),
-      Q3 = round(quantile(.data[[column]], probs = 0.75, na.rm = TRUE), 2),
-      .groups = "drop"  # ensures summarise drops the group after summarising
-    )
+      dplyr::select(2,4,19:82) %>%
+      filter(!is.na(.data[[column]])) %>%
+      group_by(New_Grouping, Watershed) %>%
+      summarise(
+        variable = column,
+        Q1 = round(quantile(.data[[column]], probs = 0.25, na.rm = TRUE), 2),
+        Q3 = round(quantile(.data[[column]], probs = 0.75, na.rm = TRUE), 2),
+        .groups = "drop"
+      )
   
-  # Combine rstatix summary with Q1 and Q3 using left_join
-  summary_combined <- summary %>%
-    left_join(q1_q3, by = c("New_Grouping", "variable"))
+  # Combine summary with Q1 and Q3
+  #summary_combined <- summary %>%
+    #left_join(q1_q3, by = c("New_Grouping", "variable"))
   
   # Store result
-  summary_stats_list[[i]] <- summary_combined
+  summary_stats_list[[i]] <- summary
+  quartiles_list[[i]] <- q1_q3
 }
 
 # Combine into one dataframe
-summary_df <- do.call(rbind, summary_stats_list)
+summary_df_2 <- do.call(rbind, summary_stats_list)
+quartiles_df <- do.call(rbind, quartiles_list)
 
-view(summary_df)
+quartiles_df <- quartiles_df %>%
+  #dplyr::rename(Variable = variable) %>%
+  mutate(joining = paste(New_Grouping, Watershed, Variable, sep = "_"))
 
-write_xlsx(summary_df, "C:/Users/tevinger/Downloads/Group summary stats_rstatix.xlsx")
+summary_df_2 <- summary_df_2 %>%
+  dplyr::rename(Variable = variable) %>%
+  mutate(joining = paste(New_Grouping, Watershed, Variable, sep = "_"))
+
+view(summary_df_2) # Grouped by New_Grouping and Watershed
+view(quartiles_df)
+
+summary_combined <- summary_df_2 %>%
+  left_join(quartiles_df, by = "joining") %>%
+  dplyr::select(-joining, -Watershed.y, -New_Grouping.y, -Variable.y)
+view(summary_combined)
+#view(summary_df) # grouped by New_Grouping only
+
+write_xlsx(summary_combined, "C:/Users/tevinger/Downloads/Group with Watersheds summary stats_rstatix.xlsx")
 ```
 
 ```{r}
@@ -670,7 +657,8 @@ elements_2 <- c(
 "f_Tl", "p_Tl",
 "f_U", "p_U",
 "f_Y", "p_Y",
-"f_Zn", "p_Zn"
+"f_Zn", "p_Zn",
+"f_REE", "p_REE"
 )
 
 columns_2 <- c(
@@ -698,7 +686,8 @@ columns_2 <- c(
 "f_Tl_mcg_per_l", "p_Tl_mcg_per_l",
 "f_U_mcg_per_l", "p_U_mcg_per_l",
 "f_Y_mcg_per_l", "p_Y_mcg_per_l",
-"f_Zn_mcg_per_l", "p_Zn_mcg_per_l"
+"f_Zn_mcg_per_l", "p_Zn_mcg_per_l",
+"f_REE", "p_REE"
 )
 ```
 
@@ -738,7 +727,8 @@ columns_to_model <- c("pH", "Spec_Cond_microS_per_cm",
 "f_Tl_mcg_per_l", "p_Tl_mcg_per_l",
 "f_U_mcg_per_l", "p_U_mcg_per_l",
 "f_Y_mcg_per_l", "p_Y_mcg_per_l",
-"f_Zn_mcg_per_l", "p_Zn_mcg_per_l")
+"f_Zn_mcg_per_l", "p_Zn_mcg_per_l",
+"f_REE", "p_REE")
 
 pdf("residuals_plots.pdf")  # Start a new PDF file
 

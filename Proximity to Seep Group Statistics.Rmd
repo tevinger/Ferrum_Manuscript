@@ -497,19 +497,19 @@ summary_df_filtered <- summary_df %>%
 
 view(summary_df_filtered)
 
-write_xlsx(summary_df_filtered, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/Upstream and seeps_rstatix.xlsx")
+#write_xlsx(summary_df_filtered, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Summary Stats/Upstream and seeps_rstatix.xlsx")
 
 summary_df_filtered_wide <- summary_df_filtered %>%
-  dplyr::select(1,2,6) %>%
+  dplyr::select(1,2,8) %>%
   pivot_wider(
   id_cols = variable,
   names_from = New_Grouping,
-  values_from = median
+  values_from = mean
 )
 
 view(summary_df_filtered_wide)
 
-write_xlsx(summary_df_filtered_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Ferrum Manuscript Summary Stats/Upstream, seep, downstream_medians.xlsx")
+write_xlsx(summary_df_filtered_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Ferrum Manuscript Summary Stats/Upstream, seep, downstream_means_V2.xlsx")
 ```
 
 ## With watershed
@@ -895,7 +895,7 @@ kruskal_results_df <- bind_rows(kruskal_results_list)
 # Print the results
 view(kruskal_results_df)
 
-write_xlsx(kruskal_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Kruskal Wallis results.xlsx")
+write_xlsx(kruskal_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Kruskal Wallis results_V2.xlsx")
 ```
 
 ### function
@@ -983,7 +983,10 @@ run_kruskal_analysis <- function(data, columns_to_model, grouping_var = "New_Gro
 ```
 
 ```{r}
-# Merge Kruskal-Wallis results into shapiro_results by "Element"
+# Merge Kruskal-Wallis results into shapiro_results by "Variable"
+kruskal_results_df <- kruskal_results_df %>%
+  dplyr::rename(Variable = ".y.")
+
 shapiro_kruskal_results <- merge(shapiro_results, kruskal_results_df, by = "Variable", all.x = TRUE)
 
 # add a kruskal wallis interpretation
@@ -1052,8 +1055,10 @@ columns_for_dunn <- c("pH", "Spec_Cond_microS_per_cm",
 "p_U_mcg_per_l",
 "f_Y_mcg_per_l", 
 #"p_Y_mcg_per_l",
-"f_Zn_mcg_per_l" 
-#"p_Zn_mcg_per_l"
+"f_Zn_mcg_per_l", 
+#"p_Zn_mcg_per_l",
+"f_REE",
+"p_REE"
 )
 ```
 
@@ -1138,6 +1143,8 @@ cld_results_df <- bind_rows(cld_results_list)
 view(dunn_results_df)
 view(cld_results_df)
 
+write_xlsx(dunn_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Dunns Test results.xlsx")
+
 write_xlsx(cld_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/CLD results.xlsx")
 ```
 
@@ -1148,14 +1155,6 @@ dunn_results_df <- dunn_results_df %>%
     cld_results_df %>%
       dplyr::rename(group1 = Group, CLD_group1 = Letters),
     by = c("Variable", "group1")
-  )
-
-# Then, merge the letters for group2
-dunn_results_df <- dunn_results_df %>%
-  left_join(
-    cld_results_df %>%
-      dplyr::rename(group2 = Group, CLD_group2 = Letters),
-    by = c("Variable", "group2")
   )
 
 # Print the updated Dunn’s test results

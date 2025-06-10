@@ -812,17 +812,23 @@ pH_plot_no_jitter <- ggplot(pH_long, aes(x = New_Groups, y = Conc)) +
   theme_minimal() +
   boxplot_theme +
   theme(
-    legend.position = "right",
+    legend.position = "none",
+    axis.text.y = element_blank(),
+    axis.title.y = element_blank(),
     axis.title.y = element_text(margin = margin(r = 10)),
     #axis.ticks.length = unit(1, "cm"),
     legend.title = element_blank(),   # legend title size
     legend.text = element_text(size = 14),    # legend item labels
     legend.key.size = unit(5, "lines")      # size of legend keys (symbols)
   ) +
-  scale_x_discrete(expand = expansion(mult = c(0.2, 0.15)))
+  scale_x_discrete(expand = expansion(mult = c(0.28, 0.15)))
 
 pH_plot_no_jitter
 #pH_plot_no_jitter_with_legend
+
+# saved size: 150x325
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/pH_V3 no labels.png", pH_plot_no_jitter, width = 2.25, height = 3.25, dpi = 300)
 ```
 
 ```{r}
@@ -952,7 +958,8 @@ print(f_SO4_mg_per_l_counts)
 f_SO4_mg_per_l_plot <- ggplot(SO4_long, aes(x = New_Groups, y = Conc)) +
   geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = 16,
                outlier.color = "black",
-               outlier.size = 2, alpha = 0.85) +
+               outlier.size = 2, alpha = 0.85,
+               size = 0.75) +
   #geom_jitter(aes(fill = Watershed), 
   #            shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.75) +
 
@@ -970,18 +977,20 @@ f_SO4_mg_per_l_plot <- ggplot(SO4_long, aes(x = New_Groups, y = Conc)) +
     y = ylab_Sulfate
     #y = "Sulfate Concentration (mg/L)"
   ) +
-  scale_x_discrete(expand = expansion(mult = c(0.2, 0.12))) +
+  scale_x_discrete(expand = expansion(mult = c(0.25, 0.15))) +
   theme_minimal() +
   boxplot_theme +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(margin = margin(r = 1))
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank()
+    #axis.title.y = element_text(margin = margin(r = 1))
   )
 
 f_SO4_mg_per_l_plot
 
 
-#ggsave("C:/Users/tayta/Downloads/SO4 bp proximity_V3.png", f_SO4_mg_per_l_plot, bg = "transparent", width = 3.85, height = 5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/SO4_V3 no labels.png", f_SO4_mg_per_l_plot, width = 1.75, height = 3.25, dpi = 300)
 
 ```
 
@@ -1160,7 +1169,7 @@ DIC_plot
 ## Alkalinity
 ```{r}
 # Select alkalinity data
-Alk_df <- working_Ferrum_data %>%
+Alk_df <- Final_groups_df %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, Alk_mgCaCO3_per_l)
 
 # Filter NA values in the grouping variable and make long format
@@ -1188,7 +1197,8 @@ Alk_labels
 Alk_plot <- ggplot(Alk_long, aes(x = New_Groups, y = Conc)) +
   geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = 16,
                outlier.color = "black",
-               outlier.size = 2, alpha = 0.85) +
+               outlier.size = 2, alpha = 0.85,
+               size = 0.75) +
   #geom_jitter(aes(fill = Watershed), 
               #shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.5) +
   scale_fill_manual(values = boxplot_colors) +
@@ -1202,7 +1212,9 @@ Alk_plot <- ggplot(Alk_long, aes(x = New_Groups, y = Conc)) +
   boxplot_theme +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(margin = margin(r = 6)),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    #axis.title.y = element_text(margin = margin(r = 6)),
     #axis.ticks.length = unit(1, "cm"),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels
@@ -1212,6 +1224,7 @@ Alk_plot <- ggplot(Alk_long, aes(x = New_Groups, y = Conc)) +
 
 Alk_plot
 
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Alk_V3 no labels.png", Alk_plot, width = 1.75, height = 3.25, dpi = 300)
 
 ```
 
@@ -1278,7 +1291,7 @@ Alk_mg_L_plot
 ## DOC
 ```{r}
 # Select DOC data
-DOC_df <- working_Ferrum_data %>%
+DOC_df <- Final_groups_df %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, DOC_mgC_per_l)
 
 # Filter NA values in the grouping variable and make long format
@@ -1301,7 +1314,7 @@ DOC_long <- DOC_long %>%
 DOC_plot <- ggplot(DOC_long, aes(x = New_Groups, y = Conc)) +
   geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = 16,
                outlier.color = "black",
-               outlier.size = 2, alpha = 0.85) +
+               outlier.size = 2, alpha = 0.85, size = 0.75) +
   #geom_jitter(aes(fill = Watershed), 
               #shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.5) +
   scale_fill_manual(values = boxplot_colors) +
@@ -1320,7 +1333,9 @@ DOC_plot <- ggplot(DOC_long, aes(x = New_Groups, y = Conc)) +
   boxplot_theme +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(margin = margin(r = 2)),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    #axis.title.y = element_text(margin = margin(r = 2)),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels
     legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
@@ -1328,6 +1343,8 @@ DOC_plot <- ggplot(DOC_long, aes(x = New_Groups, y = Conc)) +
   scale_x_discrete(expand = expansion(mult = c(0.2, 0.15)))
 
 DOC_plot
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/DOC_V3 no labels.png", DOC_plot, width = 1.75, height = 3.25, dpi = 300)
 
 ```
 
@@ -1408,7 +1425,7 @@ Ca_plot
 ##Mg
 ```{r}
 # Select alkalinity data
-Mg_df <- working_Ferrum_data %>%
+Mg_df <- Final_groups_df %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Mg_mg_l)
 
 # Filter NA values in the grouping variable and make long format
@@ -1435,21 +1452,24 @@ Mg_labels
 Mg_plot <- ggplot(Mg_long, aes(x = New_Groups, y = Conc)) +
   geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = 16,
                outlier.color = "black",
-               outlier.size = 2, alpha = 0.85) +
+               outlier.size = 2, alpha = 0.85, size = 0.75) +
   scale_fill_manual(values = boxplot_colors) +
   labs(
     title = NULL,
     x = NULL,
     y = ylab_Mg
   ) +
-  #scale_y_log10(breaks = c(50, 100, 500)) +
-  #annotation_logticks(sides = "l") +
-  scale_y_continuous(breaks = Mg_breaks, labels = Mg_labels) +
+  scale_y_log10(limits = c(5, 1000),
+                breaks = c(5, 10, 100, 1000)) +
+  annotation_logticks(sides = "l") +
+  #scale_y_continuous(breaks = Mg_breaks, labels = Mg_labels) +
   theme_minimal() +
   boxplot_theme +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(margin = margin(r = 6)),
+    axis.title.y = element_blank(),
+    #axis.text.y = element_blank(),
+    #axis.title.y = element_text(margin = margin(r = 6)),
     #axis.ticks.length = unit(1, "cm"),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels
@@ -1459,7 +1479,7 @@ Mg_plot <- ggplot(Mg_long, aes(x = New_Groups, y = Conc)) +
 
 Mg_plot
 
-
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Mg_V1 labels.png", Mg_plot, width = 1.75, height = 3.25, dpi = 300)
 ```
 
 ## Other variables all together for now
@@ -1644,7 +1664,7 @@ Fe_plot <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc_plot)) +
     outlier.shape = 16,
     outlier.color = "black",
     outlier.size = 2, 
-    pattern_density = 0.35,
+    pattern_density = 0.15,
     pattern_spacing = 0.015,
     pattern_angle = 45,
     width = 0.75,
@@ -1656,9 +1676,9 @@ Fe_plot <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc_plot)) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
   scale_y_log10(
-    limits = c(0.00001, 10000000),
+    limits = c(0.7, 1500000),
     labels = scales::comma,
-    breaks = c(0.00001, 0.01, 0.1, 1, 10, 100, 10000, 10000000),
+    breaks = c(1, 10, 100, 1000, 10000, 100000, 1000000),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +
@@ -1674,7 +1694,9 @@ Fe_plot <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc_plot)) +
   boxplot_theme +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(margin = margin(r = 1)),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    #axis.title.y = element_text(margin = margin(r = 1)),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels
     legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
@@ -1683,7 +1705,7 @@ Fe_plot <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc_plot)) +
 
 Fe_plot
 
-
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Fe_V3 no labels.png", Fe_plot, width = 2.75, height = 3.25, dpi = 300)
 ```
 
 Extract the legend

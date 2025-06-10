@@ -735,36 +735,11 @@ Salmon_Ni_relative
 ```
 
 #Final Grouping - 5 groups from Rel watershed area
-### individual df
-```{r}
-New_df_1 <- working_Ferrum_data %>%
-  filter(New_Groups == 1)
-
-New_seep_df <- working_Ferrum_data %>%
-  filter(New_Groups == 2)
-
-New_df_3 <- working_Ferrum_data %>%
-  filter(New_Groups == 3)
-
-New_df_4 <- working_Ferrum_data %>%
-  filter(New_Groups == 4)
-
-New_df_5 <- working_Ferrum_data %>%
-  filter(New_Groups == 5) 
-  
-New_df_6 <- working_Ferrum_data %>%
-  filter(New_Groups == 6)
-
-#Downstream_sites <- working_Ferrum_data %>%
-  #filter(New_Grouping == "Downstream MS")
-
-#unique(New_df_4$SamplingEventID)
-```
 
 ## pH 
 ```{r}
 # Select pH data
-pH_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+pH_df <-  Final_groups_df %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, pH) %>%
   filter(!is.na(New_Groups))
 
@@ -821,7 +796,8 @@ pH_plot_no_jitter <- ggplot(pH_long, aes(x = New_Groups, y = Conc)) +
                outlier.shape = 16,
                outlier.color = "black",
                outlier.size = 2,
-               alpha = 0.85) +
+               alpha = 0.85,
+               size = .75) +
   #geom_jitter(aes(fill = Watershed), 
   #            shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.75) +
   scale_fill_manual(values = boxplot_colors) +
@@ -938,29 +914,8 @@ ggsave('C:/Users/tevinger/Downloads/boxpot_legend.png',
 
 ## Sulfate
 ```{r}
-#filter NA
-SO4_New_df_1 <- working_Ferrum_data %>%
-  filter(New_Groups == 1) %>%
-  filter(!is.na(f_SO4_mg_per_l))
-
-SO4_New_seep_df <- working_Ferrum_data %>%
-  filter(New_Groups == 2) %>%
-  filter(!is.na(f_SO4_mg_per_l))
-
-SO4_New_df_3 <- working_Ferrum_data %>%
-  filter(New_Groups == 3) %>%
-  filter(!is.na(f_SO4_mg_per_l))
-
-SO4_New_df_4 <- working_Ferrum_data %>%
-  filter(New_Groups == 4) %>%
-  filter(!is.na(f_SO4_mg_per_l))
-  
-SO4_New_df_6 <- working_Ferrum_data %>%
-  filter(New_Groups == 6) %>%
-  filter(!is.na(f_SO4_mg_per_l))
-
 # Select pH data
-SO4_df <- working_Ferrum_data %>%
+SO4_df <- Final_groups_df %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_SO4_mg_per_l)
 
 # Filter NA values in the grouping variable and make long format

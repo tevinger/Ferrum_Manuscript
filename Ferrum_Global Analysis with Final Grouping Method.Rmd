@@ -76,12 +76,12 @@ library(ggpattern)
 ```{r}
 # Start from Alaska_DataRelease_2022_2023_Ferrum_V8
 # Load if necessary
-Alaska_DataRelease_2022_2023_Ferrum_V8 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V8.xlsx")
+Alaska_DataRelease_2022_2023_Ferrum_V9 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V9_REE.xlsx")
 ```
 
 ##### Keep only the columns with data
 ```{r}
-Grouped_Ferrum_2022_2023_data <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+Grouped_Ferrum_2022_2023_data <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
   dplyr::select(ParkID,
                 Watershed,
                 #Subcatchment,
@@ -141,7 +141,8 @@ f_Tl_mcg_per_l, p_Tl_mcg_per_l,
 f_U_mcg_per_l, p_U_mcg_per_l,
 f_V_mcg_per_l, p_V_mcg_per_l,
 f_Y_mcg_per_l, p_Y_mcg_per_l,
-f_Zn_mcg_per_l, p_Zn_mcg_per_l) %>%
+f_Zn_mcg_per_l, p_Zn_mcg_per_l,
+f_REE, p_REE) %>%
   filter(New_Grouping != "NA") 
 
 # Change class of the data
@@ -154,58 +155,12 @@ Grouped_Ferrum_2022_2023_data$DOC_mgC_per_l <- as.numeric(Grouped_Ferrum_2022_20
 view(Grouped_Ferrum_2022_2023_data)
 ```
 
-
-
-## Create Initial Filtered Dataframe for Plotting
+## Create Initial Filtered Dataframe for Plotting Groups
 ```{r}
-working_Ferrum_data <- Grouped_Ferrum_2022_2023_data
-```
+Final_groups_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+  filter(!is.na(New_Grouping))
 
-##REE Calculation
-```{r}
-# calculate sum of REE filtered and particulate in R and then export again
-
-working_Ferrum_data <- working_Ferrum_data %>%
-  mutate(
-    f_sum_REE_mcg_per_l = rowSums(dplyr::select(working_Ferrum_data, f_Ce_mcg_per_l, f_Dy_mcg_per_l, f_La_mcg_per_l, 
-                                         f_Nd_mcg_per_l, f_Pr_mcg_per_l, f_Y_mcg_per_l), 
-                                  na.rm = TRUE),
-    
-    p_sum_REE_mcg_per_l = rowSums(dplyr::select(working_Ferrum_data, p_Ce_mcg_per_l, p_Dy_mcg_per_l, p_La_mcg_per_l, 
-                                         p_Nd_mcg_per_l, p_Pr_mcg_per_l, p_Y_mcg_per_l), 
-                                  na.rm = TRUE)
-  )
-
-working_Ferrum_data <- working_Ferrum_data %>%
-  mutate(
-    f_sum_REE_mcg_per_l = if_else(row_number() <= 13, NA_real_, f_sum_REE_mcg_per_l),
-    p_sum_REE_mcg_per_l = if_else(row_number() <= 13, NA_real_, p_sum_REE_mcg_per_l)
-  )
-
-
-REE_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, f_sum_REE_mcg_per_l, f_sum_REE_QA_flag, p_sum_REE_mcg_per_l, p_sum_REE_QA_flag)
-
-write_xlsx(REE_df, "C:/Users/tayta/OneDrive/Desktop/Lab/Alaska Projects/sum of REE.xlsx")
-
-working_Ferrum_data <- working_Ferrum_data %>%
-  mutate(
-    Watershed = if_else(Subcatchment == "Anaktok River", "Anaktok River", Watershed)
-  )
-
-working_Ferrum_data <- working_Ferrum_data %>%
-  mutate(Site_Group = case_when(
-    SamplingEventID == "ANF_Tseep_source5_20230829_1300" ~ "Seep",
-    TRUE ~ Site_Group  # Keep other values unchanged
-  ))
-
-working_Ferrum_data <- working_Ferrum_data %>%
-  mutate(Site_Grouping = case_when(
-    SamplingEventID == "ANF_Tseep_source5_20230829_1300" ~ 2,  # Ensure it's numeric
-    TRUE ~ as.numeric(Site_Grouping)  # Convert all values to numeric
-  ))
-
-view(working_Ferrum_data)
+working_Ferrum_data <- Final_groups_df
 ```
 
 ### Site Group Modifications - OLD
@@ -467,7 +422,7 @@ ylab_Cd <- expression(bold(Cd)~bold((μg~L^-1)))
 ylab_Al <- expression(bold(Al)~bold((μg~L^-1)))
 ylab_Co <- expression(bold(Co)~bold((μg~L^-1)))
 ylab_Se <- expression(bold(Se)~bold((μg~L^-1)))
-ylab_REE <- expression(bold(Σ REE)~bold((μg~L^-1)))
+ylab_REE <- expression(bold(Sigma~REE)~bold((μg~L^-1)))
 ylab_Tl <- expression(bold(Tl)~bold((μg~L^-1)))
 ylab_Pb <- expression(bold(Pb)~bold((μg~L^-1)))
 ylab_As <- expression(bold(As)~bold((μg~L^-1)))
@@ -808,34 +763,15 @@ New_df_6 <- working_Ferrum_data %>%
 
 ## pH 
 ```{r}
-#Filter out NA values 
-pH_New_df_1 <- working_Ferrum_data %>%
-  filter(New_Groups == 1) %>%
-  filter(!is.na(pH))
-
-pH_New_seep_df <- working_Ferrum_data %>%
-  filter(New_Groups == 2) %>%
-  filter(!is.na(pH))
-
-pH_New_df_3 <- working_Ferrum_data %>%
-  filter(New_Groups == 3) %>%
-  filter(!is.na(pH))
-
-pH_New_df_4 <- working_Ferrum_data %>%
-  filter(New_Groups == 4) %>%
-  filter(!is.na(pH))
-  
-pH_New_df_6 <- working_Ferrum_data %>%
-  filter(New_Groups == 6) %>%
-  filter(!is.na(pH))
-
 # Select pH data
-pH_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, pH)
+pH_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, pH) %>%
+  filter(!is.na(New_Groups))
 
 # Filter NA values in the grouping variable and make long format
 pH_long <- pH_df %>%
   filter(!(New_Groups == "NA")) %>%
+  filter(!is.na(New_Groups)) %>%
   pivot_longer(
     cols = c(pH),
     names_to = "Variable",
@@ -880,8 +816,8 @@ pH_plot_jitter
 ```
 
 ```{r}
-pH_plot_no_jitter <- ggplot(pH_long, aes(x = New_Grouping, y = Conc)) +
-  geom_boxplot(aes(fill = New_Grouping), width = 0.75,
+pH_plot_no_jitter <- ggplot(pH_long, aes(x = New_Groups, y = Conc)) +
+  geom_boxplot(aes(fill = New_Groups), width = 0.75,
                outlier.shape = 16,
                outlier.color = "black",
                outlier.size = 2,
@@ -907,20 +843,14 @@ pH_plot_no_jitter <- ggplot(pH_long, aes(x = New_Grouping, y = Conc)) +
     legend.text = element_text(size = 14),    # legend item labels
     legend.key.size = unit(5, "lines")      # size of legend keys (symbols)
   ) +
-  scale_x_discrete(expand = expansion(mult = c(0.25, 0.15)))
+  scale_x_discrete(expand = expansion(mult = c(0.2, 0.15)))
 
 pH_plot_no_jitter
 #pH_plot_no_jitter_with_legend
 ```
 
 ```{r}
-pH_count <- working_Ferrum_data %>%
-  filter(New_Grouping == "Upstream" | 
-           New_Grouping == "Seep" | 
-           New_Grouping == "Unimpaired Tributary" |
-           New_Grouping == "Downstream MS" |
-           New_Grouping == "Impaired Tributary") %>%
-  filter(!is.na(pH)) %>%  # Change to pH
+pH_count <- pH_long %>%
   group_by(New_Groups) %>%
   summarise(N = n(), .groups = "drop")  # Count observations
 
@@ -1055,11 +985,6 @@ SO4_long <- SO4_long %>%
 
 ```{r}
 f_SO4_mg_per_l_counts <- working_Ferrum_data %>%
-  filter(New_Grouping == "Upstream" | 
-           New_Grouping == "Seep" | 
-           New_Grouping == "Unimpaired Tributary" |
-           New_Grouping == "Downstream MS" |
-           New_Grouping == "Impaired Tributary") %>%
   filter(!is.na(f_SO4_mg_per_l)) %>%  # Change to pH
   group_by(New_Groups) %>%
   summarise(N = n(), .groups = "drop")  # Count observations

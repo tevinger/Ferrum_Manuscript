@@ -1633,7 +1633,9 @@ Fe_long <- Fe_df %>%
     values_to = "Metal_conc"
   ) %>%
   filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
-  mutate(Metal_conc_plot = Metal_conc + ((sqrt(2)/2)*1))
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*1), 
+                                  Metal_conc))
 
 view(Fe_long)
 
@@ -1985,7 +1987,7 @@ Cu_plot
 ## Zn 
 ```{r}
 # Select Zn data
-Zn_df <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+Zn_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
                 f_Zn_mcg_per_l, f_Zn_mcg_per_l_qa, p_Zn_mcg_per_l, p_Zn_mcg_per_l_qa) %>%
   filter(!(is.na(New_Grouping)))
@@ -2001,9 +2003,9 @@ Zn_long <- Zn_df %>%
     values_to = "Metal_conc"
   ) %>%
   filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
-  mutate(Metal_conc_plot = Metal_conc + 0.1)
+  mutate(Metal_conc_plot = Metal_conc + + ((sqrt(2)/2)*0.1))
 
-#view(Zn_long)
+view(Zn_long)
 
 Zn_counts_df <- Zn_long %>%
   group_by(New_Grouping, Metal_type) %>%
@@ -2033,7 +2035,7 @@ Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc_plot)) +
     outlier.shape = 16,
     outlier.color = "black",
     outlier.size = 2, 
-    pattern_density = 0.35,
+    pattern_density = 0.15,
     pattern_spacing = 0.015,
     pattern_angle = 45,
     width = 0.75,
@@ -2044,9 +2046,9 @@ Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc_plot)) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
   scale_y_log10(
-    limits = c(0.1, 1000000),
+    limits = c(0.01, 1000000),
     labels = scales::comma,
-    breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000, 1000000),
+    breaks = c(0.01, 0.1, 1, 10, 100, 1000, 10000, 100000, 1000000),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +
@@ -2060,6 +2062,8 @@ Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc_plot)) +
   boxplot_theme +
   theme(
     legend.position = "none",
+    #axis.text.y = element_blank(),
+    #axis.title.y = element_blank(),
     axis.title.y = element_text(margin = margin(r = 1)),
     legend.title = element_text(size = 14),
     legend.text = element_text(size = 12),
@@ -2068,6 +2072,8 @@ Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc_plot)) +
   scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
 
 Zn_plot
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Zn_V1 labels.png", Zn_plot, width = 2.75, height = 3.25, dpi = 300)
 ```
 
 ##Ni

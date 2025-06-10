@@ -62,7 +62,7 @@ Alaska_DataRelease_2022_2023_Ferrum_V1 <- read_excel("C:/Users/tevinger/OneDrive
 ### Site Classification Group
 ```{r}
 # filter out samples without a New_Group - use for summary stats of the groups
-Grouped_Ferrum_2022_2023_data <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+Grouped_Ferrum_2022_2023_data <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
   dplyr::select(ParkID,
                 Watershed,
                 #Subcatchment,
@@ -122,11 +122,12 @@ f_Tl_mcg_per_l, p_Tl_mcg_per_l,
 f_U_mcg_per_l, p_U_mcg_per_l,
 f_V_mcg_per_l, p_V_mcg_per_l,
 f_Y_mcg_per_l, p_Y_mcg_per_l,
-f_Zn_mcg_per_l, p_Zn_mcg_per_l) %>%
+f_Zn_mcg_per_l, p_Zn_mcg_per_l,
+f_REE, p_REE) %>%
   filter(New_Grouping != "NA") 
 
 Grouped_Ferrum_2022_2023_data <- Grouped_Ferrum_2022_2023_data %>%
-  mutate(across(17:80, as.numeric))
+  mutate(across(17:82, as.numeric))
 view(Grouped_Ferrum_2022_2023_data)
 ```
 
@@ -334,7 +335,8 @@ elements <- c(
 "f_U", "p_U",
 "f_V", "p_V",
 "f_Y", "p_Y",
-"f_Zn", "p_Zn"
+"f_Zn", "p_Zn",
+"f_REE", "p_REE"
 )
 
 columns <- c(
@@ -367,7 +369,8 @@ columns <- c(
 "f_U_mcg_per_l", "p_U_mcg_per_l",
 "f_V_mcg_per_l", "p_V_mcg_per_l",
 "f_Y_mcg_per_l", "p_Y_mcg_per_l",
-"f_Zn_mcg_per_l", "p_Zn_mcg_per_l"
+"f_Zn_mcg_per_l", "p_Zn_mcg_per_l",
+"f_REE", "p_REE"
 )
 ```
 
@@ -465,14 +468,14 @@ for (i in seq_along(elements)) {
   
   # Perform the summary operation for the current element
   summary <- Grouped_Ferrum_2022_2023_data %>%
-    dplyr::select(3,4,19:80) %>%  # adjust as needed
+    dplyr::select(4,19:82) %>%  # adjust as needed
     filter(!is.na(.data[[column]])) %>%
     group_by(New_Grouping) %>%    # group by your variable
     get_summary_stats(vars = column, type = "common")
   
   # Now calculate Q1 and Q3 for the same groups and variable
-  q1_q3 <- grouped_stats_working_Ferrum_data %>%
-    dplyr::select(2,3,9:70) %>%  # adjust as needed
+  q1_q3 <- Grouped_Ferrum_2022_2023_data %>%
+    dplyr::select(4,19:82) %>%  # adjust as needed
     filter(!is.na(.data[[column]])) %>%
     group_by(New_Grouping) %>%
     summarise(

@@ -1157,10 +1157,11 @@ dunn_results_df <- dunn_results_df %>%
     by = c("Variable", "group1")
   )
 
-# Print the updated Dunn’s test results
-view(dunn_results_df)
 
-write_xlsx(dunn_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Dunns Test results with CLD.xlsx")
+# Print the updated Dunn’s test results
+view(dunn_results_df_2)
+
+write_xlsx(dunn_results_df_2, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Dunns Test results with CLD.xlsx")
 ```
 
 old code

@@ -2048,12 +2048,12 @@ Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc_plot)) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
-  #scale_y_log10(
-    #limits = c(0.05, 300000),
-    #labels = scales::comma,
-    #breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000),
-    #minor_breaks = NULL
-  #) +
+  scale_y_log10(
+    limits = c(0.05, 300000),
+    labels = scales::comma,
+    breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000),
+    minor_breaks = NULL
+  ) +
   annotation_logticks(sides = "l") +
   labs(
     title = NULL,
@@ -2065,7 +2065,7 @@ Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc_plot)) +
   boxplot_theme +
   theme(
     legend.position = "none",
-    axis.text.y = element_blank(),
+    #axis.text.y = element_blank(),
     axis.title.y = element_blank(),
     #axis.title.y = element_text(margin = margin(r = 1)),
     legend.title = element_text(size = 14),
@@ -2613,7 +2613,9 @@ REE_long <- REE_df %>%
     values_to = "Metal_conc"
   ) %>%
   filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
-  mutate(Metal_conc_plot = Metal_conc + 0.001)
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.01), 
+                                  Metal_conc))
 
 view(REE_long)
 
@@ -2640,131 +2642,51 @@ REE_long <- REE_long %>%
 
 
 ```{r}
-sum_REE_plot <- ggplot() + 
-  # Boxplot and jitter for Site_Grouping 1
-  geom_boxplot(data = sum_REE_df_1_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_sum_REE_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = sum_REE_df_1_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_sum_REE_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = sum_REE_df_1_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_sum_REE_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = sum_REE_df_1_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_sum_REE_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 2
-  geom_boxplot(data = sum_REE_seep_df_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_sum_REE_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = sum_REE_seep_df_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_sum_REE_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = sum_REE_seep_df_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_sum_REE_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = sum_REE_seep_df_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_sum_REE_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 3
-  geom_boxplot(data = sum_REE_df_3_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_sum_REE_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = sum_REE_df_3_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_sum_REE_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  geom_boxplot(data = sum_REE_df_3_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_sum_REE_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = sum_REE_df_3_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_sum_REE_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 5
-  geom_boxplot(data = sum_REE_df_5_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_sum_REE_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = sum_REE_df_5_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_sum_REE_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = sum_REE_df_5_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_sum_REE_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = sum_REE_df_5_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_sum_REE_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 6
-  geom_boxplot(data = sum_REE_df_6_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_sum_REE_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = sum_REE_df_6_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_sum_REE_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = sum_REE_df_6_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_sum_REE_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = sum_REE_df_6_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_sum_REE_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = sum_REE_df_4_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_sum_REE_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = sum_REE_df_4_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_sum_REE_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = sum_REE_df_4_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_sum_REE_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = sum_REE_df_4_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_sum_REE_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  # Manual fill colors
-  scale_fill_manual(name = "Site Group", values = boxplot_colors) +
-  
-  ylim(0.01, 10000) +
-  scale_y_log10(limits = c(.01, 10000), labels = scales::comma,
-                breaks = scales::trans_breaks("log10", function(x)10^x)) +
+REE_plot <- ggplot(REE_long, aes(x = x_group, y = Metal_conc_plot)) +
+  geom_boxplot_pattern(
+    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
+    pattern_density = 0.15,
+    pattern_spacing = 0.015,
+    pattern_angle = 45,
+    width = 0.75,
+    alpha = 0.85,
+    size = .75
+  ) +
+  scale_fill_manual(values = boxplot_colors) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
+  scale_y_log10(
+    limits = c(0.005, 10500),
+    labels = scales::comma,
+    breaks = c(0.01, 0.1, 1, 10, 100, 1000, 10000),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
   labs(
-    title = "Total REE Concentration by Site Group",
-    x = "Site Grouping",
-    y = "Total REE Concentration (mcg/L)",
-    fill = "Particulate metal"
+    title = NULL,
+    x = NULL,
+    y = ylab_REE,  # make sure ylab_Ni is defined
+    fill = "Metal Type"
   ) +
   theme_minimal() +
+  boxplot_theme +
   theme(
-      axis.text.x = element_blank(),  
-      axis.title.x = element_blank(),
-      axis.title.y = element_blank(),
-      axis.text.y = element_text(size = 24, color = "black", face = "bold", margin = margin(r = 10)),
-      axis.ticks.y = element_line(size = 0.8, color = "black"),
-      plot.title = element_blank(),
-      legend.position = "none",
-      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
-      panel.background = element_rect(fill = "transparent"),  
-      plot.background = element_rect(fill = "transparent", color = NA),
-      axis.ticks.x = element_line(size = 0.8, color = "black"), # Make x-axis ticks visible
-      axis.ticks.length = unit(5, "pt")
-    ) +
-  scale_x_discrete(expand = expansion(mult = c(0.11, 0.08))) +
-  annotation_logticks(sides = "l")
+    legend.position = "none",
+    #axis.title.y = element_text(margin = margin(r = 1)),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.115, 0.065)))
 
-sum_REE_plot
+REE_plot
 
-ggsave("C:/Users/tayta/Downloads/REE bp proximity_V1.png", sum_REE_plot, bg = "transparent", width = 5, height = 4.5, dpi = 300)
-
-
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/REE_V2 no labels.png", REE_plot, width = 2.75, height = 3.25, dpi = 300)
 
 ```
 

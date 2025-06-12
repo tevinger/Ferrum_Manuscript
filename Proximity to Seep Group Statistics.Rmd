@@ -52,7 +52,7 @@ ggsave("C:/Users/tayta/Downloads/circle_with_half_colors.png", plot = circle, bg
 
 #Load Data
 ```{r}
-Alaska_DataRelease_2022_2023_Ferrum_V9 <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_V9_REE.xlsx")
+Alaska_DataRelease_2022_2023_Ferrum_V9 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V9_REE.xlsx")
 ```
 
 # Statistics Codes
@@ -68,7 +68,7 @@ Grouped_Ferrum_2022_2023_data <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
                 #Subcatchment,
                 New_Groups,
                 New_Grouping,
-                `Field label`,
+                Field_label,
                 Latitude,
                 Longitude,
                 sample_collection_year,
@@ -1345,9 +1345,28 @@ view(final_cld_df)
 ```
 
 ## ANOVA loop
+ANOVA (Analysis of Variance) is a statistical method used to determine if there are significant differences between the means of three or more independent groups.
+One-way ANOVA is used to determine how one factor affects a response variable. It is suitable when you have one independent variable and want to see its impact on the dependent variable. 
+A random effect accounts for structured variation in the data that you aren’t trying to explain, but need to control for to avoid biased or misleading results.
+
+In this case, I'm interested in how New_Grouping affects alkalinity, not in how Site itself affects it. But if you measured alkalinity multiple times at the same Site, those measurements are not truly independent — they may be similar just because they’re from the same place.
 ```{r}
+# make model for Alkalinity
+# using lmer because alkalinity was measured multiple times per site in this dataset across 2022 and 2023 making them not entirely independent 
+alk_model <- lmer(Alk_mgCaCO3_per_l ~ New_Grouping + (1 | Field_label), data = Grouped_Ferrum_2022_2023_data)
 
+# run a one-way ANOVA on Alkalinity
+anova(alk_model) # Gives Type III ANOVA table with p-values
 
+# Estimated marginal means (group means adjusted for random effects)
+alk_means <- emmeans(alk_model, ~ New_Grouping)
+
+# Tukey-adjusted pairwise comparisons
+alk_pairwise_results <- pairs(alk_means, adjust = "tukey")
+summary(alk_pairwise_results)
+
+# Generate CLD with Tukey adjustment
+cld_results <- cld(emm, adjust = "tukey", Letters = letters)
 ```
 
 ## Export to table

@@ -437,18 +437,30 @@ for (i in seq_along(elements)) {
   column <- columns[i]
   
   # Perform summary operation with a default empty tibble if an error occurs
-  summary <- Grouped_Ferrum_2022_2023_data %>%
-      dplyr::select(2,4,19:82) %>%
-      filter(!is.na(.data[[column]])) %>%
-      group_by(New_Grouping, Watershed) %>%
+  summary <- 
+    #stats_working_Ferrum_data %>% # use for all data, watershed, year and month summary stats
+    Grouped_Ferrum_2022_2023_data %>% # to group by New Grouping (seeps included)
+    #dplyr::select(9:70) %>% # all data
+    #dplyr::select(2,9:70) %>% # Watershed
+    #dplyr::select(4,9:70) %>% # Year
+    #dplyr::select(5,9:70) %>% # Month
+    #dplyr::select(6,9:70) %>% # Season
+    dplyr::select(2,4,19:82) %>% # New Grouping
+    filter(!is.na(.data[[column]])) %>%
       get_summary_stats(vars = column, type = "common")
 
   
   # Calculate Q1 and Q3
-  q1_q3 <- Grouped_Ferrum_2022_2023_data %>%
-      dplyr::select(2,4,19:82) %>%
-      filter(!is.na(.data[[column]])) %>%
-      group_by(New_Grouping, Watershed) %>%
+  q1_q3 <- 
+    #stats_working_Ferrum_data %>% # use for all data, watershed, year and month summary stats
+    Grouped_Ferrum_2022_2023_data %>% # to group by New Grouping (seeps included)
+    #dplyr::select(9:70) %>% # all data
+    #dplyr::select(2,9:70) %>% # Watershed
+    #dplyr::select(4,9:70) %>% # Year
+    #dplyr::select(5,9:70) %>% # Month
+    #dplyr::select(6,9:70) %>% # Season
+    dplyr::select(2,4,19:82) %>% # New Grouping
+    filter(!is.na(.data[[column]])) %>%
       summarise(
         variable = column,
         Q1 = round(quantile(.data[[column]], probs = 0.25, na.rm = TRUE), 2),

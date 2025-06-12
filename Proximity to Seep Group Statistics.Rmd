@@ -1356,17 +1356,29 @@ In this case, I'm interested in how New_Grouping affects alkalinity, not in how 
 alk_model <- lmer(Alk_mgCaCO3_per_l ~ New_Grouping + (1 | Field_label), data = Grouped_Ferrum_2022_2023_data)
 
 # run a one-way ANOVA on Alkalinity
-anova(alk_model) # Gives Type III ANOVA table with p-values
+alk_anova <- anova(alk_model) # Gives Type III ANOVA table with p-values
+write.csv(as.data.frame(alk_anova), "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/alk_anova_results.csv", row.names = TRUE) # save ANOVA table
+
+#ANOVA Results explanation
+  # Sum Sq (5214.7): The variation in alkalinity explained by New_Grouping
+  # Mean Sq (1303.7): The average variation per degree of freedom
+  # NumDF (4): Degrees of freedom for New_Grouping (number of levels - 1)
+  # DenDF (20.201): Denominator DF, estimated using Satterthwaite's method (accounts for random effect structure)
+  # F value (2.9566): The F-statistic — a ratio of explained to unexplained variance
+  # Pr(>F) (0.045): The p-value — the probability that this effect is due to random chance
+    # Due to the p-value of 0.045 (< 0.05), there is moderate evidence that New_Grouping has a statistically significant effect on Alk_mgCaCO3_per_l, even after accounting for random variation across Field_label
 
 # Estimated marginal means (group means adjusted for random effects)
 alk_means <- emmeans(alk_model, ~ New_Grouping)
 
 # Tukey-adjusted pairwise comparisons
-alk_pairwise_results <- pairs(alk_means, adjust = "tukey")
+alk_pairwise_results <- contrast(alk_means, method = "pairwise", adjust = "tukey")
 summary(alk_pairwise_results)
 
-# Generate CLD with Tukey adjustment
-cld_results <- cld(emm, adjust = "tukey", Letters = letters)
+pairwise_df <- as.data.frame(summary(alk_pairwise_results))
+write.csv(alk_pairwise_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/alk_tukey_pairwise_results.csv", row.names = FALSE)
+
+# No differences from the tukey adjusted pairwise comparison
 ```
 
 ## Export to table

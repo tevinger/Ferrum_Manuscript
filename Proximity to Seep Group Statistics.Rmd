@@ -52,7 +52,7 @@ ggsave("C:/Users/tayta/Downloads/circle_with_half_colors.png", plot = circle, bg
 
 #Load Data
 ```{r}
-Alaska_DataRelease_2022_2023_Ferrum_V1 <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_V1.xlsx")
+Alaska_DataRelease_2022_2023_Ferrum_V9 <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Alaska_DataRelease_2022_2023_Ferrum_V9_REE.xlsx")
 ```
 
 # Statistics Codes
@@ -124,10 +124,11 @@ f_V_mcg_per_l, p_V_mcg_per_l,
 f_Y_mcg_per_l, p_Y_mcg_per_l,
 f_Zn_mcg_per_l, p_Zn_mcg_per_l,
 f_REE, p_REE) %>%
-  filter(New_Grouping != "NA") 
+  filter(!(is.na(New_Grouping)))
 
 Grouped_Ferrum_2022_2023_data <- Grouped_Ferrum_2022_2023_data %>%
   mutate(across(17:82, as.numeric))
+
 view(Grouped_Ferrum_2022_2023_data)
 ```
 

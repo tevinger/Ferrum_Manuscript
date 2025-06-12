@@ -1203,6 +1203,13 @@ dunn_results_df <- dunn_results_df %>%
     by = c("Variable", "group1")
   )
 
+# Then, merge the letters for group2
+dunn_results_df_2 <- dunn_results_df %>%
+  left_join(
+    cld_results_df %>%
+      dplyr::rename(group2 = Group, CLD_group2 = Letters),
+    by = c("Variable", "group2")
+  )
 
 # Print the updated Dunn’s test results
 view(dunn_results_df_2)

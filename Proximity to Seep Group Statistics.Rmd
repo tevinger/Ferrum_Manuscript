@@ -941,7 +941,7 @@ kruskal_results_df <- bind_rows(kruskal_results_list)
 # Print the results
 view(kruskal_results_df)
 
-write_xlsx(kruskal_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Kruskal Wallis results_V2.xlsx")
+write_xlsx(kruskal_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Kruskal Wallis results.xlsx")
 ```
 
 ### function
@@ -1047,7 +1047,7 @@ shapiro_kruskal_results <- shapiro_kruskal_results %>%
     TRUE ~ "Test could not be performed due to insufficient data or errors."
   )) %>%
   mutate(
-    shap_p_value = round(shap_p_value, 5),
+    shap_p_value = formatC(shap_p_value, format = "e", digits = 2),
     KW_p_value = round(as.numeric(KW_p_value), 5)
   )
 

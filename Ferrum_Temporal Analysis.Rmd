@@ -1,0 +1,252 @@
+---
+title: "Ferrum_Temporal Analysis"
+output: html_document
+date: "2025-03-14"
+---
+
+# Load Packages
+```{r}
+#install.packages("dataRetrieval")
+library(dataRetrieval)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(PLS205)
+library(lubridate)
+library(emmeans)
+library(lme4)
+library(ggeasy)
+library(lattice)
+library(rstatix)
+library(ggsignif)
+library(outliers)
+library(ggpmisc)
+library(ggpubr)
+library(r2symbols)
+library(stargazer)
+library(ggbreak)
+library(writexl)
+library(ggrepel)
+library(stringr)
+library(ggthemes)
+library(reshape)
+library(RColorBrewer)
+library(readxl)
+library(dplyr)
+library(gridExtra)
+library(scales)
+library(dbscan)
+library(mclust)
+library(devtools)
+library(factoextra)
+library(corrplot)
+library(ggbiplot)
+library(ggcorrplot)
+library(GGally)
+library(Hmisc)
+library(ggbiplot)
+library(ggfortify)
+library(emmeans)
+library(lme4)
+library(lmerTest)
+library(multcomp)
+library(PLS205)
+library(readxl)
+library(learnr)
+library(scatterplot3d)
+library(vegan)
+library(ggtern)
+library(plotrix)
+library(smwrBase)
+library(smwrData)
+library(smwrGraphs)
+library(colorBlindness)
+library(flextable)
+library(officer)
+library(dunn.test)
+library(multcompView)
+library(patchwork)
+library(ggpattern)
+```
+
+# Download Discharge Data
+```{r}
+# Set site numbers for the 4 water stations we want to pull data for
+site_numbers <- c("15564879", "15743850", "15744500", "15747000")
+
+sites <- whatNWISsites(sites = site_numbers)
+
+view(sites)
+
+write_xlsx(sites, "C:/Users/tayta/Downloads/USGS water stations.xlsx")
+
+# Define the time period
+start_date <- "2015-01-01"
+end_date <- "2024-12-31"
+
+# Retrieve daily discharge data for all sites
+discharge_data <- readNWISdv(
+  siteNumbers = site_numbers, 
+  parameterCd = "00060", 
+  startDate = start_date, 
+  endDate = end_date
+)
+
+# add site names to site numbers
+site_names <- sites %>% 
+  dplyr::select(site_no, station_nm)
+
+discharge_data <- left_join(discharge_data, site_names, by = join_by(site_no))
+
+discharge_data <- discharge_data %>%
+  mutate(Year = year(Date)) %>%
+  dplyr::rename(discharge_cfs = X_00060_00003)
+
+# plot the Q data
+library(ggplot2)
+
+q.p <- ggplot(discharge_data, aes(x = Date, y = discharge_cfs, color = station_nm)) +
+  geom_line() +
+  facet_wrap(station_nm~., scales = "free", ncol = 2)+
+  labs(x = "Date",
+       y = "Discharge (cfs)") +
+  theme_minimal() +
+  theme(
+    legend.position = "none"
+  )
+
+q.p
+
+ggsave(q.p, filename = "02_Hydrographs_Available_Data_2015to2025.png",
+       width = 11, height = 7)
+```
+
+```{r}
+
+
+str(discharge_data)
+
+discharge_summary <- discharge_data %>%
+  mutate(Period = case_when(
+    Year >= 2000 & Year <= 2018 ~ "2000-2018",
+    Year >= 2019 & Year <= 2024 ~ "2019-2024",
+    TRUE ~ NA_character_  # Assign NA to other years
+  )) %>%
+  filter(!is.na(Period)) %>%  # Filter only for relevant periods
+  group_by(station_nm, Period) %>%
+  summarise(
+    Mean_Discharge = round(mean(discharge_cfs, na.rm = TRUE), 2),
+    SD_Discharge = round(sd(discharge_cfs, na.rm = TRUE), 2),
+    .groups = "drop"
+  )
+
+view(discharge_summary)
+
+discharge_summary_wide <- discharge_summary %>%
+  dplyr::select(-SD_Discharge) %>%
+  pivot_wider(
+    names_from = Period,
+    values_from = Mean_Discharge
+  ) %>%
+  mutate(difference = .[[3]] - .[[2]])
+
+view(discharge_summary_wide)
+
+write_xlsx(discharge_summary_wide, "C:/Users/tayta/Downloads/Brooks Range Pre and Post Discharge Averages.xlsx")
+```
+
+
+
+```{r}
+# Download data from Wulik station
+wulik <- "15747000"
+
+# Define the time period
+start_date <- "2000-01-01"
+end_date <- "2024-12-31"
+
+# Retrieve daily discharge data for all sites
+wulik_discharge_data <- readNWISdv(
+  siteNumbers = wulik, 
+  parameterCd = "00060", 
+  startDate = start_date, 
+  endDate = end_date
+)
+
+wulik_discharge_data <- wulik_discharge_data %>%
+  mutate(Year = year(Date)) %>%
+  dplyr::rename(discharge_cfs = X_00060_00003)
+
+# Create period groups and summarize
+discharge_summary <- wulik_discharge_data %>%
+  mutate(Period = case_when(
+    Year >= 2000 & Year <= 2018 ~ "2000-2018",
+    Year >= 2019 & Year <= 2024 ~ "2019-2024",
+    TRUE ~ NA_character_  # Assign NA to other years
+  )) %>%
+  filter(!is.na(Period)) %>%  # Filter only for relevant periods
+  summarise(
+    Mean_Discharge = round(mean(discharge_cfs, na.rm = TRUE), 2),
+    SD_Discharge = round(sd(discharge_cfs, na.rm = TRUE), 2),
+    .by = Period
+  )
+
+view(discharge_summary)
+
+write_xlsx(wulik_discharge_data, "C:/Users/tayta/Downloads/raw Wulik Discharge.xlsx")
+write_xlsx(discharge_summary, "C:/Users/tayta/Downloads/Wulik Discharge Summary.xlsx")
+```
+
+```{r}
+# Download data from Wulik station
+Kobuk <- "15744500"
+
+# Define the time period
+start_date <- "2000-01-01"
+end_date <- "2024-12-31"
+
+# Retrieve daily discharge data for all sites
+Kobuk_discharge_data <- readNWISdv(
+  siteNumbers = Kobuk, 
+  parameterCd = "00060", 
+  startDate = start_date, 
+  endDate = end_date
+)
+
+Kobuk_discharge_data <- Kobuk_discharge_data %>%
+  mutate(Year = year(Date)) %>%
+  dplyr::rename(discharge_cfs = X_00060_00003)
+
+# Create period groups and summarize
+Kobuk_discharge_summary <- Kobuk_discharge_data %>%
+  mutate(Period = case_when(
+    Year >= 2000 & Year <= 2018 ~ "2000-2018",
+    Year >= 2019 & Year <= 2024 ~ "2019-2024",
+    TRUE ~ NA_character_  # Assign NA to other years
+  )) %>%
+  filter(!is.na(Period)) %>%  # Filter only for relevant periods
+  summarise(
+    Mean_Discharge = round(mean(discharge_cfs, na.rm = TRUE), 2),
+    SD_Discharge = round(sd(discharge_cfs, na.rm = TRUE), 2),
+    .by = Period
+  )
+
+view(Kobuk_discharge_summary)
+
+write_xlsx(Kobuk_discharge_data, "C:/Users/tayta/Downloads/raw Kobuk Discharge.xlsx")
+write_xlsx(Kobuk_discharge_summary, "C:/Users/tayta/Downloads/Kobuk Discharge Summary.xlsx")
+```
+
+```{r}
+Wulik_q.p <- ggplot(wulik_discharge_data, aes(x = Date, y = X_00060_00003, color = site_no)) +
+  geom_line() +
+  #facet_grid(station_nm~., scales = "free")+
+  labs(x = "Date",
+       y = "Discharge (cfs)") +
+  theme_minimal()
+
+Wulik_q.p
+```
+
+
+

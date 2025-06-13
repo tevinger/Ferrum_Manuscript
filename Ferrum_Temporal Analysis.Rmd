@@ -248,5 +248,83 @@ Wulik_q.p <- ggplot(wulik_discharge_data, aes(x = Date, y = X_00060_00003, color
 Wulik_q.p
 ```
 
+# LOad Aggie Data
+```{r}
+Agashashok_River_Data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Agashashok_Temporal_Data.xlsx")
+View(Agashashok_River_Data)
+```
+
+## Add column for year and season
+```{r}
+Agashashok_River_Data <- Agashashok_River_Data %>%
+mutate(
+    sample_collection_year = year(as.Date(sample_collection_date_mm_dd_yy)),
+    sample_collection_month = month(as.Date(sample_collection_date_mm_dd_yy), label = TRUE, abbr = FALSE)
+  ) %>%
+  mutate(
+    sample_collection_season = case_when(
+      sample_collection_month %in% c("May", "June") ~ "early",
+      sample_collection_month == "July" ~ "middle",
+      sample_collection_month %in% c("August", "September") ~ "late",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  relocate(sample_collection_year, sample_collection_month, sample_collection_season, .after = SamplingEventID)
+
+View(Agashashok_River_Data)
+```
+
+```{r}
+Aggie_SiteID_counts <- Agashashok_River_Data %>%
+  count(SiteID_mod, name = "SiteID_total_count")
+
+view(Aggie_SiteID_counts)
+
+
+Agashashok_River_Data_with_counts <- Agashashok_River_Data %>%
+ left_join(Aggie_SiteID_counts, by = "SiteID_mod") %>%
+  relocate(SiteID_total_count, .after = SiteID_mod)
+
+view(Agashashok_River_Data_with_counts)
+
+# select site Id's that have been sampled at least 5 times
+Agashashok_River_Data_filtered <- Agashashok_River_Data_with_counts %>%
+  filter(SiteID_total_count > 4)
+
+site_counts_by_year <- Agashashok_River_Data_filtered %>%
+  count(sample_collection_year, SiteID_mod, name = "count_per_year") %>%
+  filter(sample_collection_year == "2015")
+
+view(site_counts_by_year)
+
+sampled_in_2015 <- Agashashok_River_Data_filtered %>%
+  
+```
+
+## Plot SiteID by year
+```{r}
+sampling_count <- 
+  ggplot(Agashashok_River_Data_filtered, aes(x = SiteID_mod, y = SiteID_total_count)) +
+  geom_point(aes(color = SiteID_mod)) +
+  labs(
+    title = "Total Sample Count per Site",
+    x = "Site ID",
+    y = "Total Count"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # tilt labels if many sites
+  )
+
+sampling_count
+```
+## Data for plots
+```{r}
+Agashashok_for_plots <- Agashashok_River_Data_filtered %>%
+  filter(SiteID_mod %in% site_counts_by_year$SiteID_mod)
+
+view(Agashashok_for_plots)
+```
+
 
 

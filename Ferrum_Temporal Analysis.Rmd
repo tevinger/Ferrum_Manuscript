@@ -273,26 +273,28 @@ mutate(
   ) %>%
   relocate(sample_collection_year, sample_collection_month, sample_collection_season, .after = SamplingEventID)
 
-View(Agashashok_River_Data)
+#View(Agashashok_River_Data)
 ```
 
 ```{r}
+# Add a column for the count of each sample site
 Aggie_SiteID_counts <- Agashashok_River_Data %>%
   count(SiteID_mod, name = "SiteID_total_count")
 
 view(Aggie_SiteID_counts)
 
-
+# join the count column to the total df
 Agashashok_River_Data_with_counts <- Agashashok_River_Data %>%
  left_join(Aggie_SiteID_counts, by = "SiteID_mod") %>%
   relocate(SiteID_total_count, .after = SiteID_mod)
 
 view(Agashashok_River_Data_with_counts)
 
-# select site Id's that have been sampled at least 5 times
+# select site ID's that have been sampled at least 5 times
 Agashashok_River_Data_filtered <- Agashashok_River_Data_with_counts %>%
   filter(SiteID_total_count > 4)
 
+# list of sites that have been sampled since 2015
 site_counts_by_year <- Agashashok_River_Data_filtered %>%
   count(sample_collection_year, SiteID_mod, name = "count_per_year") %>%
   filter(sample_collection_year == "2015")
@@ -317,6 +319,7 @@ sampling_count <-
 
 sampling_count
 ```
+
 ## Data for plots
 ```{r}
 Agashashok_for_plots <- Agashashok_River_Data_filtered %>%
@@ -391,8 +394,269 @@ Agashashok_for_plots <- Agashashok_for_plots %>%
 view(Agashashok_for_plots)
 ```
 
+## Add Subcatchment Column
+```{r}
+Agashashok_for_plots <- Agashashok_for_plots %>%
+  mutate(
+    Subcatchment = case_when(
+      startsWith(SiteID_mod, "AN") ~ "North Fork",
+      startsWith(SiteID_mod, "AS") ~ "South Fork",
+      startsWith(SiteID_mod, "AM") ~ "Main",
+      TRUE ~ NA_character_  # Optional: sets others to NA
+    )
+  ) %>%
+  relocate(Subcatchment, .after = Field_label)
+
+Agashashok_for_plots <- Agashashok_for_plots %>%
+  mutate(Subcatchment_year = paste(Subcatchment, sample_collection_year, sep = "_")) %>%
+  relocate(Subcatchment_year, .after = Subcatchment)
+```
+
+#Summary Stats by Subcatment_year
+```{r}
+elements <- c(
+  "pH", "Temp", "Diss_oxy", "Diss_oxy_percent_sat", "Spec_Cond", "DIC", 
+  "Alk", "DOC", "f_Cl", "f_NO3", "f_SO4", "f_Ca", "f_Mg", "f_Na", "f_K",
+  "f_SiO2",
+  "f_Pb", 
+  "f_Ag",
+  "f_Al",
+  "f_As",
+  "f_Ba",
+  #"f_Be",
+  "f_Cd",
+  "f_Ce",
+  "f_Co",
+  "f_Cr",
+  "f_Cu",
+  "f_Dy",
+  "f_Fe",
+  "f_La",
+  "f_Mn",
+  "f_Nd",
+  "f_Ni",
+  "f_Pr",
+  "f_Se",
+  #"f_Th",
+  "f_Tl",
+  "f_U",
+  "f_V",
+  "f_Y",
+  "f_Zn"
+)
+
+columns <- c(
+  "pH", "Temp_deg_celsius", "Diss_oxy_mg_per_l", "Diss_oxy_percent_sat", "Spec_Cond_microS_per_cm", 
+  "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mgN_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l",
+  "f_SiO2_mg_per_l",
+  "f_Pb_mcg_per_l", 
+  "f_Ag_mcg_per_l",
+  "f_Al_mcg_per_l",
+  "f_As_mcg_per_l",
+  "f_Ba_mcg_per_l",
+  #"f_Be_mcg_per_l",
+  #"f_Br_mcg_per_l",
+  "f_Cd_mcg_per_l",
+  "f_Ce_mcg_per_l",
+  "f_Co_mcg_per_l",
+  "f_Cr_mcg_per_l",
+  "f_Cu_mcg_per_l",
+  "f_Dy_mcg_per_l",
+  "f_Fe_mcg_per_l",
+  "f_La_mcg_per_l",
+  "f_Mn_mcg_per_l",
+  "f_Nd_mcg_per_l",
+  "f_Ni_mcg_per_l",
+  "f_Pr_mcg_per_l",
+  "f_Se_mcg_per_l",
+  #"f_Th_mcg_per_l",
+  "f_Tl_mcg_per_l",
+  "f_U_mcg_per_l",
+  "f_V_mcg_per_l",
+  "f_Y_mcg_per_l",
+  "f_Zn_mcg_per_l"
+)
+```
+
+```{r}
+# loop for summary stats using rstatix instead of base R
+library(dplyr)
+library(rstatix)
+
+# Initialize an empty list to store results
+summary_stats_list <- list()
+quartiles_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform summary operation with a default empty tibble if an error occurs
+  summary <- 
+    Agashashok_for_plots %>% # to group by New Grouping (seeps included)
+    dplyr::select(5,14:52) %>% # all data
+    #dplyr::select(2,4,19:82) %>% # New Grouping
+    filter(!is.na(.data[[column]])) %>%
+     group_by(Subcatchment_year) %>% #This is where you can change what variable you want to group the data by
+      get_summary_stats(vars = column, type = "common")
+
+  
+  # Calculate Q1 and Q3
+  q1_q3 <- 
+    Agashashok_for_plots %>% # to group by New Grouping (seeps included)
+    dplyr::select(5,14:52) %>% # all data
+    #dplyr::select(2,4,19:82) %>% # New Grouping
+    filter(!is.na(.data[[column]])) %>%
+     group_by(Subcatchment_year) %>% #This is where you can change what variable you want to group the data by
+      summarise(
+        variable = column,
+        Q1 = round(quantile(.data[[column]], probs = 0.25, na.rm = TRUE), 2),
+        Q3 = round(quantile(.data[[column]], probs = 0.75, na.rm = TRUE), 2),
+        .groups = "drop"
+      )
+  
+  # Combine summary with Q1 and Q3
+  #summary_combined <- summary %>%
+    #left_join(q1_q3, by = c("New_Grouping", "variable"))
+  
+  # Store result
+  summary_stats_list[[i]] <- summary
+  quartiles_list[[i]] <- q1_q3
+}
+
+# Combine into one dataframe
+summary_df <- do.call(rbind, summary_stats_list)
+quartiles_df <- do.call(rbind, quartiles_list)
+
+quartiles_df <- quartiles_df %>%
+  mutate(joining = paste(Subcatchment_year, variable, sep = "_"))
+
+summary_df <- summary_df %>%
+  mutate(joining = paste(Subcatchment_year, variable, sep = "_"))
+
+view(summary_df) # Grouped by New_Grouping and Watershed
+view(quartiles_df)
+
+summary_combined <- summary_df %>%
+  left_join(quartiles_df, by = "joining") %>%
+  dplyr::select(-joining, -Subcatchment_year.y, -variable.y)
+
+summary_combined <-  summary_combined %>%
+  dplyr::rename(variable = variable.x) %>%
+  dplyr::rename(Subcatchment_year = Subcatchment_year.x)
+view(summary_combined)
+#view(summary_df) # grouped by New_Grouping only
+
+#write_xlsx(summary_combined, "C:/Users/tevinger/Downloads/Group with Watersheds summary stats_rstatix.xlsx")
+```
+
 #Temporal Boxplots
+## df
+```{r}
+temporal_df <- summary_combined %>%
+  separate(Subcatchment_year, into = c("Subcatchment", "year"), sep = "_") %>%
+  mutate(
+    Subcatchment = factor(Subcatchment, levels = c("South Fork", "North Fork", "Main")),
+    year = as.character(year),  # ensure year is treated as categorical if needed
+    year_sub = interaction(year, Subcatchment, sep = "_")
+  )
+
+temporal_df$year_sub <- factor(
+  temporal_df$year_sub,
+  levels = c(
+    "2015_South Fork", "2015_North Fork", "2015_Main",
+    "2016_South Fork", "2016_North Fork", "2016_Main",
+    "2017_South Fork", "2017_North Fork", "2017_Main",
+    "2018_South Fork", "2018_North Fork", "2018_Main",
+    "2019_South Fork", "2019_North Fork", "2019_Main",
+    "2020_South Fork", "2020_North Fork", "2020_Main",
+    "2021_South Fork", "2021_North Fork", "2021_Main",
+    "2022_South Fork", "2022_North Fork", "2022_Main",
+    "2023_South Fork", "2023_North Fork", "2023_Main",
+    "2024_South Fork", "2024_North Fork", "2024_Main"
+  )
+)
+
+view(temporal_df)
+```
+
+## Labels
+```{r}
+ylab_DOC <- expression(bold(DOC)~(mg~L^-1))
+ylab_DIC <- expression(bold(DIC)~(mgC~L^-1))
+
+ylab_Ca <- expression(bold(Ca)~bold((mg~L^-1)))
+ylab_Mg <- expression(bold(Mg)~bold((mg~L^-1)))
+ylab_Chloride <- expression(bold(Chloride)~bold((mg~L^-1)))
+ylab_Sulfate <- expression(bold(SO[4]^-2)~bold((mg~L^-1)))
+ylab_SpC <- expression(bold(Specific~Conductivity)~bold((μS~cm^-1)))
+ylab_Alk <- expression(bold(Alkalinity~bold((mgCaCO[3]~L^-1))))
+```
+
+##Theme
+```{r}
+temporal_theme <- 
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(size = 16, color = "black", face = "bold"),
+    axis.text.x = element_text(size = 12, color = "black", face = "bold"),
+    axis.ticks.y = element_line(linewidth = 0.9, color = "black"),  # Thicker y-axis ticks
+    axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
+    
+    axis.ticks.x = element_line(linewidth = 0.9, color = "black"),  # Thicker y-axis ticks
+    #axis.ticks.length.x = unit(0.15, "cm"),  # Longer tick marks
+    
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "black"),
+    legend.position = "top",
+    legend.text = element_text(size = 15),
+    legend.title = element_text(size = 17, face = "bold", hjust = 0.5),
+    
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    #panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    panel.background = element_rect(fill = "transparent"), # Panel background
+    plot.background = element_rect(fill = "transparent", color = NA) # Plot background
+
+  )
+
+north_fork_ticks <- levels(temporal_df$year_sub)[grepl("North Fork$", levels(temporal_df$year_sub))]
+north_fork_labels <- gsub("_North Fork", "", north_fork_ticks)
+```
+
 ## Sulfate
+
+```{r}
+# SO4 by subcatchment
+SO4_aggie <- temporal_df %>%
+  filter(variable == "f_SO4_mg_per_l") %>%
+  ggplot(aes(x = year_sub, y = median, color = Subcatchment)) +
+   geom_vline(xintercept = 12.5, linetype = "dashed", color = "black", size = 1, alpha = 0.5) +
+  #geom_line(size = 1) +
+  geom_point(size = 3) +
+  #geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
+  geom_errorbar(aes(ymin = Q1, ymax = Q3), width = 0.2) +
+  scale_x_discrete(
+    breaks = north_fork_ticks,
+    labels = north_fork_labels
+  ) +
+  #scale_x_discrete(labels = x_labels) +
+  labs(
+    title = "Median SO4 by Year and Subcatchment",
+    x = "Year",
+    y = "Median SO4",
+    color = "Subcatchment"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  temporal_theme
+
+SO4_aggie
+```
+
 ```{r}
 sulfate_temporal <- Agashashok_for_plots %>%
 ggplot(aes(x = factor(sample_collection_year), y = f_SO4_mg_per_l, fill = sample_collection_season)) +
@@ -411,9 +675,57 @@ ggplot(aes(x = factor(sample_collection_year), y = f_SO4_mg_per_l, fill = sample
 sulfate_temporal
 ```
 
+## SpC
+```{r}
+SpC_aggie <- temporal_df %>%
+  filter(variable == "Spec_Cond_microS_per_cm") %>%
+  ggplot(aes(x = year_sub, y = median, color = Subcatchment)) +
+   geom_vline(xintercept = 12.5, linetype = "dashed", color = "black", size = 1, alpha = 0.5) +
+  #geom_line(size = 1) +
+  geom_point(size = 3) +
+  #geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
+  geom_errorbar(aes(ymin = Q1, ymax = Q3), width = 0.2) +
+  scale_x_discrete(
+    breaks = north_fork_ticks,
+    labels = north_fork_labels
+  ) +
+  #scale_x_discrete(labels = x_labels) +
+  labs(
+    title = "Median SpC by Year and Subcatchment",
+    x = "Year",
+    y = "Median SpC",
+    color = "Subcatchment"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  temporal_theme
+
+SpC_aggie
+```
+
 ## pH
 ```{r}
-Mg_temporal <- Agashashok_for_plots %>%
+# pH by subcatchment
+
+pH_aggie <- temporal_df %>%
+  filter(variable == "pH") %>%
+  ggplot(aes(x = year, y = mean, color = Subcatchment)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  labs(
+    title = "Mean pH by Year and Subcatchment",
+    x = "Year",
+    y = "Mean pH",
+    color = "Subcatchment"
+  ) +
+  theme_minimal()
+
+pH_aggie
+```
+
+```{r}
+# pH by season
+pH_temporal <- Agashashok_for_plots %>%
 ggplot(aes(x = factor(sample_collection_year), y = pH, fill = sample_collection_season)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
   labs(
@@ -427,10 +739,38 @@ ggplot(aes(x = factor(sample_collection_year), y = pH, fill = sample_collection_
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
-Mg_temporal
+pH_temporal
 ```
 
 ## DIC
+```{r}
+DIC_aggie <- temporal_df %>%
+  filter(variable == "DIC_mgC_per_l") %>%
+  ggplot(aes(x = year_sub, y = median, color = Subcatchment)) +
+  geom_vline(xintercept = 9.5, linetype = "dashed", color = "black", size = 1, alpha = 0.5) +
+  #geom_line(size = 1) +
+  geom_point(size = 3) +
+  #geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
+  geom_errorbar(aes(ymin = Q1, ymax = Q3), width = 0.2) +
+  scale_x_discrete(
+    breaks = north_fork_ticks,
+    labels = north_fork_labels
+  ) +
+  #scale_x_discrete(labels = x_labels) +
+  labs(
+    title = "Median DIC by Year and Subcatchment",
+    x = "Year",
+    y = "Median DIC",
+    color = "Subcatchment"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  temporal_theme
+
+DIC_aggie
+```
+
+
 ```{r}
 DIC_temporal <- Agashashok_for_plots %>%
 ggplot(aes(x = factor(sample_collection_year), y = DIC_mgC_per_l, fill = sample_collection_season)) +
@@ -450,6 +790,34 @@ DIC_temporal
 ```
 
 ## Alk
+```{r}
+Alk_aggie <- temporal_df %>%
+  filter(variable == "Alk_mgCaCO3_per_l") %>%
+  ggplot(aes(x = year_sub, y = median, color = Subcatchment)) +
+   #geom_vline(xintercept = 12.5, linetype = "dashed", color = "black", size = 1, alpha = 0.5) +
+  #geom_line(size = 1) +
+  geom_point(size = 3) +
+  #geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
+  geom_errorbar(aes(ymin = Q1, ymax = Q3), width = 0.2) +
+  scale_x_discrete(
+    breaks = north_fork_ticks,
+    labels = north_fork_labels
+  ) +
+  #scale_x_discrete(labels = x_labels) +
+  labs(
+    title = "Median SpC by Year and Subcatchment",
+    x = "Year",
+    y = "Median SpC",
+    color = "Subcatchment"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  temporal_theme
+
+Alk_aggie
+```
+
+
 ```{r}
 Alk_temporal <- Agashashok_for_plots %>%
 ggplot(aes(x = factor(sample_collection_year), y = Alk_mgCaCO3_per_l, fill = sample_collection_season)) +

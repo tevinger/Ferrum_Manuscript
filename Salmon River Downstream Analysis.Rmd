@@ -1063,15 +1063,16 @@ SalmonR_Ni_bottom <- ggplot() +
   geom_point(data = trib_p_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "grey", size = 3.4, stroke = 1.2) +
   geom_point(data = impaired_p_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred4", size = 4, stroke = 1.2) +
   
-  coord_cartesian(x = c(0, 22), y = c(0.05, 300)) +
+  coord_cartesian(x = c(0, 22), y = c(0.05, 1100)) +
   scale_x_continuous(breaks = DA_breaks, labels = DA_labels) +
-  scale_y_log10(breaks = c(0.1, 1,10,100), labels = scales::comma) +
+  scale_y_log10(breaks = c(0.1, 1,10,100,1000), labels = scales::comma) +
   annotation_logticks(sides = "l") +
   labs(x = "Distance Downstream (km)", y = NULL, color = "Legend") +
   theme_minimal() +
   DA_theme +
   theme(
-    axis.title.x = element_blank()
+    axis.title.x = element_blank(),
+    legend.position = "top"
     )
 
 SalmonR_Ni_bottom
@@ -1102,7 +1103,62 @@ SalmonR_Ni_combo <- SalmonR_Ni_top / SalmonR_Ni_bottom + plot_layout(
 SalmonR_Ni_combo
 
 # Save
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR Ni_with DL box.png", SalmonR_Ni_combo, width = 4.95, height = 2.5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR Ni_with DL box.png", SalmonR_Ni_bottom, width = 5.15, height = 2.5, dpi = 300)
+```
+
+### For legend
+```{r}
+# Add a Group column before plotting
+MS_f_Ni_long$Group <- "Filtered MS"
+MS_p_Ni_long$Group <- "Particulate MS"
+trib_f_Ni_long$Group <- "Unimpaired Trib (F)"
+impaired_f_Ni_long$Group <- "Impaired Trib (F)"
+trib_p_Ni_long$Group <- "Unimpaired Trib (P)"
+impaired_p_Ni_long$Group <- "Impaired Trib (P)"
+
+# Then in the plot:
+SalmonR_Ni_bottom <- ggplot() +
+  geom_point(data = MS_f_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot, fill = Group),
+             shape = 21, color = "black", size = 4, stroke = 1.3) +
+  
+  geom_point(data = MS_p_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot, fill = Group),
+             shape = 21, color = "black", size = 4, stroke = 1.3) +
+  
+  geom_point(data = trib_f_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot, fill = Group),
+             shape = 24, color = "black", size = 3.4, stroke = 1.2) +
+  
+  geom_point(data = trib_p_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot, fill = Group),
+             shape = 24, color = "black", size = 3.4, stroke = 1.2) +
+  
+  # impaired tribs use color only (pch 8 doesn't use fill)
+  geom_point(data = impaired_f_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot, color = Group),
+             shape = 8, size = 4, stroke = 1.2) +
+  
+  geom_point(data = impaired_p_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot, color = Group),
+             shape = 8, size = 4, stroke = 1.2) +
+
+  # Manual legends for both color and fill
+  scale_fill_manual(values = c(
+    "Filtered MS" = "#28968b",
+    "Particulate MS" = "grey28",
+    "Unimpaired Trib (F)" = "#a1e6ce",
+    "Unimpaired Trib (P)" = "grey"
+  )) +
+  
+  scale_color_manual(values = c(
+    "Impaired Trib (F)" = "indianred2",
+    "Impaired Trib (P)" = "indianred4"
+  )) +
+
+  labs(x = "Distance Downstream (km)", y = NULL, fill = "Sample Type", color = "Sample Type") +
+  theme_minimal() +
+  theme(legend.position = "top")
+
+
+SalmonR_Ni_bottom
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR legend.png", SalmonR_Ni_bottom, width = 10, height = 2.5, dpi = 300)
+
 ```
 
 ## REE
@@ -1175,14 +1231,15 @@ SalmonR_REE_bottom <- ggplot() +
   geom_point(data = impaired_f_REE_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred2", size = 4, stroke = 1.2) +
   geom_point(data = trib_p_REE_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "grey", size = 3.4, stroke = 1.2) +
   geom_point(data = impaired_p_REE_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred4", size = 4, stroke = 1.2) +
-  coord_cartesian(x = c(0, 22), y = c(0.005, 250)) +
+  coord_cartesian(x = c(0, 22), y = c(0.005, 1000)) +
   scale_x_continuous(breaks = DA_breaks, labels = DA_labels) +
-  scale_y_log10(breaks = c(0.001,0.01,0.1, 1, 10, 100), labels = scales::comma) +
+  scale_y_log10(breaks = c(0.001,0.01,0.1, 1, 10, 100, 1000), labels = scales::comma) +
   annotation_logticks(sides = "l") +
   labs(x = "Distance Downstream (km)", y = NULL, color = "Legend") +
   theme_minimal() +
   DA_theme +
-  theme(axis.title.x = element_blank())
+  theme(axis.title.x = element_blank(),
+        legend.position = "right")
 
 SalmonR_REE_bottom
 ```
@@ -1211,7 +1268,7 @@ SalmonR_REE_combo <- SalmonR_REE_top / SalmonR_REE_bottom + plot_layout(
 
 SalmonR_REE_combo
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR REE_with DL box.png", SalmonR_REE_combo, width = 5.1, height = 2.5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR REE_with DL box.png", SalmonR_REE_bottom, width = 5.25, height = 2.5, dpi = 300)
 ```
 
 ## Cu

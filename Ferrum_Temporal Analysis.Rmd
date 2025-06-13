@@ -645,16 +645,17 @@ SO4_aggie <- temporal_df %>%
   ) +
   #scale_x_discrete(labels = x_labels) +
   labs(
-    title = "Median SO4 by Year and Subcatchment",
+    title = NULL,
     x = "Year",
     y = "Median SO4",
     color = "Subcatchment"
   ) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   temporal_theme
 
 SO4_aggie
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4.png", SO4_aggie, width = 4, height = 5, dpi = 300)
 ```
 
 ```{r}
@@ -794,7 +795,7 @@ DIC_temporal
 Alk_aggie <- temporal_df %>%
   filter(variable == "Alk_mgCaCO3_per_l") %>%
   ggplot(aes(x = year_sub, y = median, color = Subcatchment)) +
-   #geom_vline(xintercept = 12.5, linetype = "dashed", color = "black", size = 1, alpha = 0.5) +
+  geom_vline(xintercept = 9.5, linetype = "dashed", color = "black", size = 1, alpha = 0.5) +
   #geom_line(size = 1) +
   geom_point(size = 3) +
   #geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
@@ -805,16 +806,18 @@ Alk_aggie <- temporal_df %>%
   ) +
   #scale_x_discrete(labels = x_labels) +
   labs(
-    title = "Median SpC by Year and Subcatchment",
+    title = NULL,
     x = "Year",
     y = "Median SpC",
     color = "Subcatchment"
   ) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   temporal_theme
 
 Alk_aggie
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/legend.png", Alk_aggie, width = 10, height = 5, dpi = 300)
 ```
 
 

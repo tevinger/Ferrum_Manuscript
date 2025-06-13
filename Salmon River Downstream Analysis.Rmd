@@ -727,28 +727,51 @@ impaired_p_Fe_long <- SalmonR_impaired_Fe_long %>%
 
 ```{r}
 SalmonR_Fe_top <- ggplot() +
+  # Filtered Fe
   # Line plot for SalmonR_filtered_MS
-  geom_line(data = SalmonR_filtered_MS, aes(x = Rel_Water_Area_plotting, y = f_Fe_mcg_per_l), color = "black", size = 1) +
-geom_point(data = SalmonR_filtered_MS, aes(x = Rel_Water_Area_plotting, y = f_Fe_mcg_per_l), pch = 21, color = "black", 
+  geom_line(data = MS_f_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+geom_point(data = MS_f_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", 
            #fill = "#2DAA9E",
            fill = "#28968b",
            size = 4, stroke = 1.3) +
+  
   # Points for SalmonR_filtered_Trib
-  geom_point(data = Salmon_unimpaired_tribs, aes(x = Rel_Water_Area_plotting, y = f_Fe_mcg_per_l), pch = 24, color = "black", 
+  geom_point(data = trib_f_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", 
              #fill = "#c0eeea",
              fill = "#a1e6ce",
              #fill = "#92e2c6",
              #fill = "#b1ead6",
              size = 3.4, stroke = 1.2) +
   # Points for impaired tribs
-  geom_point(data = Salmon_impaired_tribs, aes(x = Rel_Water_Area_plotting, y = f_Fe_mcg_per_l), pch = 25, color = "black", 
-             fill = "indianred2", 
-             size = 3.3, stroke = 1.2) +
-  #coord_cartesian(x = c(0, 22), y = c(0, 45)) +
-  scale_x_continuous( 
-    breaks = DA_breaks,
-    labels = DA_labels) +
-  scale_y_continuous(breaks = c(0,100,200,300,400,500,1000,2000,5000,10000,15000,20000), labels = c(0,100,200,300,400,500,1000,2000,5000,10000,15000,20000)) +
+  geom_point(data = impaired_f_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, 
+             #color = "black", 
+             color = "indianred2", 
+             size = 4, stroke = 1.2) +
+  
+  # Particulate Fe
+  # Line plot for SalmonR_filtered_MS
+  geom_line(data = MS_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+geom_point(data = MS_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, 
+           color = "black", 
+           #fill = "#2DAA9E",
+           fill = "grey28",
+           size = 4, stroke = 1.3) +
+  # Points for SalmonR_filtered_Trib
+  geom_point(data = trib_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", 
+             #fill = "#c0eeea",
+             fill = "grey",
+             #fill = "#92e2c6",
+             #fill = "#b1ead6",
+             size = 3.4, stroke = 1.2) +
+  # Points for impaired tribs
+  geom_point(data = impaired_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, 
+             #color = "black", 
+             color = "indianred4", 
+             size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 22), y = c(19900, 19960)) +
+  scale_x_continuous(breaks = DA_breaks, labels = DA_labels) +
+  scale_y_log10(breaks = c(19900,19950), labels = scales::comma) +
+  annotation_logticks(sides = "l") +
   #scale_y_continuous(breaks = DIC_breaks,labels = DIC_labels) +
   labs(
     title = NULL,
@@ -779,6 +802,15 @@ geom_point(data = MS_f_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_
            #fill = "#2DAA9E",
            fill = "#28968b",
            size = 4, stroke = 1.3) +
+  
+  # Line plot for particulate Fe SalmonR_filtered_MS
+  geom_line(data = MS_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+geom_point(data = MS_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, 
+           color = "black", 
+           #fill = "#2DAA9E",
+           fill = "grey28",
+           size = 4, stroke = 1.3) +
+  
   # Points for SalmonR_filtered_Trib
   geom_point(data = trib_f_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", 
              #fill = "#c0eeea",
@@ -787,29 +819,26 @@ geom_point(data = MS_f_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_
              #fill = "#b1ead6",
              size = 3.4, stroke = 1.2) +
   # Points for impaired tribs
-  geom_point(data = impaired_f_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 25, color = "black", 
-             fill = "indianred2", 
-             size = 3.3, stroke = 1.2) +
+  geom_point(data = impaired_f_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, 
+             #color = "black", 
+             color = "indianred2", 
+             size = 4, stroke = 1.2) +
   
   # Particulate Fe
-  # Line plot for SalmonR_filtered_MS
-  geom_line(data = MS_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
-geom_point(data = MS_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", 
-           #fill = "#2DAA9E",
-           fill = "#185b53",
-           size = 4, stroke = 1.3) +
+  
   # Points for SalmonR_filtered_Trib
   geom_point(data = trib_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", 
              #fill = "#c0eeea",
-             fill = "#65d6af",
+             fill = "grey",
              #fill = "#92e2c6",
              #fill = "#b1ead6",
              size = 3.4, stroke = 1.2) +
   # Points for impaired tribs
-  geom_point(data = impaired_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 25, color = "black", 
-             fill = "indianred4", 
-             size = 3.3, stroke = 1.2) +
-  coord_cartesian(x = c(0, 22), y = c(5, 6000)) +
+  geom_point(data = impaired_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, 
+             #color = "black", 
+             color = "indianred4", 
+             size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 22), y = c(5, 7000)) +
   scale_x_continuous(breaks = DA_breaks, labels = DA_labels) +
   scale_y_log10(breaks = c(1,10,100,1000), labels = scales::comma) +
   annotation_logticks(sides = "l") +
@@ -832,18 +861,609 @@ SalmonR_Fe_bottom
 ```
 
 ```{r}
-SalmonR_Fe_combo <- SalmonR_Fe_bottom / SalmonR_Fe_top + plot_layout(
-  heights = c(1, 4), 
+SalmonR_Fe_combo <- SalmonR_Fe_top / SalmonR_Fe_bottom + plot_layout(
+  heights = c(1, 5), 
   guides = "collect") & theme(plot.margin = margin(0, 5, 0, 2), panel.background = element_rect(fill = "NA", color = "NA"), # Panel background
     plot.background = element_rect(fill = "NA", color = "NA") # Plot background
     )
 
 SalmonR_Fe_combo
 
-#ggsave("C:/Users/tevinger/Downloads/SalmonR Fe.png", SalmonR_Fe_combo, width = 5, height = 2.5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR Fe.png", SalmonR_Fe_combo, width = 5.1, height = 2.5, dpi = 300)
 
 ```
 
+## Zn
+```{r}
+# MS Zn data
+SalmonR_MS_Zn_long <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Zn_mcg_per_l, f_Zn_mcg_per_l_qa, p_Zn_mcg_per_l, p_Zn_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Zn_mcg_per_l, p_Zn_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Zn_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.1), 
+                                  Metal_conc))
+
+MS_f_Zn_long <- SalmonR_MS_Zn_long %>% filter(Metal_type == "f")
+MS_p_Zn_long <- SalmonR_MS_Zn_long %>% filter(Metal_type == "p")
+
+# Unimpaired trib Zn data
+SalmonR_trib_Zn_long <- Salmon_unimpaired_tribs %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Zn_mcg_per_l, f_Zn_mcg_per_l_qa, p_Zn_mcg_per_l, p_Zn_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Zn_mcg_per_l, p_Zn_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Zn_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.1), 
+                                  Metal_conc))
+
+trib_f_Zn_long <- SalmonR_trib_Zn_long %>% filter(Metal_type == "f")
+trib_p_Zn_long <- SalmonR_trib_Zn_long %>% filter(Metal_type == "p")
+
+# Impaired trib Zn data
+SalmonR_impaired_Zn_long <- Salmon_impaired_tribs %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Zn_mcg_per_l, f_Zn_mcg_per_l_qa, p_Zn_mcg_per_l, p_Zn_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Zn_mcg_per_l, p_Zn_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Zn_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.1), 
+                                  Metal_conc))
+
+impaired_f_Zn_long <- SalmonR_impaired_Zn_long %>% filter(Metal_type == "f")
+impaired_p_Zn_long <- SalmonR_impaired_Zn_long %>% filter(Metal_type == "p")
+```
+
+```{r}
+# Plot top
+SalmonR_Zn_top <- ggplot() +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0.01, ymax = 0.1),
+          fill = "gray80", alpha = 0.4) +
+  #Filtered Zn
+  geom_line(data = MS_f_Zn_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+  geom_point(data = MS_f_Zn_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", fill = "#28968b", size = 4, stroke = 1.3) +
+  
+  #Particulate Zn MS
+  geom_line(data = MS_p_Zn_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+  geom_point(data = MS_p_Zn_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", fill = "grey28", size = 4, stroke = 1.3) +
+  
+  # Filtered tribs
+  geom_point(data = trib_f_Zn_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "#a1e6ce", size = 3.4, stroke = 1.2) +
+  geom_point(data = impaired_f_Zn_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred2", size = 4, stroke = 1.2) +
+  
+  # Particulate tribs
+  geom_point(data = trib_p_Zn_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "grey", size = 3.4, stroke = 1.2) +
+  geom_point(data = impaired_p_Zn_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred4", size = 4, stroke = 1.2) +
+  
+  coord_cartesian(x = c(0, 22), y = c(0.05, 300)) +
+  scale_x_continuous(breaks = DA_breaks, labels = DA_labels) +
+  scale_y_log10(breaks = c(0.1,1,10,100), labels = scales::comma) +
+  annotation_logticks(sides = "l") +
+  labs(x = "Distance Downstream (km)", y = NULL, color = "Legend") +
+  theme_minimal() +
+  DA_theme +
+  theme(
+        axis.title.x = element_blank()
+        
+        )
+
+SalmonR_Zn_top
+```
+
+```{r}
+# Bottom plot (same structure as top)
+SalmonR_Zn_bottom <- SalmonR_Zn_top +
+  coord_cartesian(x = c(0, 22), y = c(2210, 2220)) +
+  scale_y_continuous(breaks = c(2210, 2220), labels = c(2210, 2220)) +
+  theme(plot.margin = margin(0, 5, 0, 2), axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+
+SalmonR_Zn_bottom
+```
+
+```{r}
+# Combine
+SalmonR_Zn_combo <- SalmonR_Zn_bottom / SalmonR_Zn_top + plot_layout(
+  heights = c(1, 5), 
+  guides = "collect") &
+  theme(plot.margin = margin(0, 5, 0, 2), 
+        panel.background = element_rect(fill = NA, color = NA), 
+        plot.background = element_rect(fill = NA, color = NA))
+
+SalmonR_Zn_combo
+
+# Save
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR Zn_with DL box.png", SalmonR_Zn_combo, width = 4.95, height = 2.5, dpi = 300)
+```
+
+## Ni
+```{r}
+# MS Ni data
+SalmonR_MS_Ni_long <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Ni_mcg_per_l, f_Ni_mcg_per_l_qa, p_Ni_mcg_per_l, p_Ni_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Ni_mcg_per_l, p_Ni_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Ni_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.1), 
+                                  Metal_conc))
+
+MS_f_Ni_long <- SalmonR_MS_Ni_long %>% filter(Metal_type == "f")
+MS_p_Ni_long <- SalmonR_MS_Ni_long %>% filter(Metal_type == "p")
+
+# Unimpaired trib Ni data
+SalmonR_trib_Ni_long <- Salmon_unimpaired_tribs %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Ni_mcg_per_l, f_Ni_mcg_per_l_qa, p_Ni_mcg_per_l, p_Ni_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Ni_mcg_per_l, p_Ni_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Ni_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.1), 
+                                  Metal_conc))
+
+trib_f_Ni_long <- SalmonR_trib_Ni_long %>% filter(Metal_type == "f")
+trib_p_Ni_long <- SalmonR_trib_Ni_long %>% filter(Metal_type == "p")
+
+# Impaired trib Ni data
+SalmonR_impaired_Ni_long <- Salmon_impaired_tribs %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Ni_mcg_per_l, f_Ni_mcg_per_l_qa, p_Ni_mcg_per_l, p_Ni_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Ni_mcg_per_l, p_Ni_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Ni_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.1), 
+                                  Metal_conc))
+
+impaired_f_Ni_long <- SalmonR_impaired_Ni_long %>% filter(Metal_type == "f")
+impaired_p_Ni_long <- SalmonR_impaired_Ni_long %>% filter(Metal_type == "p")
+```
+
+```{r}
+SalmonR_Ni_bottom <- ggplot() +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0.01, ymax = 0.1),
+          fill = "gray80", alpha = 0.4) +
+  # filtered Ni MS
+  geom_line(data = MS_f_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+  geom_point(data = MS_f_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", fill = "#28968b", size = 4, stroke = 1.3) +
+  
+  # Particulate Ni MS
+  geom_line(data = MS_p_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+  geom_point(data = MS_p_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", fill = "grey28", size = 4, stroke = 1.3) +
+  
+  # Tribs
+  geom_point(data = trib_f_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "#a1e6ce", size = 3.4, stroke = 1.2) +
+  geom_point(data = impaired_f_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred2", size = 4, stroke = 1.2) +
+  
+  geom_point(data = trib_p_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "grey", size = 3.4, stroke = 1.2) +
+  geom_point(data = impaired_p_Ni_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred4", size = 4, stroke = 1.2) +
+  
+  coord_cartesian(x = c(0, 22), y = c(0.05, 300)) +
+  scale_x_continuous(breaks = DA_breaks, labels = DA_labels) +
+  scale_y_log10(breaks = c(0.1, 1,10,100), labels = scales::comma) +
+  annotation_logticks(sides = "l") +
+  labs(x = "Distance Downstream (km)", y = NULL, color = "Legend") +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.title.x = element_blank()
+    )
+
+SalmonR_Ni_bottom
+```
+
+```{r}
+# Bottom plot (same structure as top)
+SalmonR_Ni_top <- SalmonR_Ni_bottom +
+  coord_cartesian(x = c(0, 22), y = c(850,860)) +
+  scale_y_continuous(breaks = c(850,860), labels = c(850,860)) +
+  theme(plot.margin = margin(0, 5, 0, 2), 
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+
+SalmonR_Ni_top
+```
+
+```{r}
+# Combine
+SalmonR_Ni_combo <- SalmonR_Ni_top / SalmonR_Ni_bottom + plot_layout(
+  heights = c(1, 5), 
+  guides = "collect") &
+  theme(plot.margin = margin(0, 5, 0, 2), 
+        panel.background = element_rect(fill = NA, color = NA), 
+        plot.background = element_rect(fill = NA, color = NA))
+
+SalmonR_Ni_combo
+
+# Save
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR Ni_with DL box.png", SalmonR_Ni_combo, width = 4.95, height = 2.5, dpi = 300)
+```
+
+## REE
+```{r}
+# MS REE data
+SalmonR_MS_REE_long <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_REE, f_REE_qa, p_REE, p_REE_qa) %>%
+  pivot_longer(
+    cols = c(f_REE, p_REE),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_REE",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.01), 
+                                  Metal_conc))
+
+MS_f_REE_long <- SalmonR_MS_REE_long %>% filter(Metal_type == "f")
+MS_p_REE_long <- SalmonR_MS_REE_long %>% filter(Metal_type == "p")
+
+# Unimpaired trib REE data
+SalmonR_trib_REE_long <- Salmon_unimpaired_tribs %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_REE, f_REE_qa, p_REE, p_REE_qa) %>%
+  pivot_longer(
+    cols = c(f_REE, p_REE),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_REE",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.01), 
+                                  Metal_conc))
+
+trib_f_REE_long <- SalmonR_trib_REE_long %>% filter(Metal_type == "f")
+trib_p_REE_long <- SalmonR_trib_REE_long %>% filter(Metal_type == "p")
+
+# Impaired trib REE data
+SalmonR_impaired_REE_long <- Salmon_impaired_tribs %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_REE, f_REE_qa, p_REE, p_REE_qa) %>%
+  pivot_longer(
+    cols = c(f_REE, p_REE),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_REE",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.01), 
+                                  Metal_conc))
+
+impaired_f_REE_long <- SalmonR_impaired_REE_long %>% filter(Metal_type == "f")
+impaired_p_REE_long <- SalmonR_impaired_REE_long %>% filter(Metal_type == "p")
+```
+
+```{r}
+# Bottom REE plot with detection limit rectangle
+SalmonR_REE_bottom <- ggplot() +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0.001, ymax = 0.01),
+            fill = "gray80", alpha = 0.4) +
+  # Filtered REE MS
+  geom_line(data = MS_f_REE_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+  geom_point(data = MS_f_REE_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", fill = "#28968b", size = 4, stroke = 1.3) +
+  # Particulate REE MS
+  geom_line(data = MS_p_REE_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+  geom_point(data = MS_p_REE_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", fill = "grey28", size = 4, stroke = 1.3) +
+  # Tribs
+  geom_point(data = trib_f_REE_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "#a1e6ce", size = 3.4, stroke = 1.2) +
+  geom_point(data = impaired_f_REE_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred2", size = 4, stroke = 1.2) +
+  geom_point(data = trib_p_REE_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "grey", size = 3.4, stroke = 1.2) +
+  geom_point(data = impaired_p_REE_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred4", size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 22), y = c(0.005, 250)) +
+  scale_x_continuous(breaks = DA_breaks, labels = DA_labels) +
+  scale_y_log10(breaks = c(0.001,0.01,0.1, 1, 10, 100), labels = scales::comma) +
+  annotation_logticks(sides = "l") +
+  labs(x = "Distance Downstream (km)", y = NULL, color = "Legend") +
+  theme_minimal() +
+  DA_theme +
+  theme(axis.title.x = element_blank())
+
+SalmonR_REE_bottom
+```
+
+```{r}
+# Top REE plot with adjusted y-axis
+SalmonR_REE_top <- SalmonR_REE_bottom +
+  coord_cartesian(x = c(0, 22), y = c(585, 595)) +
+  scale_y_continuous(breaks = c(585, 595), labels = c(585, 595)) +
+  theme(plot.margin = margin(0, 5, 0, 2), 
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+
+SalmonR_REE_top
+```
+
+```{r}
+# Combine top and bottom REE plots
+SalmonR_REE_combo <- SalmonR_REE_top / SalmonR_REE_bottom + plot_layout(
+  heights = c(1, 5), 
+  guides = "collect") &
+  theme(plot.margin = margin(0, 5, 0, 2), 
+        panel.background = element_rect(fill = NA, color = NA), 
+        plot.background = element_rect(fill = NA, color = NA))
+
+SalmonR_REE_combo
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR REE_with DL box.png", SalmonR_REE_combo, width = 5.1, height = 2.5, dpi = 300)
+```
+
+## Cu
+```{r}
+# MS Cu data
+SalmonR_MS_Cu_long <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Cu_mcg_per_l, f_Cu_mcg_per_l_qa, p_Cu_mcg_per_l, p_Cu_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Cu_mcg_per_l, p_Cu_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Cu_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.1), 
+                                  Metal_conc))
+
+MS_f_Cu_long <- SalmonR_MS_Cu_long %>% filter(Metal_type == "f")
+MS_p_Cu_long <- SalmonR_MS_Cu_long %>% filter(Metal_type == "p")
+
+# Unimpaired trib Cu data
+SalmonR_trib_Cu_long <- Salmon_unimpaired_tribs %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Cu_mcg_per_l, f_Cu_mcg_per_l_qa, p_Cu_mcg_per_l, p_Cu_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Cu_mcg_per_l, p_Cu_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Cu_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.1), 
+                                  Metal_conc))
+
+trib_f_Cu_long <- SalmonR_trib_Cu_long %>% filter(Metal_type == "f")
+trib_p_Cu_long <- SalmonR_trib_Cu_long %>% filter(Metal_type == "p")
+
+# Impaired trib Cu data
+SalmonR_impaired_Cu_long <- Salmon_impaired_tribs %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Cu_mcg_per_l, f_Cu_mcg_per_l_qa, p_Cu_mcg_per_l, p_Cu_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Cu_mcg_per_l, p_Cu_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Cu_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.1), 
+                                  Metal_conc))
+
+impaired_f_Cu_long <- SalmonR_impaired_Cu_long %>% filter(Metal_type == "f")
+impaired_p_Cu_long <- SalmonR_impaired_Cu_long %>% filter(Metal_type == "p")
+
+```
+
+```{r}
+# Plot bottom
+SalmonR_Cu_bottom <- ggplot() +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0.01, ymax = 0.1),
+            fill = "gray80", alpha = 0.4) +
+  geom_line(data = MS_f_Cu_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+  geom_point(data = MS_f_Cu_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", fill = "#28968b", size = 4, stroke = 1.3) +
+  geom_line(data = MS_p_Cu_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+  geom_point(data = MS_p_Cu_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", fill = "grey28", size = 4, stroke = 1.3) +
+  geom_point(data = trib_f_Cu_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "#a1e6ce", size = 3.4, stroke = 1.2) +
+  geom_point(data = impaired_f_Cu_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred2", size = 4, stroke = 1.2) +
+  geom_point(data = trib_p_Cu_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "grey", size = 3.4, stroke = 1.2) +
+  geom_point(data = impaired_p_Cu_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred4", size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 22), y = c(0.5, 80)) +
+  scale_x_continuous(breaks = DA_breaks, labels = DA_labels) +
+  scale_y_log10(breaks = c(0.1, 1,10), labels = scales::comma) +
+  annotation_logticks(sides = "l") +
+  labs(x = "Distance Downstream (km)", y = NULL, color = "Legend") +
+  theme_minimal() +
+  DA_theme +
+  theme(axis.title.x = element_blank())
+
+SalmonR_Cu_bottom
+```
+
+```{r}
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR Cu.png", SalmonR_Cu_bottom, width = 4.65, height = 2.5, dpi = 300)
+```
+
+## Cd
+```{r}
+# MS Cd data
+SalmonR_MS_Cd_long <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Cd_mcg_per_l, f_Cd_mcg_per_l_qa, p_Cd_mcg_per_l, p_Cd_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Cd_mcg_per_l, p_Cd_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Cd_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.01), 
+                                  Metal_conc))
+
+MS_f_Cd_long <- SalmonR_MS_Cd_long %>% filter(Metal_type == "f")
+MS_p_Cd_long <- SalmonR_MS_Cd_long %>% filter(Metal_type == "p")
+
+# Unimpaired trib Cd data
+SalmonR_trib_Cd_long <- Salmon_unimpaired_tribs %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Cd_mcg_per_l, f_Cd_mcg_per_l_qa, p_Cd_mcg_per_l, p_Cd_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Cd_mcg_per_l, p_Cd_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Cd_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.01), 
+                                  Metal_conc))
+
+trib_f_Cd_long <- SalmonR_trib_Cd_long %>% filter(Metal_type == "f")
+trib_p_Cd_long <- SalmonR_trib_Cd_long %>% filter(Metal_type == "p")
+
+# Impaired trib Cd data
+SalmonR_impaired_Cd_long <- Salmon_impaired_tribs %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Cd_mcg_per_l, f_Cd_mcg_per_l_qa, p_Cd_mcg_per_l, p_Cd_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Cd_mcg_per_l, p_Cd_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Cd_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.01), 
+                                  Metal_conc))
+
+impaired_f_Cd_long <- SalmonR_impaired_Cd_long %>% filter(Metal_type == "f")
+impaired_p_Cd_long <- SalmonR_impaired_Cd_long %>% filter(Metal_type == "p")
+```
+
+```{r}
+# Plot bottom
+SalmonR_Cd_bottom <- ggplot() +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0.001, ymax = 0.01),
+            fill = "gray80", alpha = 0.4) +
+  geom_line(data = MS_f_Cd_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+  geom_point(data = MS_f_Cd_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", fill = "#28968b", size = 4, stroke = 1.3) +
+  geom_line(data = MS_p_Cd_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+  geom_point(data = MS_p_Cd_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", fill = "grey28", size = 4, stroke = 1.3) +
+  geom_point(data = trib_f_Cd_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "#a1e6ce", size = 3.4, stroke = 1.2) +
+  geom_point(data = impaired_f_Cd_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred2", size = 4, stroke = 1.2) +
+  geom_point(data = trib_p_Cd_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "grey", size = 3.4, stroke = 1.2) +
+  geom_point(data = impaired_p_Cd_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred4", size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 22), y = c(0.005, 70)) +
+  scale_x_continuous(breaks = DA_breaks, labels = DA_labels) +
+  scale_y_log10(breaks = c(0.01, 0.1,1,10), labels = scales::comma) +
+  annotation_logticks(sides = "l") +
+  labs(x = "Distance Downstream (km)", y = NULL, color = "Legend") +
+  theme_minimal() +
+  DA_theme +
+  theme(axis.title.x = element_blank())
+
+SalmonR_Cd_bottom
+```
+
+```{r}
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR Cd_with DL box.png", SalmonR_Cd_bottom, width = 4.95, height = 2.5, dpi = 300)
+```
+
+##Co
+```{r}
+# MS Co data
+SalmonR_MS_Co_long <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Co_mcg_per_l, f_Co_mcg_per_l_qa, p_Co_mcg_per_l, p_Co_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Co_mcg_per_l, p_Co_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Co_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.01), 
+                                  Metal_conc))
+
+MS_f_Co_long <- SalmonR_MS_Co_long %>% filter(Metal_type == "f")
+MS_p_Co_long <- SalmonR_MS_Co_long %>% filter(Metal_type == "p")
+
+# Unimpaired trib Co data
+SalmonR_trib_Co_long <- Salmon_unimpaired_tribs %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Co_mcg_per_l, f_Co_mcg_per_l_qa, p_Co_mcg_per_l, p_Co_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Co_mcg_per_l, p_Co_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Co_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.01), 
+                                  Metal_conc))
+
+trib_f_Co_long <- SalmonR_trib_Co_long %>% filter(Metal_type == "f")
+trib_p_Co_long <- SalmonR_trib_Co_long %>% filter(Metal_type == "p")
+
+# Impaired trib Co data
+SalmonR_impaired_Co_long <- Salmon_impaired_tribs %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Co_mcg_per_l, f_Co_mcg_per_l_qa, p_Co_mcg_per_l, p_Co_mcg_per_l_qa) %>%
+  pivot_longer(
+    cols = c(f_Co_mcg_per_l, p_Co_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Co_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.01), 
+                                  Metal_conc))
+
+impaired_f_Co_long <- SalmonR_impaired_Co_long %>% filter(Metal_type == "f")
+impaired_p_Co_long <- SalmonR_impaired_Co_long %>% filter(Metal_type == "p")
+```
+
+```{r}
+# Plot bottom
+SalmonR_Co_bottom <- ggplot() +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0.001, ymax = 0.01),
+            fill = "gray80", alpha = 0.4) +
+  geom_line(data = MS_f_Co_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+  geom_point(data = MS_f_Co_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", fill = "#28968b", size = 4, stroke = 1.3) +
+  geom_line(data = MS_p_Co_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), color = "black", size = 1) +
+  geom_point(data = MS_p_Co_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 21, color = "black", fill = "grey28", size = 4, stroke = 1.3) +
+  geom_point(data = trib_f_Co_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "#a1e6ce", size = 3.4, stroke = 1.2) +
+  geom_point(data = impaired_f_Co_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred2", size = 4, stroke = 1.2) +
+  geom_point(data = trib_p_Co_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", fill = "grey", size = 3.4, stroke = 1.2) +
+  geom_point(data = impaired_p_Co_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, color = "indianred4", size = 4, stroke = 1.2) +
+  coord_cartesian(x = c(0, 22), y = c(0.005, 600)) +
+  scale_x_continuous(breaks = DA_breaks, labels = DA_labels) +
+  scale_y_log10(breaks = c(0.01,0.1,1,10,100), labels = scales::comma) +
+  annotation_logticks(sides = "l") +
+  labs(x = "Distance Downstream (km)", y = NULL, color = "Legend") +
+  theme_minimal() +
+  DA_theme +
+  theme(axis.title.x = element_blank())
+
+SalmonR_Co_bottom
+
+```
+
+```{r}
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR Co_with DL box.png", SalmonR_Co_bottom, width = 5.1, height = 2.5, dpi = 300)
+```
 
 # Downstream Analysis by Downstream Distance
 ## pH plot

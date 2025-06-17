@@ -241,8 +241,8 @@ boxplot_colors <- c(
 # Downstream Analysis by Relative Watershed Area
 ## pH
 ```{r}
-DA_x_breaks <- seq(0,25, by = 2.5)
-DA_x_labels <- c(0,"",5,"",10,"",15,"",20,"",25)
+DA_x_breaks <- c(1,2.5,5,7.5,10,12.5,15,17.5,20,22.5)
+DA_x_labels <- c(1,"",5,"",10,"",15,"",20,"")
 DA_labels
 
 pH_y_breaks <- seq(4.4,8.6, by = 0.2)
@@ -725,6 +725,122 @@ impaired_p_Fe_long <- SalmonR_impaired_Fe_long %>%
   filter(Metal_type == "p")
 ```
 
+### area plot
+```{r}
+SalmonR_MS_Fe_area <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Fe_mcg_per_l, u_Fe_mcg_per_l) %>%
+  #filter(!(New_Groups == "NA")) %>%
+  #filter(p_Fe_mcg_per_l >= 0.01) %>%
+  pivot_longer(
+    cols = c(f_Fe_mcg_per_l, u_Fe_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Fe_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
+
+view(SalmonR_MS_Fe_area)
+
+MS_f_Fe_area <- SalmonR_MS_Fe_area %>%
+  filter(Metal_type == "f")
+
+MS_u_Fe_area <- SalmonR_MS_Fe_area %>%
+  filter(Metal_type == "u")
+```
+
+```{r}
+SalmonR_trib_Fe_area <- SalmonR_filtered_Trib %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Fe_mcg_per_l, u_Fe_mcg_per_l) %>%
+  #filter(!(New_Groups == "NA")) %>%
+  #filter(p_Fe_mcg_per_l >= 0.01) %>%
+  pivot_longer(
+    cols = c(f_Fe_mcg_per_l, u_Fe_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Fe_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
+
+view(SalmonR_trib_Fe_area)
+
+trib_f_Fe_area <- SalmonR_trib_Fe_area %>%
+  filter(Metal_type == "f")
+
+trib_u_Fe_area <- SalmonR_trib_Fe_area %>%
+  filter(Metal_type == "u")
+```
+
+```{r}
+SalmonR_Fe_area <- ggplot() +
+  geom_area(data = MS_u_Fe_area, 
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#28968b",
+            #fill = "grey28",
+            alpha = 0.85
+            ) +
+  
+  geom_line(data = MS_u_Fe_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), color = "#1d6e66", linewidth = 0.5) +
+  
+  geom_area(data = MS_f_Fe_area, 
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#c9f1e4") + # light blue/green for filtered
+            #fill = "#28968b") + # darker green for filtered paired with grey for particulate
+            #fill = "#caf1ed",
+            
+            #alpha = 0.8,
+            #pattern = "crosshatch",
+            #pattern_fill = "grey70",
+            #pattern_angle = 45,
+            #pattern_density = 0.1,
+            #pattern_spacing = 0.03,
+            #pattern_size = 0.2,
+            #pattern_alpha = 1) +
+  
+  geom_line(data = MS_f_Fe_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), color = "#1d6e66", linewidth = 0.4) +
+  geom_tile(data = trib_f_Fe_area,
+            aes(x = Rel_Water_Area_plotting, y = 10, fill = Metal_conc),
+            height = 0.5,  # controls thickness of tile band
+            width = 0.1) +  # controls horizontal width
+  scale_fill_gradient(low = "lightblue", high = "darkred", name = "Heatmap\nFe conc") +
+  coord_cartesian(x = c(1,22.5), y = c(1,10000)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.02))) +
+  scale_y_log10(breaks = c(0.01,0.1,1,10,100,1000,10000), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02))) +
+  annotation_logticks(sides = "l") +
+  labs(
+    x = "Relative Water Area",
+    y = "Metal Concentration",
+    title = "Fe Area Plot - Unfiltered and Filtered"
+  ) +
+  theme_minimal() +
+  DA_theme
+
+SalmonR_Fe_area
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR Fe area plot practice.png", SalmonR_Fe_area, width = 5.1, height = 2.5, dpi = 300)
+```
+
+### Trib heat plot
+```{r}
+f_Fe_heat <- ggplot(trib_f_Fe_area, aes(x = Rel_Water_Area_plotting, y = 1, fill = Metal_conc)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkred") +
+  labs(
+    x = "Relative Water Area",
+    y = NULL,
+    fill = "Concentration (µg/L)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    panel.grid = element_blank()
+  )
+
+f_Fe_heat
+
+```
+
+### geom_point
 ```{r}
 SalmonR_Fe_top <- ggplot() +
   # Filtered Fe

@@ -172,7 +172,7 @@ u_Zn_mcg_per_l)
 unique(working_Ferrum_data$Watershed)
 ```
 
-## New_Grouping specific dataframes
+## Individual Dataframes
 ```{r}
 Upstream_df <- working_Ferrum_data %>%
   filter(New_Grouping == "Upstream")
@@ -625,7 +625,7 @@ barplot_theme <- theme(
   panel.grid.minor = element_blank(),
   panel.grid.major = element_blank(),
   panel.background = element_rect(fill = "white"),
-  panel.border = element_rect(fill = NA, color = "black", size = 1),
+  panel.border = element_rect(fill = NA, color = "black", linewidth = 1),
   # X and Y axis tick labels
   axis.text.x = element_text(size = 8, color = "black", face = "bold" 
                              #angle = 45, 
@@ -654,9 +654,9 @@ barplot_theme <- theme(
 ```{r}
 # data other than metals
 Upstream_long <- Upstream_df %>%
-  dplyr::select(2,18:24) %>%
+  dplyr::select(2,19:26) %>% # select watershed and data columns
   pivot_longer(
-    cols = 2:8,
+    cols = 2:9,
     names_to = "Variable",
     values_to = "Value"
   ) %>%
@@ -669,14 +669,16 @@ Upstream_long <- Upstream_df %>%
     Watershed == "Agashashok River"     ~ 762.96,
     Watershed == "Anaktok River"        ~ 196.91,
     Watershed == "Kugururok River"      ~ 2059.42,
-    Watershed == "Tukpahlearik"   ~ 83.24,
+    Watershed == "Tukpahlearik Creek"   ~ 83.24,
     Watershed == "Salmon River"         ~ 1740.33,
-    Watershed == "Nakolikurok"    ~ 349.5,
+    Watershed == "Nakolikurok Creek"    ~ 349.5,
     TRUE ~ NA_real_
   )) %>% 
   mutate(
     Watershed = factor(Watershed, levels = names(sort(watershed_areas)))
   )
+
+view(Upstream_long)
   
 Upstream_long_summary <- Upstream_long %>%
   group_by(Variable, Watershed, Metal_Group) %>%
@@ -692,7 +694,7 @@ Upstream_long_summary <- Upstream_long %>%
 df_buffering_capacity <- Upstream_long_summary %>%
   filter(Metal_Group == "Buffering")
 
-write_xlsx(df_buffering_capacity, "C:/Users/tayta/Downloads/Buffering Capacity Parameters Stats.xlsx")
+#write_xlsx(df_buffering_capacity, "C:/Users/tayta/Downloads/Buffering Capacity Parameters Stats.xlsx")
 
 ```
 
@@ -708,9 +710,9 @@ watershed_areas <- c(
 )
 
 Upstream_f_metals_long <- Upstream_df %>%
-  dplyr::select(2,18:103) %>% #select Watershed column and the metal data columns
+  dplyr::select(2,27:105) %>% #select Watershed column and all data including the metal data columns
   pivot_longer(
-    cols = 2:87,
+    cols = 2:80,
     names_to = "Variable",
     values_to = "Value"
   ) %>%
@@ -750,6 +752,8 @@ Upstream_f_metals_long_summary <- Upstream_f_metals_long %>%
     Count = n(),
     .groups = "drop"
   )
+
+view(Upstream_f_metals_long)
 ```
 
 ```{r}
@@ -1036,36 +1040,20 @@ pH, DIC, Alk
 ##2.5 Seep Chemistry
 ### Seep dataframe
 ```{r}
-Seep_df <- working_Ferrum_data %>%
-  filter(New_Grouping == "Seep")
-
 view(Seep_df)
 
-Seep_df_long <- Seep_df %>%
-  dplyr::select(-c(3,4,7,8,9,10,12,13,14,18)) %>% # remove site information columns that aren't necessary
+# data other than metals
+Seep_long <- Seep_df %>%
+  dplyr::select(2,19:26) %>% # select watershed and data columns
   pivot_longer(
-    cols = 6:66,
+    cols = 2:9,
     names_to = "Variable",
-    values_to = "Conc"
+    values_to = "Value"
   ) %>%
-  # Add a column for grouping the metals 
   mutate(Metal_Group = case_when(
-    grepl("Al_|Fe_|Mn_|Ba_", Variable) ~ "Major",
-    grepl("Pb_|As_|Cd_|Cr_|Co_|Cu_|Zn_|Ni_|U_|Se_", Variable) ~ "Trace",
-    grepl("Ce_|Dy_|Nd_|Pr_|La_|Y_", Variable) ~ "REE",
-    grepl("K_|Na_", Variable) ~ "Minor Cations",
-    grepl("Cl_|NO3_|PO4_", Variable) ~ "Minor Anions",
-    grepl("Ca_|Mg_", Variable) ~ "Major Cations",
-    grepl("SO4_", Variable) ~ "Sulfate",
+    grepl("pH|DIC|Alk", Variable) ~ "Buffering",
     TRUE ~ NA_character_  # Optional: NA if none match
   )) %>%
-  mutate(Metal_Type = case_when(
-    grepl("f_", Variable) ~ "f",
-    grepl("p_", Variable) ~ "p",
-    TRUE ~ NA_character_ # NA if none match
-  )
-  ) %>%
-  mutate(across(c(Conc), round, 2)) %>%
   # Add a column of watershed area to organize the watersheds by later
   mutate(Watershed_area = case_when(
     Watershed == "Agashashok River"     ~ 762.96,
@@ -1080,7 +1068,62 @@ Seep_df_long <- Seep_df %>%
     Watershed = factor(Watershed, levels = names(sort(watershed_areas)))
   )
 
-view(Seep_df_long)
+view(Seep_long)
+  
+Seep_long_summary <- Seep_long %>%
+  group_by(Variable, Watershed, Metal_Group) %>%
+  summarise(
+    mean_value = mean(Value, na.rm = TRUE),
+    sd_value = sd(Value, na.rm = TRUE),
+    Min = round(min(Value, na.rm = TRUE), 5),
+    Max = round(max(Value, na.rm = TRUE), 5),     
+    Count = n(),
+    .groups = "drop"
+  )
+```
+
+```{r}
+Seep_f_metals_long <- Seep_df %>%
+  dplyr::select(2,27:105) %>%#select Watershed column and all data including the metal data columns
+  pivot_longer(
+    cols = 2:80,
+    names_to = "Variable",
+    values_to = "Value"
+  ) %>%
+  dplyr::filter(grepl("f_", Variable)) %>% #keep only filtered metals
+  # Add a column for grouping the metals 
+  mutate(Metal_Group = case_when(
+    grepl("Al|Fe|Mn", Variable) ~ "Major",
+    grepl("Ba|Pb|As|Cd|Cr|Co|Cu|Zn|Ni|U|Se", Variable) ~ "Trace",
+    grepl("Ce|Dy|Nd|Pr|La|Y", Variable) ~ "REE",
+    grepl("K|Na", Variable) ~ "Minor Cations",
+    grepl("Cl|NO3", Variable) ~ "Minor Anions",
+    grepl("Ca|Mg", Variable) ~ "Major Cations",
+    grepl("SO4", Variable) ~ "Sulfate",
+    TRUE ~ NA_character_  # Optional: NA if none match
+  )) %>%
+  mutate(Metal_Type = case_when(
+    grepl("f_", Variable) ~ "f",
+    grepl("p_", Variable) ~ "p",
+    grepl("u_", Variable) ~ "u",
+    TRUE ~ NA_character_ # NA if none match
+  )
+  ) %>%
+  # Add a column of watershed area to organize the watersheds by later
+  mutate(Watershed_area = case_when(
+    Watershed == "Agashashok River"     ~ 762.96,
+    Watershed == "Anaktok River"        ~ 196.91,
+    Watershed == "Kugururok River"      ~ 2059.42,
+    Watershed == "Tukpahlearik Creek"   ~ 83.24,
+    Watershed == "Salmon River"         ~ 1740.33,
+    Watershed == "Nakolikurok Creek"    ~ 349.5,
+    TRUE ~ NA_real_
+  )) %>% 
+  mutate(
+    Watershed = factor(Watershed, levels = names(sort(watershed_areas)))
+  )
+
+view(Seep_f_metals_long)
 ```
 
 DF Modifications

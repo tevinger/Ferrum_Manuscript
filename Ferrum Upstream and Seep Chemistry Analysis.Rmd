@@ -172,7 +172,7 @@ u_Zn_mcg_per_l)
 unique(working_Ferrum_data$Watershed)
 ```
 
-## Make Upstream dataframe
+## New_Grouping specific dataframes
 ```{r}
 Upstream_df <- working_Ferrum_data %>%
   filter(New_Grouping == "Upstream")
@@ -187,7 +187,19 @@ Downstream_df <- working_Ferrum_data %>%
 view(Downstream_df)
 ```
 
+```{r}
+Seep_df <- working_Ferrum_data %>%
+  filter(New_Grouping == "Seep")
 
+view(Seep_df)
+```
+
+```{r}
+Seep_control_df <- working_Ferrum_data %>%
+  filter(Field_label %in% c("TukC_Seep2_con", "TukC_seep_con"))
+
+view(Seep_control_df)
+```
 
 #1. Summary Stats
 ##1.1 Summary Stats Loop
@@ -535,17 +547,7 @@ write_xlsx(Anaktok_summary_stats, "C:/Users/tayta/Downloads/Anaktok Summary Stat
 
 
 #2. Data Analysis
-##2.1  Individual data frames
-```{r}
-Upstream_df <- Upstream_seep_df %>%
-  filter(Site_Group == "Upstream")
-
-seep_df <- Upstream_seep_df %>%
-  filter(Site_Group == "Seep")
-
-Seep_control_df <- Upstream_seep_df %>%
-  filter(Site_Group == "Seep_control")
-```
+##2.1  
 
 ##2.2 Colors
 ``` {r}

@@ -77,39 +77,35 @@ library(ggpattern) #need to install rlang package I think for ggpattern to be ab
 
 #view(working_Ferrum_data)
 
-# Use this if need to reload to R from files
-working_Ferrum_data <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Final Ferrum Manuscript Data Sheet_V2.xlsx")
+Alaska_DataRelease_2022_2023_Ferrum_V9 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V9_REE.xlsx")
+```
 
-working_Ferrum_data <- working_Ferrum_data %>%
+```{r}
+working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
   dplyr::select(ParkID,
                 Watershed,
-                Subcatchment,
+                #Subcatchment,
                 New_Groups,
                 New_Grouping,
-                `Field label`,
+                Field_label,
                 Latitude,
                 Longitude,
-                sample_collection_date_mm_dd_yy,
-                sample_time_h_mm,
+                sample_collection_year,
+                sample_collection_month,
+                sample_collection_season,
+                Watershed_Area,
+                Relative_MS_Watershed_Area,
                 SamplingEventID,
                 VisualDescription,
                 Site_Classification,
-                #Hyd_Site_Classification,
                 Hyd_Classification,
                 Distance_km,
                 Elevation_ft,
-                Watershed_Area,
-                Relative_MS_Watershed_Area,
                 pH,
                 Temp_deg_celsius,
                 Diss_oxy_mg_per_l,
                 Diss_oxy_percent_sat,
                 Spec_Cond_microS_per_cm,
-                TOC_mgC_per_l,
-                f_NH3_mgN_per_l,
-                f_PO4_mgP_per_l,
-                TDN_mgN_per_l,
-                TDP_mgP_per_l,
                 DIC_mgC_per_l,
                 Alk_mgCaCO3_per_l,
                 DOC_mgC_per_l,
@@ -120,49 +116,58 @@ working_Ferrum_data <- working_Ferrum_data %>%
                 f_Mg_mg_l,
                 f_Na_mg_l,
                 f_K_mg_l,
-                f_Al_mcg_per_l,	
-                p_Al_mcg_per_l,	
-                f_As_mcg_per_l,	
-                p_As_mcg_per_l,	
-                f_Ba_mcg_per_l,
-                p_Ba_mcg_per_l,
-                f_Cd_mcg_per_l,	
-                p_Cd_mcg_per_l,	
-                f_Ce_mcg_per_l,
-                p_Ce_mcg_per_l,	
-                f_Co_mcg_per_l,	
-                p_Co_mcg_per_l,	
-                f_Cr_mcg_per_l,	
-                p_Cr_mcg_per_l,	
-                f_Cu_mcg_per_l,	
-                p_Cu_mcg_per_l,	
-                f_Fe_mcg_per_l,	
-                p_Fe_mcg_per_l,	
-                f_Mn_mcg_per_l,	
-                p_Mn_mcg_per_l,
-                f_Ni_mcg_per_l,
-                p_Ni_mcg_per_l,
-                f_Se_mcg_per_l,
-                p_Se_mcg_per_l,
-                f_Zn_mcg_per_l,
-                p_Zn_mcg_per_l,
-                f_Y_mcg_per_l,
-                p_Y_mcg_per_l,
-                f_La_mcg_per_l,
-                p_La_mcg_per_l,
-                f_Dy_mcg_per_l,
-                p_Dy_mcg_per_l,
-                f_Nd_mcg_per_l,
-                p_Nd_mcg_per_l,
-                f_Pr_mcg_per_l,
-                p_Pr_mcg_per_l,
-                f_Tl_mcg_per_l,
-                p_Tl_mcg_per_l,
-                f_U_mcg_per_l,
-                p_U_mcg_per_l,
-                f_Pb_mcg_per_l,
-                p_Pb_mcg_per_l,
-                f_SiO2_mg_per_l)
+                f_SiO2_mg_per_l,
+                f_Pb_mcg_per_l, p_Pb_mcg_per_l,
+                f_Ag_mcg_per_l, p_Ag_mcg_per_l,
+f_Al_mcg_per_l, p_Al_mcg_per_l,
+f_As_mcg_per_l, p_As_mcg_per_l,
+f_Ba_mcg_per_l, p_Ba_mcg_per_l,
+#f_Be_mcg_per_l, p_Be_mcg_per_l,
+f_Cd_mcg_per_l, p_Cd_mcg_per_l,
+f_Ce_mcg_per_l, p_Ce_mcg_per_l,
+f_Co_mcg_per_l, p_Co_mcg_per_l,
+f_Cr_mcg_per_l, p_Cr_mcg_per_l,
+f_Cu_mcg_per_l, p_Cu_mcg_per_l,
+f_Dy_mcg_per_l, p_Dy_mcg_per_l,
+f_Fe_mcg_per_l, p_Fe_mcg_per_l,
+f_La_mcg_per_l, p_La_mcg_per_l,
+f_Mn_mcg_per_l, p_Mn_mcg_per_l,
+f_Nd_mcg_per_l, p_Nd_mcg_per_l,
+f_Ni_mcg_per_l, p_Ni_mcg_per_l,
+f_Pr_mcg_per_l, p_Pr_mcg_per_l,
+f_Se_mcg_per_l, p_Se_mcg_per_l,
+#f_Th_mcg_per_l, p_Th_mcg_per_l,
+f_Tl_mcg_per_l, p_Tl_mcg_per_l,
+f_U_mcg_per_l, p_U_mcg_per_l,
+f_V_mcg_per_l, p_V_mcg_per_l,
+f_Y_mcg_per_l, p_Y_mcg_per_l,
+f_Zn_mcg_per_l, p_Zn_mcg_per_l,
+f_REE, p_REE,
+u_Pb_mcg_per_l,
+u_Ag_mcg_per_l,
+u_Al_mcg_per_l,
+u_As_mcg_per_l,
+u_Ba_mcg_per_l,
+# u_Be_mcg_per_l,
+u_Cd_mcg_per_l,
+u_Ce_mcg_per_l,
+u_Co_mcg_per_l,
+u_Cr_mcg_per_l,
+u_Cu_mcg_per_l,
+u_Dy_mcg_per_l,
+u_Fe_mcg_per_l,
+u_La_mcg_per_l,
+u_Mn_mcg_per_l,
+u_Nd_mcg_per_l,
+u_Ni_mcg_per_l,
+u_Pr_mcg_per_l,
+u_Se_mcg_per_l,
+# u_Th_mcg_per_l,
+u_Tl_mcg_per_l,
+u_U_mcg_per_l,
+u_V_mcg_per_l,
+u_Y_mcg_per_l,
+u_Zn_mcg_per_l)
 
 unique(working_Ferrum_data$Watershed)
 ```
@@ -170,7 +175,7 @@ unique(working_Ferrum_data$Watershed)
 ## Make Upstream dataframe
 ```{r}
 Upstream_df <- working_Ferrum_data %>%
-  filter(Distance_km == "0")
+  filter(New_Grouping == "Upstream")
 
 view(Upstream_df)
 ```
@@ -181,6 +186,7 @@ Downstream_df <- working_Ferrum_data %>%
 
 view(Downstream_df)
 ```
+
 
 
 #1. Summary Stats

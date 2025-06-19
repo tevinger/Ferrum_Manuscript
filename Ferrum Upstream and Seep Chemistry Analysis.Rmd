@@ -1128,15 +1128,6 @@ view(Seep_f_metals_long)
 
 DF Modifications
 ```{r}
-watershed_areas <- c(
-  "Agashashok River" = 762.96,
-  "Anaktok River" = 196.91,
-  "Kugururok River" = 2059.42,
-  "Tukpahlearik Creek" = 83.24,
-  "Salmon River" = 1740.33,
-  "Nakolikurok Creek" = 349.5
-)
-  
 Seep_f_metals_long_summary <- Seep_df_long %>%
   group_by(Variable, Watershed, Metal_Group, Metal_Type) %>%
   summarise(

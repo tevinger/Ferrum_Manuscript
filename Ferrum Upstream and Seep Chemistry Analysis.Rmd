@@ -1090,11 +1090,11 @@ Seep_f_metals_long <- Seep_df %>%
     names_to = "Variable",
     values_to = "Value"
   ) %>%
-  dplyr::filter(grepl("f_", Variable)) %>% #keep only filtered metals
+  #dplyr::filter(grepl("f_", Variable)) %>% #keep only filtered metals
   # Add a column for grouping the metals 
   mutate(Metal_Group = case_when(
-    grepl("Al|Fe|Mn", Variable) ~ "Major",
-    grepl("Ba|Pb|As|Cd|Cr|Co|Cu|Zn|Ni|U|Se", Variable) ~ "Trace",
+    grepl("Al|Fe|Mn|Ba", Variable) ~ "Major",
+    grepl("Pb|As|Cd|Cr|Co|Cu|Zn|Ni|U|Se", Variable) ~ "Trace",
     grepl("Ce|Dy|Nd|Pr|La|Y", Variable) ~ "REE",
     grepl("K|Na", Variable) ~ "Minor Cations",
     grepl("Cl|NO3", Variable) ~ "Minor Anions",
@@ -1128,13 +1128,13 @@ view(Seep_f_metals_long)
 
 DF Modifications
 ```{r}
-Seep_f_metals_long_summary <- Seep_df_long %>%
+Seep_f_metals_long_summary <- Seep_f_metals_long %>%
   group_by(Variable, Watershed, Metal_Group, Metal_Type) %>%
   summarise(
-    mean_value = mean(Conc, na.rm = TRUE),
-    sd_value = sd(Conc, na.rm = TRUE),
-    Min = if (all(is.na(Conc))) NA_real_ else round(min(Conc, na.rm = TRUE), 5),
-    Max = if (all(is.na(Conc))) NA_real_ else round(max(Conc, na.rm = TRUE), 5),     
+    mean_value = mean(Value, na.rm = TRUE),
+    sd_value = sd(Value, na.rm = TRUE),
+    Min = if (all(is.na(Value))) NA_real_ else round(min(Value), 5),
+    Max = if (all(is.na(Value))) NA_real_ else round(max(Value, na.rm = TRUE), 5),     
     Count = n(),
     .groups = "drop"
   )
@@ -1142,7 +1142,7 @@ Seep_f_metals_long_summary <- Seep_df_long %>%
 view(Seep_f_metals_long_summary)
 ```
 
-##Plot colors and metal order
+##Plot and metal colors
 ```{r}
 watershed_colors <- c(  
     "Agashashok River" = "#A1E3F9",   
@@ -1156,7 +1156,9 @@ watershed_colors <- c(
     "Tukpahlearik" = "#FDDE74"
     )
 
-cb_palette_20 <- c(
+
+
+cb_palette_metals <- c(
   # Major metal colors
   #"#FF7F00", "#56B4E9", "grey31", "#009E73", 
   #"#FF7F00", "#56B4E9", "grey31", "#5d9b84",
@@ -1197,10 +1199,11 @@ metals_ordered <- c(
 "p_Ce_mcg_per_l", "p_Dy_mcg_per_l", "p_Nd_mcg_per_l", "p_Pr_mcg_per_l","p_La_mcg_per_l", "p_Y_mcg_per_l"
 )
 
-metal_colors <- cb_palette_20
+metal_colors <- cb_palette_metals
 names(metal_colors) <- metals_ordered
 ```
 
+## Metal order
 ```{r}
 # Major metals
 major_order <- c("f_Ba_mcg_per_l", "p_Ba_mcg_per_l", "f_Al_mcg_per_l", "p_Al_mcg_per_l", "f_Fe_mcg_per_l", "p_Fe_mcg_per_l", "f_Mn_mcg_per_l", "p_Mn_mcg_per_l")
@@ -1242,17 +1245,22 @@ minor_cations_order <- c(
 minor_anions_order <- c(
   "f_Cl_mg_per_l", "f_NO3_mg_per_l"
 )
+```
 
-
+## Metal group dataframes
+```{r}
 df_major_seep <- Seep_f_metals_long_summary %>%
   filter(Metal_Group == "Major") %>%
   filter(!is.na(Variable)) %>%
+  filter(Metal_Type != "u") %>%
   mutate(Variable = factor(Variable, levels = major_order))
 
 #view(df_major_seep)
 
 df_trace_seep <- Seep_f_metals_long_summary %>%
   filter(Metal_Group == "Trace") %>%
+  filter(!is.na(Variable)) %>%
+  filter(Metal_Type != "u") %>%
   mutate(Variable = factor(Variable, levels = trace_order))
 
 #view(df_trace_seep)
@@ -1281,8 +1289,19 @@ df_sulfate_seep <- Seep_f_metals_long_summary %>%
 ```{r}
 #Grouped by watershed on the y-axis
 seep_metals_major <- df_major_seep %>%
-  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
-        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable, pattern = Metal_Type)) +
+  geom_bar_pattern(
+    stat = "identity",
+    position = position_dodge(width = 0.9),
+    pattern_density = 0.15,
+    pattern_spacing = 0.015,
+    pattern_angle = 45,
+    width = 0.75,
+    alpha = 0.7,
+    size = .75,
+    pattern_key_scale_factor = 0.6,
+    color = "black"
+  ) +
   geom_errorbar(
     aes(ymin = mean_value, ymax = mean_value + sd_value),
     position = position_dodge(width = 0.9),
@@ -1293,20 +1312,24 @@ seep_metals_major <- df_major_seep %>%
     x = NULL,
     y = "Concentration (μg/L)"
   ) +
-  #coord_cartesian(ylim = c(0,15)) +
- #scale_y_log10(labels = label_comma()) +
-  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10), breaks = c(0,10,100,1000,10000,100000,1000000,10000000), labels = label_comma(), expand = expansion(mult = c(0, 0.05))) +
+  scale_y_continuous(
+    trans = scales::pseudo_log_trans(base = 10),
+    breaks = c(0,10,100,1000,10000,100000,1000000,10000000),
+    labels = label_comma(),
+    expand = expansion(mult = c(0, 0.05))
+  ) +
   annotation_logticks(sides = "l") +
   scale_fill_manual(values = c(metal_colors)) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe")) +
   theme_minimal() +
-  barplot_theme + 
+  barplot_theme +
   theme(
     legend.position = "top",
-    axis.title.y = element_text(margin = margin(r=1))
-    #axis.title.y = element_blank()
+    axis.title.y = element_text(margin = margin(r = 1))
   ) +
-  guides(fill = guide_legend(nrow = 2)) +
-  scale_x_discrete(expand = expansion(mult = c(0.4, 0.2)))
+  guides(fill = guide_legend(nrow = 2), pattern = guide_legend(nrow = 2)) +
+  scale_x_discrete(expand = expansion(mult = c(0.25, 0.2)))
+
 
 seep_metals_major
 ```
@@ -1378,7 +1401,7 @@ seep_metals_trace_bottom <- df_trace_seep %>%
     size = 0.7,
     pattern_density = 0.2,
     pattern_spacing = 0.02,
-    pattern_angle = 25,
+    pattern_angle = 45,
     #width = 0.75,
     alpha = 0.7,
     width = 0.9

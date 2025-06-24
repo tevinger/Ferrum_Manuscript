@@ -856,7 +856,7 @@ metal_colors <- cb_palette_20
 names(metal_colors) <- metals_ordered
 ```
 
-###2.4.1 Major Metals
+## 3.1 Major Metals
 ```{r}
 #Grouped by watershed on the y-axis
 upstream_metals_major <- df_major %>%
@@ -884,7 +884,7 @@ upstream_metals_major <- df_major %>%
 upstream_metals_major
 ```
 
-###2.4.2 Trace Metals
+## 3.2 Trace Metals
 ```{r}
 #grouped by watershed on the y-axis
 upstream_metals_trace_bottom <- df_trace %>%
@@ -1041,9 +1041,10 @@ pH, DIC, Alk
 
 
 # 4. Seep Chemistry
-### Seep dataframe
+## DF modifications
+Everything other than metals
 ```{r}
-view(Seep_df)
+view(Seep_df) # check the column numbers
 
 # make a data frame for all variables other than metals
 Seep_long <- Seep_df %>%
@@ -1088,10 +1089,15 @@ Seep_long_summary <- Seep_long %>%
 view(Seep_long_summary)
 ```
 
+All metals
 ```{r}
+# create a data frame for all metal data - filtered, unfiltered, and particulate
 
-Seep_f_metals_long <- Seep_df %>%
-  dplyr::select(2,27:105) %>%#select Watershed column and all data including the metal data columns
+view(Seep_df) # check the column numbers
+
+
+Seep_metals_long <- Seep_df %>%
+  dplyr::select(2,27:105) %>% #select Watershed column and all data including the metal data columns
   pivot_longer(
     cols = 2:80,
     names_to = "Variable",
@@ -1109,6 +1115,7 @@ Seep_f_metals_long <- Seep_df %>%
     grepl("SO4", Variable) ~ "Sulfate",
     TRUE ~ NA_character_  # Optional: NA if none match
   )) %>%
+  # create a Metal_Type column and assign a letter according to the type of metal measurement (f, p, or u)
   mutate(Metal_Type = case_when(
     grepl("f_", Variable) ~ "f",
     grepl("p_", Variable) ~ "p",
@@ -1130,26 +1137,67 @@ Seep_f_metals_long <- Seep_df %>%
     Watershed = factor(Watershed, levels = names(sort(watershed_areas)))
   )
 
-view(Seep_f_metals_long)
+view(Seep_metals_long)
 ```
 
-DF Modifications
 ```{r}
-Seep_f_metals_long_summary <- Seep_f_metals_long %>%
+# summary of values for bar plots
+Seep_metals_long_summary <- Seep_metals_long %>%
   group_by(Variable, Watershed, Metal_Group, Metal_Type) %>%
   summarise(
-    mean_value = mean(Value, na.rm = TRUE),
-    sd_value = sd(Value, na.rm = TRUE),
-    Min = if (all(is.na(Value))) NA_real_ else round(min(Value), 5),
-    Max = if (all(is.na(Value))) NA_real_ else round(max(Value, na.rm = TRUE), 5),     
-    Count = n(),
-    .groups = "drop"
-  )
+  mean_value = if (all(is.na(Value))) NA_real_ else mean(Value, na.rm = TRUE),
+  sd_value   = if (all(is.na(Value))) NA_real_ else sd(Value, na.rm = TRUE),
+  Min        = if (all(is.na(Value))) NA_real_ else round(min(Value, na.rm = TRUE), 5),
+  Max        = if (all(is.na(Value))) NA_real_ else round(max(Value, na.rm = TRUE), 5),
+  Count      = sum(!is.na(Value)),
+  .groups = "drop"
+)
 
-view(Seep_f_metals_long_summary)
+view(Seep_metals_long_summary)
 ```
 
-##Plot and metal colors
+## Metal group dataframes
+Create specific data frames from the previous subsets based on the Metal_Group (major, trace, REE, etc.)
+```{r}
+df_major_seep <- Seep_metals_long_summary %>%
+  filter(Metal_Group == "Major") %>%
+  filter(!is.na(Variable)) %>%
+  filter(Metal_Type != "u") %>% # filter out unfiltered metal data
+  mutate(Variable = factor(Variable, levels = major_order))
+
+#view(df_major_seep)
+
+df_trace_seep <- Seep_metals_long_summary %>%
+  filter(Metal_Group == "Trace") %>%
+  filter(!is.na(Variable)) %>%
+  filter(Metal_Type != "u") %>% # filter out unfiltered metal data
+  mutate(Variable = factor(Variable, levels = trace_order))
+
+#view(df_trace_seep)
+
+df_ree_seep <- Seep_metals_long_summary %>%
+  filter(Metal_Group == "REE") %>%
+  filter(!is.na(Variable)) %>%
+  filter(Metal_Type != "u") %>% # filter out unfiltered metal data
+  mutate(Variable = factor(Variable, levels = ree_order))
+
+df_major_cations_seep <- Seep_metals_long_summary %>%
+  filter(Metal_Group == "Major Cations") %>%
+  mutate(Variable = factor(Variable, levels = major_cations_order))
+
+df_minor_cations_seep <- Seep_metals_long_summary %>%
+  filter(Metal_Group == "Minor Cations") %>%
+  mutate(Variable = factor(Variable, levels = minor_cations_order))
+
+df_minor_anions_seep <- Seep_metals_long_summary %>%
+  filter(Metal_Group == "Minor Anions") %>%
+  mutate(Variable = factor(Variable, levels = minor_anions_order))
+
+df_sulfate_seep <- Seep_metals_long_summary %>%
+  filter(Metal_Group == "Sulfate")
+```
+
+## Plot and metal colors
 ```{r}
 watershed_colors <- c(  
     "Agashashok River" = "#A1E3F9",   
@@ -1254,43 +1302,7 @@ minor_anions_order <- c(
 )
 ```
 
-## Metal group dataframes
-```{r}
-df_major_seep <- Seep_f_metals_long_summary %>%
-  filter(Metal_Group == "Major") %>%
-  filter(!is.na(Variable)) %>%
-  filter(Metal_Type != "u") %>%
-  mutate(Variable = factor(Variable, levels = major_order))
 
-#view(df_major_seep)
-
-df_trace_seep <- Seep_f_metals_long_summary %>%
-  filter(Metal_Group == "Trace") %>%
-  filter(!is.na(Variable)) %>%
-  filter(Metal_Type != "u") %>%
-  mutate(Variable = factor(Variable, levels = trace_order))
-
-#view(df_trace_seep)
-
-df_ree_seep <- Seep_f_metals_long_summary %>%
-  filter(Metal_Group == "REE") %>%
-  mutate(Variable = factor(Variable, levels = ree_order))
-
-df_major_cations_seep <- Seep_f_metals_long_summary %>%
-  filter(Metal_Group == "Major Cations") %>%
-  mutate(Variable = factor(Variable, levels = major_cations_order))
-
-df_minor_cations_seep <- Seep_f_metals_long_summary %>%
-  filter(Metal_Group == "Minor Cations") %>%
-  mutate(Variable = factor(Variable, levels = minor_cations_order))
-
-df_minor_anions_seep <- Seep_f_metals_long_summary %>%
-  filter(Metal_Group == "Minor Anions") %>%
-  mutate(Variable = factor(Variable, levels = minor_anions_order))
-
-df_sulfate_seep <- Seep_f_metals_long_summary %>%
-  filter(Metal_Group == "Sulfate")
-```
 
 ###2.5.1 Seep Major Metals
 ```{r}

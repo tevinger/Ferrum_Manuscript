@@ -178,23 +178,17 @@ Upstream_df <- working_Ferrum_data %>%
   filter(New_Grouping == "Upstream")
 
 view(Upstream_df)
-```
 
-```{r}
 Downstream_df <- working_Ferrum_data %>%
   filter(New_Grouping == "Downstream MS")
 
 view(Downstream_df)
-```
 
-```{r}
 Seep_df <- working_Ferrum_data %>%
   filter(New_Grouping == "Seep")
 
 view(Seep_df)
-```
 
-```{r}
 Seep_control_df <- working_Ferrum_data %>%
   filter(Field_label %in% c("TukC_Seep2_con", "TukC_seep_con"))
 
@@ -1136,6 +1130,9 @@ Seep_metals_long <- Seep_df %>%
   mutate(
     Watershed = factor(Watershed, levels = names(sort(watershed_areas)))
   )
+
+# replace 0 values with sqrt2/2 of the element detection limit
+
 
 view(Seep_metals_long)
 ```

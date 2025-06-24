@@ -618,8 +618,8 @@ pH_plot
 ggsave("C:/Users/tayta/Downloads/pH_V2.png", pH_plot, bg = "transparent", width = 3, height = 5, dpi = 300)
 ```
 
-##2.4 Upstream Chemistry Barplots
-###Plot theme
+## 2.4 Bar plot Theme
+### Plot theme
 ```{r}
 barplot_theme <- theme(
   panel.grid.minor = element_blank(),
@@ -649,6 +649,9 @@ barplot_theme <- theme(
   plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold")
 )
 ```
+
+# 3. Upstream Chemistry Barplots
+
 
 ###DF modifications
 ```{r}
@@ -1037,12 +1040,12 @@ upstream_major_anions
 pH, DIC, Alk
 
 
-##2.5 Seep Chemistry
+# 4. Seep Chemistry
 ### Seep dataframe
 ```{r}
 view(Seep_df)
 
-# data other than metals
+# make a data frame for all variables other than metals
 Seep_long <- Seep_df %>%
   dplyr::select(2,19:26) %>% # select watershed and data columns
   pivot_longer(
@@ -1069,20 +1072,24 @@ Seep_long <- Seep_df %>%
   )
 
 view(Seep_long)
-  
+
+# summary values to use for bar plots for data that isn't metals
 Seep_long_summary <- Seep_long %>%
   group_by(Variable, Watershed, Metal_Group) %>%
   summarise(
-    mean_value = mean(Value, na.rm = TRUE),
-    sd_value = sd(Value, na.rm = TRUE),
-    Min = round(min(Value, na.rm = TRUE), 5),
-    Max = round(max(Value, na.rm = TRUE), 5),     
-    Count = n(),
-    .groups = "drop"
-  )
+  mean_value = if (all(is.na(Value))) NA_real_ else mean(Value, na.rm = TRUE),
+  sd_value   = if (all(is.na(Value))) NA_real_ else sd(Value, na.rm = TRUE),
+  Min        = if (all(is.na(Value))) NA_real_ else round(min(Value, na.rm = TRUE), 5),
+  Max        = if (all(is.na(Value))) NA_real_ else round(max(Value, na.rm = TRUE), 5),
+  Count      = sum(!is.na(Value)),
+  .groups = "drop"
+)
+
+view(Seep_long_summary)
 ```
 
 ```{r}
+
 Seep_f_metals_long <- Seep_df %>%
   dplyr::select(2,27:105) %>%#select Watershed column and all data including the metal data columns
   pivot_longer(

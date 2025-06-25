@@ -712,7 +712,7 @@ rel_data_to_join <- rel_data %>%
 SalmonR_Fe_with_rel <- SalmonR_Fe %>%
   left_join(rel_data_to_join, by = "SamplingEventID")
 
-view(SalmonR_Fe_with_rel)
+#view(SalmonR_Fe_with_rel)
 ```
 
 ```{r}
@@ -726,7 +726,19 @@ df_expanded <- full_sequence %>%
   left_join(rel_data, by = "Rel_Water_Area_plotting")
 
 rel_data_to_plot <- df_expanded %>%
-  dplyr::select(-c(u_Fe_mcg_per_l, f_Fe_mcg_per_l, p_Fe_mcg_per_l, ref_u_Fe, ref_f_Fe, ref_p_Fe))
+  dplyr::select(-c(u_Fe_mcg_per_l, f_Fe_mcg_per_l, p_Fe_mcg_per_l, ref_u_Fe, ref_f_Fe, ref_p_Fe)) %>%
+   mutate(Rel_Water_Area_plotting = as.numeric(Rel_Water_Area_plotting)) %>%
+  mutate(Rel_Water_Area_plotting = round(Rel_Water_Area_plotting, 2))
+
+Anaktok_salmon <- rel_data %>%
+  filter(Rel_Water_Area_plotting == 6.35) %>%
+  dplyr::select(-c(u_Fe_mcg_per_l, f_Fe_mcg_per_l, p_Fe_mcg_per_l, ref_u_Fe, ref_f_Fe, ref_p_Fe)) %>%
+   mutate(Rel_Water_Area_plotting = as.numeric(Rel_Water_Area_plotting)) %>%
+  mutate(Rel_Water_Area_plotting = round(Rel_Water_Area_plotting, 2))
+
+# Replace the existing row with the one from Anaktok_salmon
+rel_data_to_plot <- rel_data_to_plot %>%
+  rows_update(Anaktok_salmon, by = "Rel_Water_Area_plotting")
 
 view(rel_data_to_plot)
 ```
@@ -740,7 +752,7 @@ rel_data_to_plot_interp <- rel_data_to_plot %>%
     .fns = ~ na.approx(., x = Rel_Water_Area_plotting, na.rm = FALSE, rule = 2)
   ))
 
-view(rel_data_to_plot_interp)
+#view(rel_data_to_plot_interp)
 ```
 
 Data interpolation using na_interpolation - spline
@@ -752,7 +764,7 @@ rel_data_to_plot_interp_spline <- rel_data_to_plot %>%
     .fns = ~ na_interpolation(., option = "spline", maxgap = Inf)
   ))
 
-view(rel_data_to_plot_interp_spline)
+#view(rel_data_to_plot_interp_spline)
 ```
 
 Data interpolation using na_interpolation - stine
@@ -768,14 +780,21 @@ rel_data_to_plot_interp_stine <- rel_data_to_plot %>%
 Interpolation using state space method - na_kalman
 ```{r}
 #na_kalman uses a Kalman filter and smoother to estimate missing values by reconstructing the latent state of the system.
-filtered_na_kalman_df <- rel_data_to_plot %>%
-  dplyr::select(Rel_Water_Area_plotting, rel_f_Fe)
+
+# create a function to replace the NA values before the first value in the df with zeros
+fill_leading_zeros <- function(x) {
+  first_non_na <- which(!is.na(x))[1]
+  if (!is.na(first_non_na) && first_non_na > 1) {
+    x[1:(first_non_na - 1)] <- 0  # set leading NAs to 0
+  }
+  return(x)
+}
 
 # Default state space method (StructTS)
 filled_series <- rel_data_to_plot %>%
   mutate(across(
     .cols = c(rel_u_Fe, rel_f_Fe, rel_p_Fe),
-    .fns = ~ na_kalman(.)
+    .fns = ~ na_kalman(fill_leading_zeros(.))
   ))
 
 view(filled_series)
@@ -951,9 +970,16 @@ f_Fe_heat_stine
 ```{r}
 f_Fe_heat_kalman <- ggplot(filled_series, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Fe)) +
   geom_tile(color = NA, width = 0.05) +
-   geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
-             linetype = "dashed", color = "black", linewidth = 0.5) +
-  scale_fill_gradient(low = "lightblue", high = "darkred") +
+  geom_vline(
+    xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+    linetype = "dashed", color = "black", linewidth = 0.5
+  ) +
+  scale_fill_gradientn(
+    colours = c("lightblue", "darkred"),
+    values = scales::rescale(c(0, 1, max(filled_series$rel_f_Fe, na.rm = TRUE))),
+    limits = c(0, max(filled_series$rel_f_Fe, na.rm = TRUE)),
+    oob = scales::squish
+  ) +
   labs(
     x = "Relative Water Area",
     y = NULL,
@@ -967,7 +993,6 @@ f_Fe_heat_kalman <- ggplot(filled_series, aes(x = Rel_Water_Area_plotting, y = 1
   )
 
 f_Fe_heat_kalman
-
 ```
 
 

@@ -743,10 +743,26 @@ rel_data_to_plot <- rel_data_to_plot %>%
 view(rel_data_to_plot)
 ```
 
+Manually add data values to relative data to control more of how the NA values are interpolated
+```{r}
+mod_data <- data.frame(
+  Rel_Water_Area_plotting = c(4.7, 6.2, 7.95, 8.05, 8.95, 10.85, 10.90, 10.95, 22.5),
+  rel_u_Fe = c(1, 0.2, 0.02, 0.03, 0.02, 0.7, 0.6, 0.5, 0),
+  rel_f_Fe = c(8, 0.2, 0.2, 0.3, 0.1, 0.1, 0.09, 0.05, 0),
+  rel_p_Fe = c(1, 0.2, 0.02, 0.02, 0.01, 1.15, 1.05, 1, 0)
+) %>%
+  mutate(across(everything(), as.numeric))
+
+rel_data_mod <- rel_data_to_plot %>%
+  rows_update(mod_data, by = "Rel_Water_Area_plotting")
+
+view(rel_data_mod)
+```
+
 Linear interpolation using na.approx
 ```{r}
 # Apply linear interpolation to all numeric columns except Rel_Water_Area_plotting
-rel_data_to_plot_interp <- rel_data_to_plot %>%
+rel_data_to_plot_interp <- rel_data_mod %>%
   mutate(across(
     .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
     .fns = ~ na.approx(., x = Rel_Water_Area_plotting, na.rm = FALSE, rule = 2)
@@ -758,7 +774,7 @@ rel_data_to_plot_interp <- rel_data_to_plot %>%
 Data interpolation using na_interpolation - spline
 ```{r}
 # spline interpolates a smooth curve through points
-rel_data_to_plot_interp_spline <- rel_data_to_plot %>%
+rel_data_to_plot_interp_spline <- rel_data_mod %>%
   mutate(across(
     .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
     .fns = ~ na_interpolation(., option = "spline", maxgap = Inf)
@@ -770,7 +786,9 @@ rel_data_to_plot_interp_spline <- rel_data_to_plot %>%
 Data interpolation using na_interpolation - stine
 ```{r}
 # stine is similar to spline but avoids overshoots and extreme curves
-rel_data_to_plot_interp_stine <- rel_data_to_plot %>%
+
+
+rel_data_to_plot_interp_stine <- rel_data_mod %>%
   mutate(across(
     .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
     .fns = ~ na_interpolation(., option = "stine", maxgap = Inf)
@@ -791,7 +809,7 @@ fill_leading_zeros <- function(x) {
 }
 
 # Default state space method (StructTS)
-filled_series <- rel_data_to_plot %>%
+filled_series <- rel_data_mod %>%
   mutate(across(
     .cols = c(rel_u_Fe, rel_f_Fe, rel_p_Fe),
     .fns = ~ na_kalman(fill_leading_zeros(.))
@@ -908,6 +926,7 @@ f_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
              linetype = "dashed", color = "black", linewidth = 0.5) +
   scale_fill_gradient(low = "lightblue", high = "darkred") +
   labs(
+    title = "na.approx method",
     x = "Relative Water Area",
     y = NULL,
     fill = "Tributary:Mainstem"
@@ -930,6 +949,7 @@ f_Fe_heat_spline <- ggplot(rel_data_to_plot_interp_spline, aes(x = Rel_Water_Are
              linetype = "dashed", color = "black", linewidth = 0.5) +
   scale_fill_gradient(low = "lightblue", high = "darkred") +
   labs(
+    title = "na_interpolation spline method",
     x = "Relative Water Area",
     y = NULL,
     fill = "Tributary:Mainstem"
@@ -946,12 +966,15 @@ f_Fe_heat_spline
 ```
 
 ```{r}
+
+
 f_Fe_heat_stine <- ggplot(rel_data_to_plot_interp_stine, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Fe)) +
   geom_tile(color = NA, width = 0.05) +
    geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
              linetype = "dashed", color = "black", linewidth = 0.5) +
   scale_fill_gradient(low = "lightblue", high = "darkred") +
   labs(
+    title = "na_interpolation stine method",
     x = "Relative Water Area",
     y = NULL,
     fill = "Tributary:Mainstem"
@@ -975,12 +998,10 @@ f_Fe_heat_kalman <- ggplot(filled_series, aes(x = Rel_Water_Area_plotting, y = 1
     linetype = "dashed", color = "black", linewidth = 0.5
   ) +
   scale_fill_gradientn(
-    colours = c("lightblue", "darkred"),
-    values = scales::rescale(c(0, 1, max(filled_series$rel_f_Fe, na.rm = TRUE))),
-    limits = c(0, max(filled_series$rel_f_Fe, na.rm = TRUE)),
-    oob = scales::squish
+    colours = c("lightblue", "darkred")
   ) +
   labs(
+    title = "na_kalman method",
     x = "Relative Water Area",
     y = NULL,
     fill = "Tributary:Mainstem"

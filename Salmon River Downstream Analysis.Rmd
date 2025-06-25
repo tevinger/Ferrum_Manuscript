@@ -64,6 +64,8 @@ library(multcompView)
 library(patchwork)
 library(ggbreak)
 library(ggpattern)
+library(imputeTS)
+library(zoo)
 ```
 
 # Load Data
@@ -741,6 +743,45 @@ rel_data_to_plot_interp <- rel_data_to_plot %>%
 view(rel_data_to_plot_interp)
 ```
 
+Data interpolation using na_interpolation - spline
+```{r}
+# spline interpolates a smooth curve through points
+rel_data_to_plot_interp_spline <- rel_data_to_plot %>%
+  mutate(across(
+    .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
+    .fns = ~ na_interpolation(., option = "spline", maxgap = Inf)
+  ))
+
+view(rel_data_to_plot_interp_spline)
+```
+
+Data interpolation using na_interpolation - stine
+```{r}
+# stine is similar to spline but avoids overshoots and extreme curves
+rel_data_to_plot_interp_stine <- rel_data_to_plot %>%
+  mutate(across(
+    .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
+    .fns = ~ na_interpolation(., option = "stine", maxgap = Inf)
+  ))
+```
+
+Interpolation using state space method - na_kalman
+```{r}
+#na_kalman uses a Kalman filter and smoother to estimate missing values by reconstructing the latent state of the system.
+filtered_na_kalman_df <- rel_data_to_plot %>%
+  dplyr::select(Rel_Water_Area_plotting, rel_f_Fe)
+
+# Default state space method (StructTS)
+filled_series <- rel_data_to_plot %>%
+  mutate(across(
+    .cols = c(rel_u_Fe, rel_f_Fe, rel_p_Fe),
+    .fns = ~ na_kalman(.)
+  ))
+
+view(filled_series)
+```
+
+
 Mainstem data frame
 ```{r}
 SalmonR_MS_Fe_area <- SalmonR_filtered_MS %>%
@@ -862,6 +903,73 @@ f_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
 f_Fe_heat
 
 ```
+
+```{r}
+f_Fe_heat_spline <- ggplot(rel_data_to_plot_interp_spline, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Fe)) +
+  geom_tile(color = NA, width = 0.05) +
+   geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "lightblue", high = "darkred") +
+  labs(
+    x = "Relative Water Area",
+    y = NULL,
+    fill = "Tributary:Mainstem"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    panel.grid = element_blank()
+  )
+
+f_Fe_heat_spline
+
+```
+
+```{r}
+f_Fe_heat_stine <- ggplot(rel_data_to_plot_interp_stine, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Fe)) +
+  geom_tile(color = NA, width = 0.05) +
+   geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "lightblue", high = "darkred") +
+  labs(
+    x = "Relative Water Area",
+    y = NULL,
+    fill = "Tributary:Mainstem"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    panel.grid = element_blank()
+  )
+
+f_Fe_heat_stine
+
+```
+
+```{r}
+f_Fe_heat_kalman <- ggplot(filled_series, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Fe)) +
+  geom_tile(color = NA, width = 0.05) +
+   geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "lightblue", high = "darkred") +
+  labs(
+    x = "Relative Water Area",
+    y = NULL,
+    fill = "Tributary:Mainstem"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    panel.grid = element_blank()
+  )
+
+f_Fe_heat_kalman
+
+```
+
 
 ### geom_point
 ```{r}

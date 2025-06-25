@@ -700,7 +700,10 @@ rel_data <- SalmonR_Fe %>%
   )
   
 view(rel_data)
+```
 
+```{r}
+#join the relative concentrations to the main data
 rel_data_to_join <- rel_data %>%
   dplyr::select(SamplingEventID, rel_u_Fe, rel_f_Fe, rel_p_Fe)
 
@@ -710,6 +713,35 @@ SalmonR_Fe_with_rel <- SalmonR_Fe %>%
 view(SalmonR_Fe_with_rel)
 ```
 
+```{r}
+# extend the data to have a fake continuous x axis with fake data
+
+# Create full sequence from 0 to 22.5 by 0.05
+full_sequence <- data.frame(Rel_Water_Area_plotting = seq(0, 22.5, by = 0.05))
+
+# Join original df with the full sequence
+df_expanded <- full_sequence %>%
+  left_join(rel_data, by = "Rel_Water_Area_plotting")
+
+rel_data_to_plot <- df_expanded %>%
+  dplyr::select(-c(u_Fe_mcg_per_l, f_Fe_mcg_per_l, p_Fe_mcg_per_l, ref_u_Fe, ref_f_Fe, ref_p_Fe))
+
+view(rel_data_to_plot)
+```
+
+Linear interpolation using na.approx
+```{r}
+# Apply linear interpolation to all numeric columns except Rel_Water_Area_plotting
+rel_data_to_plot_interp <- rel_data_to_plot %>%
+  mutate(across(
+    .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
+    .fns = ~ na.approx(., x = Rel_Water_Area_plotting, na.rm = FALSE, rule = 2)
+  ))
+
+view(rel_data_to_plot_interp)
+```
+
+Mainstem data frame
 ```{r}
 SalmonR_MS_Fe_area <- SalmonR_filtered_MS %>%
   dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Fe_mcg_per_l, u_Fe_mcg_per_l) %>%
@@ -732,6 +764,7 @@ MS_u_Fe_area <- SalmonR_MS_Fe_area %>%
   filter(Metal_type == "u")
 ```
 
+Tributary data frame
 ```{r}
 SalmonR_trib_Fe_area <- SalmonR_filtered_Trib %>%
   dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Fe_mcg_per_l, u_Fe_mcg_per_l) %>%
@@ -754,6 +787,7 @@ trib_u_Fe_area <- SalmonR_trib_Fe_area %>%
   filter(Metal_type == "u")
 ```
 
+Plotting the actual tributary concentrations
 ```{r}
 SalmonR_Fe_area <- ggplot() +
   geom_tile(data = trib_f_Fe_area,
@@ -790,7 +824,7 @@ SalmonR_Fe_area <- ggplot() +
   geom_line(data = MS_f_Fe_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), color = "#1d6e66", linewidth = 0.4) +
   
   coord_cartesian(x = c(1,22.5), y = c(1,10000)) +
-  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.02))) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
   scale_y_log10(breaks = c(0.01,0.1,1,10,100,1000,10000), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02))) +
   annotation_logticks(sides = "l") +
   labs(
@@ -808,13 +842,15 @@ SalmonR_Fe_area
 
 ### Trib heat plot
 ```{r}
-f_Fe_heat <- ggplot(trib_f_Fe_area, aes(x = Rel_Water_Area_plotting, y = 1000, fill = Metal_conc)) +
-  geom_tile(color = "white") +
+f_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Fe)) +
+  geom_tile(color = NA, width = 0.05) +
+   geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
   scale_fill_gradient(low = "lightblue", high = "darkred") +
   labs(
     x = "Relative Water Area",
     y = NULL,
-    fill = "Concentration (µg/L)"
+    fill = "Tributary:Mainstem"
   ) +
   theme_minimal() +
   theme(
@@ -828,8 +864,6 @@ f_Fe_heat
 ```
 
 ### geom_point
-
-
 ```{r}
 # Select MS Fe data
 # Filter NA values in the grouping variable, filter particulate concentrations and make long format

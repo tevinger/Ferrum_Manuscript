@@ -746,10 +746,10 @@ view(rel_data_to_plot)
 Manually add data values to relative data to control more of how the NA values are interpolated
 ```{r}
 mod_data <- data.frame(
-  Rel_Water_Area_plotting = c(4.7, 6.2, 7.95, 8.05, 8.95, 10.85, 10.90, 10.95, 22.5),
-  rel_u_Fe = c(1, 0.2, 0.02, 0.03, 0.02, 0.7, 0.6, 0.5, 0),
-  rel_f_Fe = c(8, 0.2, 0.2, 0.3, 0.1, 0.1, 0.09, 0.05, 0),
-  rel_p_Fe = c(1, 0.2, 0.02, 0.02, 0.01, 1.15, 1.05, 1, 0)
+  Rel_Water_Area_plotting = c(0, 4.7, 6.2, 7.95, 8.05, 8.95, 10.85, 10.90, 10.95, 22.5),
+  rel_u_Fe = c(0, 1, 0.2, 0.02, 0.03, 0.02, 0.7, 0.6, 0.5, 0),
+  rel_f_Fe = c(0, 8, 0.2, 0.2, 0.3, 0.1, 0.1, 0.09, 0.05, 0),
+  rel_p_Fe = c(0, 1, 0.2, 0.02, 0.02, 0.01, 1.15, 1.05, 1, 0)
 ) %>%
   mutate(across(everything(), as.numeric))
 
@@ -786,9 +786,13 @@ rel_data_to_plot_interp_spline <- rel_data_mod %>%
 Data interpolation using na_interpolation - stine
 ```{r}
 # stine is similar to spline but avoids overshoots and extreme curves
+rel_data_mod2 <- rel_data_mod %>%
+  mutate(rel_f_Fe = case_when(
+    Rel_Water_Area_plotting == 4.75  ~ 100,
+    TRUE ~ rel_f_Fe  # keep original value if no match
+  ))
 
-
-rel_data_to_plot_interp_stine <- rel_data_mod %>%
+rel_data_to_plot_interp_stine <- rel_data_mod2 %>%
   mutate(across(
     .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
     .fns = ~ na_interpolation(., option = "stine", maxgap = Inf)
@@ -815,7 +819,7 @@ filled_series <- rel_data_mod %>%
     .fns = ~ na_kalman(fill_leading_zeros(.))
   ))
 
-view(filled_series)
+#view(filled_series)
 ```
 
 
@@ -919,6 +923,7 @@ SalmonR_Fe_area
 ```
 
 ### Trib heat plot
+na.aprox method
 ```{r}
 f_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Fe)) +
   geom_tile(color = NA, width = 0.05) +
@@ -966,7 +971,6 @@ f_Fe_heat_spline
 ```
 
 ```{r}
-
 
 f_Fe_heat_stine <- ggplot(rel_data_to_plot_interp_stine, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Fe)) +
   geom_tile(color = NA, width = 0.05) +

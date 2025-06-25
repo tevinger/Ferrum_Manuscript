@@ -1132,7 +1132,15 @@ Seep_metals_long <- Seep_df %>%
   )
 
 # replace 0 values with sqrt2/2 of the element detection limit
-
+Seep_metals_long <- Seep_metals_long %>%
+  mutate(
+    Value = case_when(
+      str_detect(Variable, "p_Al|p_Mn|p_Ni|p_Cu|p_Zn") & Value == 0 ~ 0.07071,
+      str_detect(Variable, "p_Fe") & Value == 0 ~ 0.7071,
+      str_detect(Variable, "p_Be|p_V|p_Cr|p_Co|p_As|p_Se|p_Y|p_Ag|p_Cd|p_Ba|p_La|p_Ce|p_Pr|p_Nd|p_Dy|p_Tl|p_Pb|p_Th|p_U") & Value == 0 ~ 0.007071,
+      TRUE ~ Value  # keep existing values otherwise
+    )
+  )
 
 view(Seep_metals_long)
 ```
@@ -1302,6 +1310,7 @@ minor_anions_order <- c(
 
 
 ###2.5.1 Seep Major Metals
+ADD A <DL ABOVE THE PARTICULATE BARS THAT LOOK LIKE 0 IN POWERPOINT
 ```{r}
 #Grouped by watershed on the y-axis
 seep_metals_major <- df_major_seep %>%
@@ -1313,7 +1322,7 @@ seep_metals_major <- df_major_seep %>%
     pattern_spacing = 0.015,
     pattern_angle = 45,
     width = 0.75,
-    alpha = 0.7,
+    alpha = 0.8,
     size = .75,
     pattern_key_scale_factor = 0.6,
     color = "black"
@@ -1350,6 +1359,7 @@ seep_metals_major <- df_major_seep %>%
 seep_metals_major
 ```
 
+Slightly different formatting of the barplots - no space between the bars in the same watershed
 ```{r}
 #Grouped by watershed on the y-axis
 seep_metals_major_2 <- df_major_seep %>%
@@ -1357,13 +1367,14 @@ seep_metals_major_2 <- df_major_seep %>%
   geom_col_pattern(aes(fill = Variable, pattern = Metal_Type, pattern_fill = Metal_Type),
     position = position_dodge(width = 0.9),
     color = "black",
-    size = 0.7,
+    size = 0.75,
     pattern_density = 0.2,
     pattern_spacing = 0.02,
-    pattern_angle = 25,
+    pattern_angle = 45,
     #width = 0.75,
-    alpha = 0.9,
-    width = 0.9
+    alpha = 0.8,
+    width = 0.9,
+    color = "black"
     ) +
         #geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
   geom_errorbar(
@@ -1380,7 +1391,7 @@ seep_metals_major_2 <- df_major_seep %>%
   annotation_logticks(sides = "l") +
   scale_fill_manual(values = c(metal_colors)) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
-  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey28")) +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "black")) +
   theme_minimal() +
   barplot_theme + 
   theme(

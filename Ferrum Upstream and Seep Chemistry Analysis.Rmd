@@ -1232,8 +1232,8 @@ cb_palette_metals <- c(
   #"#F0E442", "#0072B2","#D55E00", "#CC79A7", "#999999", "#E41A1C", "#E69F00",
   #"#377EB8", "#4DAF4A", "#984EA3",
   
-  "#003f5c", "#2c4875", "#752c48", "#8a508f", "#bc5090", "#ff6361", "#ff8531", "#ffa600", "#ffca67", "#80acff",
-  "#003f5c", "#2c4875", "#752c48", "#8a508f", "#bc5090", "#ff6361", "#ff8531", "#ffa600", "#ffca67", "#80acff",
+  "#003f5c",  "#ffca67", "#752c48", "#80acff", "#3a5e9b", "#53B0AE", "#bc5090", "#ff6361", "#01796f",  "#bac4c8",
+  "#003f5c",  "#ffca67", "#752c48", "#80acff", "#3a5e9b", "#53B0AE", "#bc5090", "#ff6361", "#01796f",  "#bac4c8",
   
   # REE colors
   #"#FF7F00", "#A65628", "#999999", "#66C2A5", "#FC8D62", "#8DA0CB"
@@ -1251,6 +1251,7 @@ metals_ordered <- c(
   "f_Pb_mcg_per_l", "f_As_mcg_per_l", "f_Cr_mcg_per_l", "f_Cd_mcg_per_l", 
   "f_Cu_mcg_per_l", "f_Se_mcg_per_l", "f_U_mcg_per_l", "f_Co_mcg_per_l", 
   "f_Ni_mcg_per_l", "f_Zn_mcg_per_l",
+  
   "p_Pb_mcg_per_l", "p_As_mcg_per_l", "p_Cr_mcg_per_l", "p_Cd_mcg_per_l",
 "p_Cu_mcg_per_l", "p_Se_mcg_per_l", "p_U_mcg_per_l", "p_Co_mcg_per_l",
 "p_Ni_mcg_per_l", "p_Zn_mcg_per_l",
@@ -1443,7 +1444,8 @@ seep_metals_trace_bottom <- df_trace_seep %>%
     width = 0.3
   ) +
   labs(
-    title = "Trace Elements by Watershed",
+    title = NULL,
+    #title = "Trace Elements by Watershed",
     x = NULL,
     y = "Concentration (μg/L)"
   ) +
@@ -1464,7 +1466,7 @@ seep_metals_trace_bottom <- df_trace_seep %>%
 
 seep_metals_trace_bottom
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/Major metals_V2 no legend.png", seep_metals_trace_bottom, width = 6, height = 6, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/Trace elements_V1 legend.png", seep_metals_trace_bottom, width = 14, height = 6, dpi = 300)
 ```
 
 ###2.5.3 Seep REE Metals

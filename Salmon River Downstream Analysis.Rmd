@@ -746,10 +746,10 @@ view(rel_data_to_plot)
 Manually add data values to relative data to control more of how the NA values are interpolated
 ```{r}
 mod_data <- data.frame(
-  Rel_Water_Area_plotting = c(0, 4.7, 6.2, 7.95, 8.05, 8.95, 10.85, 10.90, 10.95, 22.5),
-  rel_u_Fe = c(0, 1, 0.2, 0.02, 0.03, 0.02, 0.7, 0.6, 0.5, 0),
-  rel_f_Fe = c(0, 8, 0.2, 0.2, 0.3, 0.1, 0.1, 0.09, 0.05, 0),
-  rel_p_Fe = c(0, 1, 0.2, 0.02, 0.02, 0.01, 1.15, 1.05, 1, 0)
+  Rel_Water_Area_plotting = c(0, 4.7, 6.2, 7.95, 8.05, 8.95, 10.85, 10.90, 10.95, 15, 22.5),
+  rel_u_Fe = c(0, 1, 0.2, 0.02, 0.03, 0.02, 0.7, 0.6, 0.5, 0, 0),
+  rel_f_Fe = c(0, 8, 15, 0.2, 0.3, 0.1, 0.1, 0.09, 0.05, 0, 0),
+  rel_p_Fe = c(0, 1, 0.2, 0.02, 0.02, 0.01, 1.15, 1.05, 1, 0, 0)
 ) %>%
   mutate(across(everything(), as.numeric))
 
@@ -761,12 +761,22 @@ view(rel_data_mod)
 
 Linear interpolation using na.approx
 ```{r}
+# manually change the highest value
+rel_data_mod2 <- rel_data_mod %>%
+  mutate(rel_f_Fe = case_when(
+    Rel_Water_Area_plotting == 4.75  ~ 75,
+    TRUE ~ rel_f_Fe  # keep original value if no match
+  ))
+
 # Apply linear interpolation to all numeric columns except Rel_Water_Area_plotting
-rel_data_to_plot_interp <- rel_data_mod %>%
+rel_data_to_plot_interp <- rel_data_mod2 %>%
   mutate(across(
     .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
     .fns = ~ na.approx(., x = Rel_Water_Area_plotting, na.rm = FALSE, rule = 2)
   ))
+
+# make the values before the first tributary 0 
+rel_data_to_plot_interp[1:75, 6:8] <- 0
 
 #view(rel_data_to_plot_interp)
 ```
@@ -819,7 +829,7 @@ filled_series <- rel_data_mod %>%
     .fns = ~ na_kalman(fill_leading_zeros(.))
   ))
 
-#view(filled_series)
+view(filled_series)
 ```
 
 
@@ -945,6 +955,26 @@ f_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
 
 f_Fe_heat
 
+p_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_p_Fe)) +
+  geom_tile(color = NA, width = 0.05) +
+   geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "lightblue", high = "darkred") +
+  labs(
+    title = "na.approx method",
+    x = "Relative Water Area",
+    y = NULL,
+    fill = "Tributary:Mainstem"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    panel.grid = element_blank()
+  )
+
+p_Fe_heat
+
 ```
 
 ```{r}
@@ -971,7 +1001,6 @@ f_Fe_heat_spline
 ```
 
 ```{r}
-
 f_Fe_heat_stine <- ggplot(rel_data_to_plot_interp_stine, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Fe)) +
   geom_tile(color = NA, width = 0.05) +
    geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
@@ -995,7 +1024,7 @@ f_Fe_heat_stine
 ```
 
 ```{r}
-f_Fe_heat_kalman <- ggplot(filled_series, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Fe)) +
+p_Fe_heat_kalman <- ggplot(filled_series, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_p_Fe)) +
   geom_tile(color = NA, width = 0.05) +
   geom_vline(
     xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
@@ -1017,7 +1046,7 @@ f_Fe_heat_kalman <- ggplot(filled_series, aes(x = Rel_Water_Area_plotting, y = 1
     panel.grid = element_blank()
   )
 
-f_Fe_heat_kalman
+p_Fe_heat_kalman
 ```
 
 

@@ -939,7 +939,7 @@ f_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
   geom_tile(color = NA, width = 0.05) +
    geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
              linetype = "dashed", color = "black", linewidth = 0.5) +
-  scale_fill_gradient(low = "lightblue", high = "darkred") +
+  scale_fill_gradient(low = "white", high = "darkred") +
   labs(
     title = "na.approx method",
     x = "Relative Water Area",
@@ -947,6 +947,7 @@ f_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
     fill = "Tributary:Mainstem"
   ) +
   theme_minimal() +
+  DA_theme +
   theme(
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
@@ -959,7 +960,7 @@ p_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
   geom_tile(color = NA, width = 0.05) +
    geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
              linetype = "dashed", color = "black", linewidth = 0.5) +
-  scale_fill_gradient(low = "lightblue", high = "darkred") +
+  scale_fill_gradient(low = "white", high = "#301934") +
   labs(
     title = "na.approx method",
     x = "Relative Water Area",
@@ -967,6 +968,7 @@ p_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
     fill = "Tributary:Mainstem"
   ) +
   theme_minimal() +
+  DA_theme +
   theme(
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
@@ -977,6 +979,7 @@ p_Fe_heat
 
 ```
 
+na_interpolation - spline
 ```{r}
 f_Fe_heat_spline <- ggplot(rel_data_to_plot_interp_spline, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Fe)) +
   geom_tile(color = NA, width = 0.05) +
@@ -1000,6 +1003,7 @@ f_Fe_heat_spline
 
 ```
 
+na_interpolation - stine
 ```{r}
 f_Fe_heat_stine <- ggplot(rel_data_to_plot_interp_stine, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Fe)) +
   geom_tile(color = NA, width = 0.05) +
@@ -1023,6 +1027,7 @@ f_Fe_heat_stine
 
 ```
 
+na_kalman
 ```{r}
 p_Fe_heat_kalman <- ggplot(filled_series, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_p_Fe)) +
   geom_tile(color = NA, width = 0.05) +

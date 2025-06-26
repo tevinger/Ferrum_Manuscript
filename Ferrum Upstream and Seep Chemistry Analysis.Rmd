@@ -1238,8 +1238,8 @@ cb_palette_metals <- c(
   # REE colors
   #"#FF7F00", "#A65628", "#999999", "#66C2A5", "#FC8D62", "#8DA0CB"
   
-  "#b86622", "#c5e6a1", "#8DA0CB", "#ab694e", "#4eab69", "#6d7a6b",
-  "#b86622", "#c5e6a1", "#8DA0CB", "#ab694e", "#4eab69", "#6d7a6b"
+  "#bc5259", "#c5e6a1", "#ab694e","#8dbfcb",  "#4eab69", "#6d7a6b",
+  "#bc5259", "#c5e6a1", "#ab694e","#8dbfcb",  "#4eab69", "#6d7a6b"
   
 )
 
@@ -1476,14 +1476,14 @@ Seep_metals_REE <- df_ree_seep %>%
   ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
   geom_col_pattern(aes(fill = Variable, pattern = Metal_Type, pattern_fill = Metal_Type),
     position = position_dodge(width = 0.9),
-    color = "black",
-    size = 0.7,
+    size = 0.75,
     pattern_density = 0.2,
     pattern_spacing = 0.02,
-    pattern_angle = 25,
+    pattern_angle = 45,
     #width = 0.75,
-    alpha = 0.7,
-    width = 0.9
+    alpha = 0.8,
+    width = 0.9,
+    color = "black"
     ) +
         #geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
   geom_errorbar(
@@ -1492,7 +1492,8 @@ Seep_metals_REE <- df_ree_seep %>%
     width = 0.3
   ) +
   labs(
-    title = "Rare Earth Elements by Watershed",
+    title = NULL,
+    #title = "Rare Earth Elements by Watershed",
     x = NULL,
     y = "Concentration (μg/L)"
   ) +
@@ -1513,6 +1514,7 @@ Seep_metals_REE <- df_ree_seep %>%
 
 Seep_metals_REE 
 
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/REE_V1 legend.png", Seep_metals_REE, width = 10, height = 6, dpi = 300)
 ```
 
 ####Combo Plots

@@ -1457,7 +1457,7 @@ seep_metals_trace_bottom <- df_trace_seep %>%
   theme_minimal() +
   barplot_theme + 
   theme(
-    legend.position = "top",
+    legend.position = "none",
     axis.title.y = element_text(margin = margin(r=1))
     #axis.title.y = element_blank()
   ) +
@@ -1466,7 +1466,7 @@ seep_metals_trace_bottom <- df_trace_seep %>%
 
 seep_metals_trace_bottom
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/Trace elements_V1 legend.png", seep_metals_trace_bottom, width = 14, height = 6, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/Trace elements_V2 no legend.png", seep_metals_trace_bottom, width = 8, height = 6, dpi = 300)
 ```
 
 ###2.5.3 Seep REE Metals

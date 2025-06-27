@@ -1751,6 +1751,292 @@ ggsave('C:/Users/tevinger/Downloads/proximity_metal_plot_legend.png',
        proximity_metal_plot_legend, width = 5, height = 8, bg = "transparent", dpi = 250)
 ```
 
+
+## Zn 
+```{r}
+# Select Zn data
+Zn_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
+                f_Zn_mcg_per_l, f_Zn_mcg_per_l_qa, p_Zn_mcg_per_l, p_Zn_mcg_per_l_qa) %>%
+  filter(!(is.na(New_Grouping)))
+
+#view(Zn_df)
+
+# Filter NA values in the grouping variable, filter particulate concentrations and make long format
+Zn_long <- Zn_df %>%
+  pivot_longer(
+    cols = c(f_Zn_mcg_per_l, p_Zn_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Zn_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.1), 
+                                  Metal_conc))
+
+#view(Zn_long)
+
+Zn_counts_df <- Zn_long %>%
+  group_by(New_Grouping, Metal_type) %>%
+  summarise(count = n(), .groups = "drop")
+
+#view(Zn_counts_df)
+
+# Factor the grouping variable to set plotting order
+Zn_long <- Zn_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+
+# Create a new variable that combines the groups and metal_type for plotting order
+Zn_long <- Zn_long %>%
+  mutate(
+    x_group = factor(
+      interaction(New_Groups, Metal_type, sep = "_"),
+      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
+    )
+  )
+
+```
+
+```{r}
+Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc_plot)) +
+  geom_boxplot_pattern(
+    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
+    pattern_density = 0.15,
+    pattern_spacing = 0.015,
+    pattern_angle = 45,
+    width = 0.75,
+    alpha = 0.85,
+    size = 0.75
+  ) +
+  scale_fill_manual(values = boxplot_colors) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
+  scale_y_log10(
+    limits = c(0.05, 300000),
+    labels = scales::comma,
+    breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = ylab_Zn,  # make sure ylab_Zn is defined
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    #axis.text.y = element_blank(),
+    axis.title.y = element_blank(),
+    #axis.title.y = element_text(margin = margin(r = 1)),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.115, 0.065)))
+
+Zn_plot
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Zn_V2 no labels.png", Zn_plot, width = 2.75, height = 3.25, dpi = 300)
+```
+
+##Ni
+```{r}
+# Select Ni data
+Ni_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
+                f_Ni_mcg_per_l, f_Ni_mcg_per_l_qa, p_Ni_mcg_per_l, p_Ni_mcg_per_l_qa) %>%
+  filter(!(is.na(New_Grouping)))
+
+#view(Ni_df)
+
+# Filter NA values in the grouping variable, filter particulate concentrations and make long format
+Ni_long <- Ni_df %>%
+  pivot_longer(
+    cols = c(f_Ni_mcg_per_l, p_Ni_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Ni_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.1), 
+                                  Metal_conc))
+
+#view(Ni_long)
+
+Ni_counts_df <- Ni_long %>%
+  group_by(New_Grouping, Metal_type) %>%
+  summarise(count = n(), .groups = "drop")
+
+#view(Ni_counts_df)
+
+# Factor the grouping variable to set plotting order
+Ni_long <- Ni_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+
+# Create a new variable that combines the groups and metal_type for plotting order
+Ni_long <- Ni_long %>%
+  mutate(
+    x_group = factor(
+      interaction(New_Groups, Metal_type, sep = "_"),
+      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
+    )
+  )
+
+```
+
+```{r}
+Ni_plot <- ggplot(Ni_long, aes(x = x_group, y = Metal_conc_plot)) +
+  geom_boxplot_pattern(
+    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
+    pattern_density = 0.15,
+    pattern_spacing = 0.015,
+    pattern_angle = 45,
+    width = 0.75,
+    alpha = 0.85,
+    size = .75
+  ) +
+  scale_fill_manual(values = boxplot_colors) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
+  scale_y_log10(
+    limits = c(0.05, 20000),
+    labels = scales::comma,
+    breaks = c(0.1, 1, 10, 100, 1000, 10000),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = ylab_Ni,  # make sure ylab_Ni is defined
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    #axis.title.y = element_text(margin = margin(r = 1)),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines"),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank()
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.115, 0.065)))
+
+Ni_plot
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Ni_V2 no labels.png", Ni_plot, width = 2.75, height = 3.25, dpi = 300)
+
+```
+
+## REE
+```{r}
+# Select REE sum data
+REE_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
+                f_REE, f_REE_qa, p_REE, p_REE_qa) %>%
+  filter(!(is.na(New_Grouping)))
+
+view(REE_df)
+
+# Filter NA values in the grouping variable, filter particulate concentrations and make long format
+REE_long <- REE_df %>%
+  pivot_longer(
+    cols = c(f_REE, p_REE),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_REE",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
+  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*0.01), 
+                                  Metal_conc))
+
+view(REE_long)
+
+REE_counts_df <- REE_long %>%
+  group_by(New_Grouping, Metal_type) %>%
+  summarise(count = n(), .groups = "drop")
+
+view(REE_counts_df)
+
+# Factor the grouping variable to set plotting order
+REE_long <- REE_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+
+# Create a new variable that combines the groups and metal_type for plotting order
+REE_long <- REE_long %>%
+  mutate(
+    x_group = factor(
+      interaction(New_Groups, Metal_type, sep = "_"),
+      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
+    )
+  )
+
+```
+
+
+```{r}
+REE_plot <- ggplot(REE_long, aes(x = x_group, y = Metal_conc_plot)) +
+  geom_boxplot_pattern(
+    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
+    pattern_density = 0.15,
+    pattern_spacing = 0.015,
+    pattern_angle = 45,
+    width = 0.75,
+    alpha = 0.85,
+    size = .75
+  ) +
+  scale_fill_manual(values = boxplot_colors) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
+  scale_y_log10(
+    limits = c(0.005, 10500),
+    labels = scales::comma,
+    breaks = c(0.01, 0.1, 1, 10, 100, 1000, 10000),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = ylab_REE,  # make sure ylab_Ni is defined
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    #axis.title.y = element_text(margin = margin(r = 1)),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.115, 0.065)))
+
+REE_plot
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/REE_V2 no labels.png", REE_plot, width = 2.75, height = 3.25, dpi = 300)
+
+```
+
 ### Fe Violin
 ```{r}
 Fe_plot_violin <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc_plot)) +
@@ -2011,196 +2297,6 @@ Cu_plot <- ggplot(Cu_long, aes(x = x_group, y = Metal_conc_plot)) +
   scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
 
 Cu_plot
-```
-
-## Zn 
-```{r}
-# Select Zn data
-Zn_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
-  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
-                f_Zn_mcg_per_l, f_Zn_mcg_per_l_qa, p_Zn_mcg_per_l, p_Zn_mcg_per_l_qa) %>%
-  filter(!(is.na(New_Grouping)))
-
-#view(Zn_df)
-
-# Filter NA values in the grouping variable, filter particulate concentrations and make long format
-Zn_long <- Zn_df %>%
-  pivot_longer(
-    cols = c(f_Zn_mcg_per_l, p_Zn_mcg_per_l),
-    names_to = "Metal_type",
-    names_pattern = "^(.)_Zn_mcg_per_l",
-    values_to = "Metal_conc"
-  ) %>%
-  filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
-  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
-                                  Metal_conc + ((sqrt(2)/2)*0.1), 
-                                  Metal_conc))
-
-#view(Zn_long)
-
-Zn_counts_df <- Zn_long %>%
-  group_by(New_Grouping, Metal_type) %>%
-  summarise(count = n(), .groups = "drop")
-
-#view(Zn_counts_df)
-
-# Factor the grouping variable to set plotting order
-Zn_long <- Zn_long %>%
-  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
-
-# Create a new variable that combines the groups and metal_type for plotting order
-Zn_long <- Zn_long %>%
-  mutate(
-    x_group = factor(
-      interaction(New_Groups, Metal_type, sep = "_"),
-      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
-    )
-  )
-
-```
-
-```{r}
-Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc_plot)) +
-  geom_boxplot_pattern(
-    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
-    outlier.shape = 16,
-    outlier.color = "black",
-    outlier.size = 2, 
-    pattern_density = 0.15,
-    pattern_spacing = 0.015,
-    pattern_angle = 45,
-    width = 0.75,
-    alpha = 0.85,
-    size = 0.75
-  ) +
-  scale_fill_manual(values = boxplot_colors) +
-  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
-  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
-  scale_y_log10(
-    limits = c(0.05, 300000),
-    labels = scales::comma,
-    breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000),
-    minor_breaks = NULL
-  ) +
-  annotation_logticks(sides = "l") +
-  labs(
-    title = NULL,
-    x = NULL,
-    y = ylab_Zn,  # make sure ylab_Zn is defined
-    fill = "Metal Type"
-  ) +
-  theme_minimal() +
-  boxplot_theme +
-  theme(
-    legend.position = "none",
-    #axis.text.y = element_blank(),
-    axis.title.y = element_blank(),
-    #axis.title.y = element_text(margin = margin(r = 1)),
-    legend.title = element_text(size = 14),
-    legend.text = element_text(size = 12),
-    legend.key.size = unit(3, "lines")
-  ) +
-  scale_x_discrete(expand = expansion(mult = c(0.115, 0.065)))
-
-Zn_plot
-
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Zn_V2 no labels.png", Zn_plot, width = 2.75, height = 3.25, dpi = 300)
-```
-
-##Ni
-
-```{r}
-# Select Ni data
-Ni_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
-  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
-                f_Ni_mcg_per_l, f_Ni_mcg_per_l_qa, p_Ni_mcg_per_l, p_Ni_mcg_per_l_qa) %>%
-  filter(!(is.na(New_Grouping)))
-
-#view(Ni_df)
-
-# Filter NA values in the grouping variable, filter particulate concentrations and make long format
-Ni_long <- Ni_df %>%
-  pivot_longer(
-    cols = c(f_Ni_mcg_per_l, p_Ni_mcg_per_l),
-    names_to = "Metal_type",
-    names_pattern = "^(.)_Ni_mcg_per_l",
-    values_to = "Metal_conc"
-  ) %>%
-  filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
-  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
-                                  Metal_conc + ((sqrt(2)/2)*0.1), 
-                                  Metal_conc))
-
-#view(Ni_long)
-
-Ni_counts_df <- Ni_long %>%
-  group_by(New_Grouping, Metal_type) %>%
-  summarise(count = n(), .groups = "drop")
-
-#view(Ni_counts_df)
-
-# Factor the grouping variable to set plotting order
-Ni_long <- Ni_long %>%
-  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
-
-# Create a new variable that combines the groups and metal_type for plotting order
-Ni_long <- Ni_long %>%
-  mutate(
-    x_group = factor(
-      interaction(New_Groups, Metal_type, sep = "_"),
-      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
-    )
-  )
-
-```
-
-```{r}
-Ni_plot <- ggplot(Ni_long, aes(x = x_group, y = Metal_conc_plot)) +
-  geom_boxplot_pattern(
-    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
-    outlier.shape = 16,
-    outlier.color = "black",
-    outlier.size = 2, 
-    pattern_density = 0.15,
-    pattern_spacing = 0.015,
-    pattern_angle = 45,
-    width = 0.75,
-    alpha = 0.85,
-    size = .75
-  ) +
-  scale_fill_manual(values = boxplot_colors) +
-  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
-  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
-  scale_y_log10(
-    limits = c(0.05, 20000),
-    labels = scales::comma,
-    breaks = c(0.1, 1, 10, 100, 1000, 10000),
-    minor_breaks = NULL
-  ) +
-  annotation_logticks(sides = "l") +
-  labs(
-    title = NULL,
-    x = NULL,
-    y = ylab_Ni,  # make sure ylab_Ni is defined
-    fill = "Metal Type"
-  ) +
-  theme_minimal() +
-  boxplot_theme +
-  theme(
-    legend.position = "none",
-    #axis.title.y = element_text(margin = margin(r = 1)),
-    legend.title = element_text(size = 14),
-    legend.text = element_text(size = 12),
-    legend.key.size = unit(3, "lines"),
-    axis.title.y = element_blank(),
-    axis.text.y = element_blank()
-  ) +
-  scale_x_discrete(expand = expansion(mult = c(0.115, 0.065)))
-
-Ni_plot
-
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Ni_V2 no labels.png", Ni_plot, width = 2.75, height = 3.25, dpi = 300)
-
 ```
 
 
@@ -2484,102 +2580,6 @@ Se_plot <- ggplot(Se_long, aes(x = x_group, y = Metal_conc_plot)) +
 
 Se_plot
 
-
-```
-
-## REE
-```{r}
-# Select REE sum data
-REE_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
-  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
-                f_REE, f_REE_qa, p_REE, p_REE_qa) %>%
-  filter(!(is.na(New_Grouping)))
-
-view(REE_df)
-
-# Filter NA values in the grouping variable, filter particulate concentrations and make long format
-REE_long <- REE_df %>%
-  pivot_longer(
-    cols = c(f_REE, p_REE),
-    names_to = "Metal_type",
-    names_pattern = "^(.)_REE",
-    values_to = "Metal_conc"
-  ) %>%
-  filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
-  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
-                                  Metal_conc + ((sqrt(2)/2)*0.01), 
-                                  Metal_conc))
-
-view(REE_long)
-
-REE_counts_df <- REE_long %>%
-  group_by(New_Grouping, Metal_type) %>%
-  summarise(count = n(), .groups = "drop")
-
-view(REE_counts_df)
-
-# Factor the grouping variable to set plotting order
-REE_long <- REE_long %>%
-  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
-
-# Create a new variable that combines the groups and metal_type for plotting order
-REE_long <- REE_long %>%
-  mutate(
-    x_group = factor(
-      interaction(New_Groups, Metal_type, sep = "_"),
-      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
-    )
-  )
-
-```
-
-
-```{r}
-REE_plot <- ggplot(REE_long, aes(x = x_group, y = Metal_conc_plot)) +
-  geom_boxplot_pattern(
-    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
-    outlier.shape = 16,
-    outlier.color = "black",
-    outlier.size = 2, 
-    pattern_density = 0.15,
-    pattern_spacing = 0.015,
-    pattern_angle = 45,
-    width = 0.75,
-    alpha = 0.85,
-    size = .75
-  ) +
-  scale_fill_manual(values = boxplot_colors) +
-  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
-  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
-  scale_y_log10(
-    limits = c(0.005, 10500),
-    labels = scales::comma,
-    breaks = c(0.01, 0.1, 1, 10, 100, 1000, 10000),
-    minor_breaks = NULL
-  ) +
-  annotation_logticks(sides = "l") +
-  labs(
-    title = NULL,
-    x = NULL,
-    y = ylab_REE,  # make sure ylab_Ni is defined
-    fill = "Metal Type"
-  ) +
-  theme_minimal() +
-  boxplot_theme +
-  theme(
-    legend.position = "none",
-    #axis.title.y = element_text(margin = margin(r = 1)),
-    axis.title.y = element_blank(),
-    axis.text.y = element_blank(),
-    legend.title = element_text(size = 14),
-    legend.text = element_text(size = 12),
-    legend.key.size = unit(3, "lines")
-  ) +
-  scale_x_discrete(expand = expansion(mult = c(0.115, 0.065)))
-
-REE_plot
-
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/REE_V2 no labels.png", REE_plot, width = 2.75, height = 3.25, dpi = 300)
 
 ```
 

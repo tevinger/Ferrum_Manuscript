@@ -1049,7 +1049,7 @@ Seep_long <- Seep_df %>%
     values_to = "Value"
   ) %>%
   mutate(Metal_Group = case_when(
-    grepl("pH|DIC|Alk", Variable) ~ "Buffering",
+    grepl("pH|DIC|Alk|DOC", Variable) ~ "Buffering",
     TRUE ~ NA_character_  # Optional: NA if none match
   )) %>%
   # Add a column of watershed area to organize the watersheds by later
@@ -1317,7 +1317,7 @@ minor_anions_order <- c(
 
 
 
-###2.5.1 Seep Major Metals
+### 2.5.1 Seep Major Metals
 ADD A <DL ABOVE THE PARTICULATE BARS THAT LOOK LIKE 0 IN POWERPOINT
 ```{r}
 #Grouped by watershed on the y-axis
@@ -1428,7 +1428,7 @@ stacked_seep_major_metals <- ggplot(df_major_seep, aes(x = Watershed, y = mean_v
 stacked_seep_major_metals
 ```
 
-###2.5.2 Seep Trace Metals
+### 2.5.2 Seep Trace Metals
 ```{r}
 #grouped by watershed on the y-axis
 seep_metals_trace_bottom <- df_trace_seep %>%
@@ -1476,7 +1476,7 @@ seep_metals_trace_bottom
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/Trace elements_V2 no legend.png", seep_metals_trace_bottom, width = 8, height = 6, dpi = 300)
 ```
 
-###2.5.3 Seep REE Metals
+### 2.5.3 Seep REE Metals
 ```{r}
 #grouped by watershed on the y-axis
 Seep_metals_REE <- df_ree_seep %>%
@@ -1524,10 +1524,12 @@ Seep_metals_REE
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/REE_V2 no legend.png", Seep_metals_REE, width = 6, height = 6, dpi = 300)
 ```
 
-###2.5.4 Seep Cations
+### 2.5.4 Seep Cations
 Ca, Mg, Na, K
+
+Major Cations
 ```{r}
-upstream_major_cations <- df_cations %>%
+seep_major_cations <- df_major_cations_seep %>%
   ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
         geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
   geom_errorbar(
@@ -1548,14 +1550,153 @@ upstream_major_cations <- df_cations %>%
     legend.position = "top"
   )
 
-upstream_major_cations
+seep_major_cations
 ```
 
-###2.5.5 Seep Anions
-SO4, Cl, NO3, PO4, HCO3(?)
+Minor Cations
+```{r}
+seep_minor_cations <- df_minor_cations_seep %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "Minor Cations by Watershed",
+    x = "Watershed",
+    y = "Concentration (mg/L)"
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "top"
+  )
 
-###2.5.6 Seep SpC, Temp, DOC
+seep_minor_cations
+```
+
+### 2.5.5 Seep Anions
+SO4, Cl, NO3, PO4, HCO3(?)
+```{r}
+seep_minor_anions <- df_minor_anions_seep %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "Minor Anions by Watershed",
+    x = "Watershed",
+    y = "Concentration (mg/L)"
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "top"
+  )
+
+seep_minor_anions
+```
+
+```{r}
+seep_sulfate <- df_sulfate_seep %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9), fill = "#ffe562", color = "black", size = 0.75) +
+  geom_errorbar(
+    aes(ymin = mean_value - sd_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "Sulfate by Watershed",
+    x = "Watershed",
+    y = "Concentration (mg/L)"
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "none"
+  )
+
+seep_sulfate
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/SO4.png", seep_sulfate, width = 6, height = 6, dpi = 300)
+
+```
+
+###2.5.6 Seep SpC, Temp
 
 ###2.5.7 Seep Buffering Capacity
-pH, DIC, Alk
+pH, DIC, Alk, DOC
+```{r}
+df_seep_buffering <- Seep_long_summary %>%
+  filter(Metal_Group == "Buffering")
 
+view(df_seep_buffering)
+```
+
+```{r}
+seep_pH <- df_seep_buffering %>%
+  filter(str_detect(Variable, "pH")) %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value - sd_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "pH by Watershed",
+    x = "Watershed",
+    y = "pH"
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "none"
+  )
+
+seep_pH
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/pH.png", seep_pH, width = 6, height = 6, dpi = 300)
+```
+
+```{r}
+seep_DOC <- df_seep_buffering %>%
+  filter(str_detect(Variable, "DOC")) %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9), fill =  "#d1834a", color = "black", size = 0.75) +
+  geom_errorbar(
+    aes(ymin = mean_value - sd_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "DOC by Watershed",
+    x = "Watershed",
+    y = "DOC (mgC/L)"
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "none"
+  )
+
+seep_DOC
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/DOC.png", seep_DOC, width = 6, height = 6, dpi = 300)
+```

@@ -1734,7 +1734,7 @@ Fe_plot <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc_plot)) +
 
 Fe_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Fe_V3 no labels.png", Fe_plot, width = 2.75, height = 3.25, dpi = 300)
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Fe_V3 no labels.png", Fe_plot, width = 2.75, height = 3.25, dpi = 300)
 ```
 
 Extract the legend
@@ -1825,6 +1825,8 @@ combined_plot <- plot_grid(
 
 combined_plot
 ```
+
+
 
 ##Al
 ```{r}
@@ -2201,142 +2203,7 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 
 ```
 
-```{r}
-Ni_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, Prox_Groups, RelAcc_Groups, New_Groups, RelAcc_Grouping, Prox_Grouping, New_Grouping, f_Ni_mcg_per_l, p_Ni_mcg_per_l)
 
-Ni_df_1_metal <- Ni_df %>%
-  filter(New_Groups == 1) 
-
-Ni_seep_df_metal <- Ni_df %>%
-  filter(New_Groups == 2) 
-
-Ni_df_3_metal <- Ni_df %>%
-  filter(New_Groups == 3) 
-
-Ni_df_4_metal <- Ni_df %>%
-  filter(New_Groups == 4)
-
-Ni_df_5_metal <- Ni_df %>%
-  filter(New_Groups == 5) 
-
-Ni_df_6_metal <- Ni_df %>%
-  filter(New_Groups == 6)
-```
-
-
-```{r}
-Ni_plot <- ggplot() + 
-  geom_boxplot(data = Ni_df_4_metal, 
-               aes(x = interaction(New_Grouping, "f"), y = f_Ni_mcg_per_l, fill = factor(New_Groups)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Ni_df_4_metal, 
-              aes(x = interaction(New_Grouping, "f"), y = f_Ni_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  geom_boxplot(data = Ni_df_4_metal, 
-               aes(x = interaction(New_Grouping, "p"), y = p_Ni_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Ni_df_4_metal, 
-              aes(x = interaction(New_Grouping, "p"), y = p_Ni_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  geom_boxplot(data = Ni_df_1_metal, 
-               aes(x = interaction(New_Grouping, "f"), y = f_Ni_mcg_per_l, fill = factor(New_Groups)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Ni_df_1_metal, 
-              aes(x = interaction(New_Grouping, "f"), y = f_Ni_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  geom_boxplot(data = Ni_df_1_metal, 
-               aes(x = interaction(New_Grouping, "p"), y = p_Ni_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Ni_df_1_metal, 
-              aes(x = interaction(New_Grouping, "p"), y = p_Ni_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  geom_boxplot(data = Ni_seep_df_metal, 
-               aes(x = interaction(New_Grouping, "f"), y = f_Ni_mcg_per_l, fill = factor(New_Groups)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Ni_seep_df_metal, 
-              aes(x = interaction(New_Grouping, "f"), y = f_Ni_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  geom_boxplot(data = Ni_seep_df_metal, 
-               aes(x = interaction(New_Grouping, "p"), y = p_Ni_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Ni_seep_df_metal, 
-              aes(x = interaction(New_Grouping, "p"), y = p_Ni_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  geom_boxplot(data = Ni_df_3_metal, 
-               aes(x = interaction(New_Grouping, "f"), y = f_Ni_mcg_per_l, fill = factor(New_Groups)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Ni_df_3_metal, 
-              aes(x = interaction(New_Grouping, "f"), y = f_Ni_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  geom_boxplot(data = Ni_df_3_metal, 
-               aes(x = interaction(New_Grouping, "p"), y = p_Ni_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Ni_df_3_metal, 
-              aes(x = interaction(New_Grouping, "p"), y = p_Ni_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  geom_boxplot(data = Ni_df_5_metal, 
-               aes(x = interaction(New_Grouping, "f"), y = f_Ni_mcg_per_l, fill = factor(New_Groups)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Ni_df_5_metal, 
-              aes(x = interaction(New_Grouping, "f"), y = f_Ni_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  geom_boxplot(data = Ni_df_5_metal, 
-               aes(x = interaction(New_Grouping, "p"), y = p_Ni_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Ni_df_5_metal, 
-              aes(x = interaction(New_Grouping, "p"), y = p_Ni_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  geom_boxplot(data = Ni_df_6_metal, 
-               aes(x = interaction(New_Grouping, "f"), y = f_Ni_mcg_per_l, fill = factor(New_Groups)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Ni_df_6_metal, 
-              aes(x = interaction(New_Grouping, "f"), y = f_Ni_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  geom_boxplot(data = Ni_df_6_metal, 
-               aes(x = interaction(New_Grouping, "p"), y = p_Ni_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Ni_df_6_metal, 
-              aes(x = interaction(New_Grouping, "p"), y = p_Ni_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  scale_fill_manual(name = "New Group", values = boxplot_colors) +
-  scale_y_log10(
-    limits = c(0.1, 100000),
-    labels = scales::comma,
-    breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000),
-    minor_breaks = NULL
-  ) +
-  annotation_logticks(sides = "l") +
-  labs(
-    title = "Dissolved and Particulate Ni",
-    x = NULL,
-    y = NULL,
-    fill = "particulate metal"
-  ) +
-  coord_cartesian(ylim = c(0.1, 100000)) +
-  theme_minimal() +
-  boxplot_theme +
-  theme(
-    legend.position = "none",
-    axis.title.y = element_blank(),
-    axis.text.y = element_blank(),
-    axis.ticks.y = element_blank()
-  ) +
-  scale_x_discrete(expand = expansion(mult = c(0.11, 0.08)))
-
-Ni_plot
-
-
-#ggsave("C:/Users/tayta/Downloads/Ni bp proximity_V1.png", Ni_plot, bg = "transparent", width = 5, height = 4.5, dpi = 300)
-
-
-```
 
 ####Combo plot
 ```{r}

@@ -1440,7 +1440,7 @@ seep_metals_trace_bottom <- df_trace_seep %>%
     pattern_spacing = 0.02,
     pattern_angle = 45,
     #width = 0.75,
-    alpha = 0.8,
+    alpha = 0.75,
     width = 0.9,
     color = "black"
     ) +
@@ -1531,12 +1531,13 @@ Major Cations
 ```{r}
 seep_major_cations <- df_major_cations_seep %>%
   ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
-        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9), color = "black", size = 0.75, alpha = 0.8) +
   geom_errorbar(
     aes(ymin = mean_value, ymax = mean_value + sd_value),
     position = position_dodge(width = 0.9),
     width = 0.3
   ) +
+  scale_fill_manual(values = c("f_Ca_mg_l" = "#087830", "f_Mg_mg_l" = "#1dcbd6")) +
   labs(
     title = "Major Cations by Watershed",
     x = "Watershed",
@@ -1551,6 +1552,8 @@ seep_major_cations <- df_major_cations_seep %>%
   )
 
 seep_major_cations
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/major cations.png", seep_major_cations, width = 6, height = 6, dpi = 300)
 ```
 
 Minor Cations
@@ -1679,7 +1682,7 @@ seep_DOC <- df_seep_buffering %>%
   ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
         geom_bar(stat = "identity", position = position_dodge(width = 0.9), fill =  "#d1834a", color = "black", size = 0.75) +
   geom_errorbar(
-    aes(ymin = mean_value - sd_value, ymax = mean_value + sd_value),
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
     position = position_dodge(width = 0.9),
     width = 0.3
   ) +
@@ -1699,4 +1702,60 @@ seep_DOC <- df_seep_buffering %>%
 seep_DOC
 
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/DOC.png", seep_DOC, width = 6, height = 6, dpi = 300)
+```
+
+```{r}
+seep_Alk <- df_seep_buffering %>%
+  filter(str_detect(Variable, "Alk")) %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9), fill =  "#d1834a", color = "black", size = 0.75) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "Alk by Watershed",
+    x = "Watershed",
+    y = ylab_Alk
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "none"
+  )
+
+seep_Alk
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/DOC.png", seep_DOC, width = 6, height = 6, dpi = 300)
+```
+
+```{r}
+seep_DIC <- df_seep_buffering %>%
+  filter(str_detect(Variable, "DIC")) %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9), fill =  "#f79fff", color = "black", size = 0.75) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "DIC by Watershed",
+    x = "Watershed",
+    y = ylab_DIC
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "none"
+  )
+
+seep_DIC
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/DIC.png", seep_DIC, width = 6, height = 6, dpi = 300)
 ```

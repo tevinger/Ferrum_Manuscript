@@ -1524,29 +1524,6 @@ Seep_metals_REE
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/REE_V2 no legend.png", Seep_metals_REE, width = 6, height = 6, dpi = 300)
 ```
 
-####Combo Plots
-```{r}
-Seep_metals_combo_plot <- plot_grid(
-  seep_metals_major, seep_metals_trace_bottom, Seep_metals_REE, 
-  ncol = 3,
-  rel_widths = c(1.1, 0.95, 0.85)
-  )
-
-Seep_metals_combo_plot
-
-```
-
-```{r}
-Stacked_seep_metals_combo_plot <- plot_grid(
-  seep_metals_major, seep_metals_trace_bottom, Seep_metals_REE, 
-  ncol = 3,
-  rel_widths = c(1.1, 0.95, 0.85)
-  )
-
-Stacked_seep_metals_combo_plot
-
-```
-
 ###2.5.4 Seep Cations
 Ca, Mg, Na, K
 ```{r}

@@ -1640,7 +1640,7 @@ scale_y_log10(
 ```
 
 ## individual metal df
-### Fe 
+## Fe 
 ```{r}
 # Select Fe data
 Fe_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
@@ -2113,11 +2113,10 @@ combined_plot
 ```
 
 
-
 ##Al
 ```{r}
 # Select Al data
-Al_df <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+Al_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
                 f_Al_mcg_per_l, f_Al_mcg_per_l_qa, p_Al_mcg_per_l, p_Al_mcg_per_l_qa) %>%
   filter(!(is.na(New_Grouping)))
@@ -2133,7 +2132,9 @@ Al_long <- Al_df %>%
     values_to = "Metal_conc"
   ) %>%
   filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
-  mutate(Metal_conc_plot = Metal_conc + 0.1)
+   mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
+                                  Metal_conc + ((sqrt(2)/2)*.1), 
+                                  Metal_conc))
 
 #view(Al_long)
 
@@ -2166,27 +2167,21 @@ Al_plot <- ggplot(Al_long, aes(x = x_group, y = Metal_conc_plot)) +
     outlier.shape = 16,
     outlier.color = "black",
     outlier.size = 2, 
-    pattern_density = 0.35,
+    pattern_density = 0.15,
     pattern_spacing = 0.015,
     pattern_angle = 45,
     width = 0.75,
     alpha = 0.85,
-    size = 0.75
-  ) +
-  geom_jitter(
-    aes(fill = Watershed),
-    shape = 21,        # Hollow circles with fill color
-    size = 2,          # Adjust size as needed
-    width = 0.15,      # Horizontal jitter (adjust as needed)
-    alpha = 0.7        # Slight transparency
+    size = .75
+    #,color = "black"
   ) +
   scale_fill_manual(values = boxplot_colors) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
 scale_y_log10(
-    limits = c(0.01, 10000000),
+    limits = c(0.07, 5000000),
     labels = scales::comma,
-    breaks = c(0.01, 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000),
+    breaks = c(0.1, 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +
@@ -2200,15 +2195,18 @@ scale_y_log10(
   boxplot_theme +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(margin = margin(r = 1)),
-    legend.title = element_text(size = 14),
-    legend.text = element_text(size = 12),
-    legend.key.size = unit(3, "lines")
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    #axis.title.y = element_text(margin = margin(r = 1)),
+    legend.title = element_text(size = 14),   # legend title size
+    legend.text = element_text(size = 12),    # legend item labels
+    legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
   ) +
   scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
 
 Al_plot
 
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Al_V2 no labels.png", Al_plot, width = 2.75, height = 3.25, dpi = 300)
 ```
 
 ## Cu

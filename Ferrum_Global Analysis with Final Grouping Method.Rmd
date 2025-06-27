@@ -2397,15 +2397,18 @@ Cd_plot <- ggplot(Cd_long, aes(x = x_group, y = Metal_conc_plot)) +
   boxplot_theme +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(margin = margin(r = 1)),
-    legend.title = element_text(size = 14),
-    legend.text = element_text(size = 12),
-    legend.key.size = unit(3, "lines")
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    #axis.title.y = element_text(margin = margin(r = 1)),
+    legend.title = element_text(size = 14),   # legend title size
+    legend.text = element_text(size = 12),    # legend item labels
+    legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
   ) +
   scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
 
 Cd_plot
 
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Cd_V2 no labels.png", Cd_plot, width = 2.75, height = 3.25, dpi = 300)
 ```
 
 ##Co

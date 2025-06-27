@@ -1172,6 +1172,9 @@ df_major_seep <- Seep_metals_long_summary %>%
 
 #view(df_major_seep)
 
+#write_xlsx(df_major_seep, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/Major metals bar plot stats.xlsx")
+
+
 df_trace_seep <- Seep_metals_long_summary %>%
   filter(Metal_Group == "Trace") %>%
   filter(!is.na(Variable)) %>%
@@ -1180,11 +1183,15 @@ df_trace_seep <- Seep_metals_long_summary %>%
 
 #view(df_trace_seep)
 
+#write_xlsx(df_trace_seep, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/Trace elements bar plot stats.xlsx")
+
 df_ree_seep <- Seep_metals_long_summary %>%
   filter(Metal_Group == "REE") %>%
   filter(!is.na(Variable)) %>%
   filter(Metal_Type != "u") %>% # filter out unfiltered metal data
   mutate(Variable = factor(Variable, levels = ree_order))
+
+#write_xlsx(df_ree_seep, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/REE bar plot stats.xlsx")
 
 df_major_cations_seep <- Seep_metals_long_summary %>%
   filter(Metal_Group == "Major Cations") %>%

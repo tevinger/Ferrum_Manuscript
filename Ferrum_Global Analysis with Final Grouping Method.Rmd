@@ -3058,6 +3058,184 @@ Tl_plot
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Tl_V2 no labels.png", Tl_plot, width = 2.75, height = 3.25, dpi = 300)
 ```
 
+## As
+```{r}
+# Select As data
+As_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_As_mcg_per_l, f_As_mcg_per_l_qa, p_As_mcg_per_l, p_As_mcg_per_l_qa) %>%
+  filter(!(is.na(New_Grouping)))
+
+# Filter NA values in the grouping variable, convert to long format and handle low/zero values
+As_long <- As_df %>%
+  pivot_longer(
+    cols = c(f_As_mcg_per_l, p_As_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_As_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = case_when(
+    Metal_conc == 0 ~ Metal_conc + ((sqrt(2)/2) * 0.01),
+    Metal_conc < ((sqrt(2)/2) * 0.01) ~ Metal_conc + ((sqrt(2)/2) * 0.01),
+    TRUE ~ Metal_conc
+  ))
+
+#view(As_long)
+
+As_counts_df <- As_long %>%
+  group_by(New_Grouping, Metal_type) %>%
+  summarise(count = n(), .groups = "drop")
+
+# Factor the grouping variable to set plotting order
+As_long <- As_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+
+# Create a new variable that combines the groups and metal_type for plotting order
+As_long <- As_long %>%
+  mutate(
+    x_group = factor(
+      interaction(New_Groups, Metal_type, sep = "_"),
+      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
+    )
+  )
+```
+
+```{r}
+As_plot <- ggplot(As_long, aes(x = x_group, y = Metal_conc_plot)) +
+  geom_boxplot_pattern(
+    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2,
+    pattern_density = 0.15,
+    pattern_spacing = 0.015,
+    pattern_angle = 45,
+    width = 0.75,
+    alpha = 0.85,
+    size = 0.75
+  ) +
+  scale_fill_manual(values = boxplot_colors) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
+  scale_y_log10(
+    limits = c(0.007, 30),
+    labels = scales::comma,
+    breaks = c(0.01, 0.1, 1, 10),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = "As",  # or use ylab_As <- "Arsenic concentration (µg/L)" if preferred
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
+
+As_plot
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/As_V2 no labels.png", As_plot, width = 2.75, height = 3.25, dpi = 300)
+```
+
+## Cr
+```{r}
+# Select Cr data
+Cr_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Cr_mcg_per_l, f_Cr_mcg_per_l_qa, p_Cr_mcg_per_l, p_Cr_mcg_per_l_qa) %>%
+  filter(!(is.na(New_Grouping)))
+
+# Filter NA values in the grouping variable, convert to long format and handle low/zero values
+Cr_long <- Cr_df %>%
+  pivot_longer(
+    cols = c(f_Cr_mcg_per_l, p_Cr_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Cr_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = case_when(
+    Metal_conc == 0 ~ Metal_conc + ((sqrt(2)/2) * 0.01),
+    Metal_conc < ((sqrt(2)/2) * 0.01) ~ Metal_conc + ((sqrt(2)/2) * 0.01),
+    TRUE ~ Metal_conc
+  ))
+
+#view(Cr_long)
+
+Cr_counts_df <- Cr_long %>%
+  group_by(New_Grouping, Metal_type) %>%
+  summarise(count = n(), .groups = "drop")
+
+# Factor the grouping variable to set plotting order
+Cr_long <- Cr_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+
+# Create a new variable that combines the groups and metal_type for plotting order
+Cr_long <- Cr_long %>%
+  mutate(
+    x_group = factor(
+      interaction(New_Groups, Metal_type, sep = "_"),
+      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
+    )
+  )
+
+```
+
+```{r}
+Cr_plot <- ggplot(Cr_long, aes(x = x_group, y = Metal_conc_plot)) +
+  geom_boxplot_pattern(
+    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2,
+    pattern_density = 0.15,
+    pattern_spacing = 0.015,
+    pattern_angle = 45,
+    width = 0.75,
+    alpha = 0.85,
+    size = 0.75
+  ) +
+  scale_fill_manual(values = boxplot_colors) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
+  scale_y_log10(
+    limits = c(0.007, 45),
+    labels = scales::comma,
+    breaks = c(0.01, 0.1, 1, 10),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = "Cr",  # or use ylab_Cr <- "Chromium concentration (µg/L)"
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
+
+Cr_plot
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Cr_V2 no labels.png", Cr_plot, width = 2.75, height = 3.25, dpi = 300)
+```
 
 # Old code
 ### Filtered Se

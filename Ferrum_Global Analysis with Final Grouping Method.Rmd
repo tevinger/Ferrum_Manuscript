@@ -2502,7 +2502,7 @@ Cd_plot
 ##Co
 ```{r}
 # Select Co data
-Co_df <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+Co_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
                 f_Co_mcg_per_l, f_Co_mcg_per_l_qa, p_Co_mcg_per_l, p_Co_mcg_per_l_qa) %>%
   filter(!(is.na(New_Grouping)))
@@ -2518,11 +2518,18 @@ Co_long <- Co_df %>%
     values_to = "Metal_conc"
   ) %>%
   filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
-  mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
-                                  Metal_conc + ((sqrt(2)/2)*0.001), 
-                                  Metal_conc))
+  mutate(Metal_conc_plot = case_when(
+  Metal_conc == 0 ~ Metal_conc + ((sqrt(2)/2) * 0.01),
+  Metal_conc < ((sqrt(2)/2) * 0.01) ~ Metal_conc + ((sqrt(2)/2) * 0.1),
+  TRUE ~ Metal_conc
+))
 
 #view(Co_long)
+
+Co_below_DL <- Co_long %>%
+  filter(Metal_conc_plot < ((sqrt(2)/2)*0.01))
+
+#view(Co_below_DL)
 
 Co_counts_df <- Co_long %>%
   group_by(New_Grouping, Metal_type) %>%
@@ -2565,9 +2572,9 @@ Co_plot <- ggplot(Co_long, aes(x = x_group, y = Metal_conc_plot)) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
   scale_y_log10(
-    limits = c(0.0007, 4000),
+    limits = c(0.007, 4000),
     labels = scales::comma,
-    breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
+    breaks = c(0.01, 0.1, 1, 10, 100, 1000),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +
@@ -2597,7 +2604,7 @@ Co_plot
 ## Se 
 ```{r}
 # Select Se data
-Se_df <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+Se_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, 
                 f_Se_mcg_per_l, f_Se_mcg_per_l_qa, p_Se_mcg_per_l, p_Se_mcg_per_l_qa) %>%
   filter(!(is.na(New_Grouping)))
@@ -2614,7 +2621,7 @@ Se_long <- Se_df %>%
   ) %>%
   filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
   mutate(Metal_conc_plot = ifelse(Metal_conc == 0, 
-                                  Metal_conc + ((sqrt(2)/2)*0.001), 
+                                  Metal_conc + ((sqrt(2)/2)*0.01), 
                                   Metal_conc))
 
 #view(Se_long)
@@ -2660,9 +2667,9 @@ Se_plot <- ggplot(Se_long, aes(x = x_group, y = Metal_conc_plot)) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
   scale_y_log10(
-    limits = c(0.0007, 2000),
+    limits = c(0.007, 2000),
     labels = scales::comma,
-    breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
+    breaks = c(0.01, 0.1, 1, 10, 100, 1000),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +
@@ -2677,7 +2684,7 @@ Se_plot <- ggplot(Se_long, aes(x = x_group, y = Metal_conc_plot)) +
   theme(
     legend.position = "none",
     axis.title.y = element_blank(),
-    axis.text.y = element_blank(),
+    #axis.text.y = element_blank(),
     legend.title = element_text(size = 14),
     legend.text = element_text(size = 12),
     legend.key.size = unit(3, "lines")
@@ -2686,7 +2693,7 @@ Se_plot <- ggplot(Se_long, aes(x = x_group, y = Metal_conc_plot)) +
 
 Se_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Se_V2 no labels.png", Se_plot, width = 2.75, height = 3.25, dpi = 300)
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Se_V1 with labels.png", Se_plot, width = 2.75, height = 3.25, dpi = 300)
 ```
 
 ## Pb

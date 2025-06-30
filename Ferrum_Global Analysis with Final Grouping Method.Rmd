@@ -2520,7 +2520,7 @@ Co_long <- Co_df %>%
   filter(!is.na(Metal_conc)) %>% # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
   mutate(Metal_conc_plot = case_when(
   Metal_conc == 0 ~ Metal_conc + ((sqrt(2)/2) * 0.01),
-  Metal_conc < ((sqrt(2)/2) * 0.01) ~ Metal_conc + ((sqrt(2)/2) * 0.1),
+  Metal_conc < ((sqrt(2)/2) * 0.01) ~ Metal_conc + ((sqrt(2)/2) * 0.01),
   TRUE ~ Metal_conc
 ))
 

@@ -2714,11 +2714,11 @@ Ba_long <- Ba_df %>%
   filter(!is.na(Metal_conc)) %>%
   mutate(Metal_conc_plot = case_when(
     Metal_conc == 0 ~ Metal_conc + ((sqrt(2)/2) * 0.01),
-    Metal_conc < ((sqrt(2)/2) * 0.01) ~ Metal_conc + ((sqrt(2)/2) * 0.1),
+    Metal_conc < ((sqrt(2)/2) * 0.01) ~ Metal_conc + ((sqrt(2)/2) * 0.01),
     TRUE ~ Metal_conc
   ))
 
-view(Ba_long)
+#view(Ba_long)
 
 Ba_counts_df <- Ba_long %>%
   group_by(New_Grouping, Metal_type) %>%
@@ -2756,16 +2756,16 @@ Ba_plot <- ggplot(Ba_long, aes(x = x_group, y = Metal_conc_plot)) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
   scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
   scale_y_log10(
-    limits = c(0.7, 1500000),
+    limits = c(0.007, 300),
     labels = scales::comma,
-    breaks = c(1, 10, 100, 1000, 10000, 100000, 1000000),
+    breaks = c(0.01, 0.1, 1, 10, 100),
     minor_breaks = NULL
   ) +
   annotation_logticks(sides = "l") +
   labs(
     title = NULL,
     x = NULL,
-    y = ylab_Ba,  # define this before running, e.g., ylab_Ba <- "Barium concentration (µg/L)"
+    y = "Ba",  # define this before running, e.g., ylab_Ba <- "Barium concentration (µg/L)"
     fill = "Metal Type"
   ) +
   theme_minimal() +
@@ -2782,6 +2782,7 @@ Ba_plot <- ggplot(Ba_long, aes(x = x_group, y = Metal_conc_plot)) +
 
 Ba_plot
 
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Ba_V2 no labels.png", Ba_plot, width = 2.75, height = 3.25, dpi = 300)
 ```
 
 ## Pb

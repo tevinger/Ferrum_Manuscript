@@ -2802,7 +2802,7 @@ Pb_long <- Pb_df %>%
   filter(!is.na(Metal_conc)) %>%
   mutate(Metal_conc_plot = case_when(
     Metal_conc == 0 ~ Metal_conc + ((sqrt(2)/2) * 0.01),
-    Metal_conc < ((sqrt(2)/2) * 0.01) ~ Metal_conc + ((sqrt(2)/2) * 0.1),
+    Metal_conc < ((sqrt(2)/2) * 0.01) ~ Metal_conc + ((sqrt(2)/2) * 0.01),
     TRUE ~ Metal_conc
 ))
 
@@ -2867,7 +2867,7 @@ Pb_plot <- ggplot(Pb_long, aes(x = x_group, y = Metal_conc_plot)) +
   theme(
     legend.position = "none",
     axis.title.y = element_blank(),
-    axis.text.y = element_blank(),
+    #axis.text.y = element_blank(),
     legend.title = element_text(size = 14),
     legend.text = element_text(size = 12),
     legend.key.size = unit(3, "lines")
@@ -2876,7 +2876,7 @@ Pb_plot <- ggplot(Pb_long, aes(x = x_group, y = Metal_conc_plot)) +
 
 Pb_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Pb_V2 no labels.png", Pb_plot, width = 2.75, height = 3.25, dpi = 300)
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Pb_V1 with labels.png", Pb_plot, width = 2.75, height = 3.25, dpi = 300)
 ```
 
 ## U

@@ -2698,164 +2698,97 @@ Se_plot
 
 ## Pb
 ```{r}
-## Pb Sum
-Pb_Sum_df <- working_Ferrum_data %>%
-  dplyr::select(SamplingEventID, Watershed, Site_Group, Site_Grouping, `f_Pb Sum_mcg_per_l`, `p_Pb Sum_mcg_per_l`) %>%
-  mutate(`p_Pb Sum_mcg_per_l` = ifelse(`p_Pb Sum_mcg_per_l` <= 0.01, NA, `p_Pb Sum_mcg_per_l`)) %>%
-  mutate(p_Pb_Sum_mcg_per_l = `p_Pb Sum_mcg_per_l`,
-         f_Pb_Sum_mcg_per_l = `f_Pb Sum_mcg_per_l`)
+# Select Pb data
+Pb_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Pb_mcg_per_l, f_Pb_mcg_per_l_qa, p_Pb_mcg_per_l, p_Pb_mcg_per_l_qa) %>%
+  filter(!(is.na(New_Grouping)))
 
+# Filter NA values in the grouping variable, filter particulate concentrations and make long format
+Pb_long <- Pb_df %>%
+  pivot_longer(
+    cols = c(f_Pb_mcg_per_l, p_Pb_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Pb_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) %>%
+  mutate(Metal_conc_plot = case_when(
+    Metal_conc == 0 ~ Metal_conc + ((sqrt(2)/2) * 0.01),
+    Metal_conc < ((sqrt(2)/2) * 0.01) ~ Metal_conc + ((sqrt(2)/2) * 0.1),
+    TRUE ~ Metal_conc
+))
 
-  filter(f_Pb_Sum_mcg_per_l > 0.01) %>%
-  filter(p_Pb_Sum_mcg_per_l > 0.01)
+#view(Pb_long)
 
-view(Pb_Sum_df)
+Pb_below_DL <- Pb_long %>%
+  filter(Metal_conc_plot < ((sqrt(2)/2)*0.01))
 
+view(Pb_below_DL)
+
+Pb_counts_df <- Pb_long %>%
+  group_by(New_Grouping, Metal_type) %>%
+  summarise(count = n(), .groups = "drop")
+
+# Factor the grouping variable to set plotting order
+Pb_long <- Pb_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+
+# Create a new variable that combines the groups and metal_type for plotting order
+Pb_long <- Pb_long %>%
+  mutate(
+    x_group = factor(
+      interaction(New_Groups, Metal_type, sep = "_"),
+      levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
+    )
+  )
 ```
 
-```{r}
-Pb_Sum_df_1_metal <- Pb_Sum_df %>%
-  filter(Site_Grouping == 1) 
-
-Pb_Sum_seep_df_metal <- Pb_Sum_df %>%
-  filter(Site_Grouping == 2)
-
-view(Pb_Sum_seep_df_metal)
-
-Pb_Sum_df_3_metal <- Pb_Sum_df %>%
-  filter(Site_Grouping == 3) 
-
-Pb_Sum_df_4_metal <- Pb_Sum_df %>%
-  filter(Site_Grouping == 4)
-
-Pb_Sum_df_5_metal <- Pb_Sum_df %>%
-  filter(Site_Grouping == 5) 
-
-Pb_Sum_df_6_metal <- Pb_Sum_df %>%
-  filter(Site_Grouping == 6)
-
-```
 
 ```{r}
-Pb_Sum_plot <- ggplot() + 
-  #geom_hline(yintercept = 2.5, size = 0.7, color = "red") + # CCC value at 100 mg/L
-  # Boxplot and jitter for Site_Grouping 1
-  geom_boxplot(data = Pb_Sum_df_1_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Pb_Sum_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Pb_Sum_df_1_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Pb_Sum_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Pb_Sum_df_1_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Pb_Sum_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Pb_Sum_df_1_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Pb_Sum_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 2
-  geom_boxplot(data = Pb_Sum_seep_df_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Pb_Sum_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Pb_Sum_seep_df_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Pb_Sum_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Pb_Sum_seep_df_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Pb_Sum_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Pb_Sum_seep_df_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Pb_Sum_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 3
-  geom_boxplot(data = Pb_Sum_df_3_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Pb_Sum_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Pb_Sum_df_3_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Pb_Sum_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  geom_boxplot(data = Pb_Sum_df_3_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Pb_Sum_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Pb_Sum_df_3_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Pb_Sum_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 5
-  geom_boxplot(data = Pb_Sum_df_5_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Pb_Sum_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Pb_Sum_df_5_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Pb_Sum_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Pb_Sum_df_5_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Pb_Sum_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Pb_Sum_df_5_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Pb_Sum_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-
-  # Boxplot and jitter for Site_Grouping 6
-  geom_boxplot(data = Pb_Sum_df_6_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Pb_Sum_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Pb_Sum_df_6_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Pb_Sum_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Pb_Sum_df_6_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Pb_Sum_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Pb_Sum_df_6_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Pb_Sum_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Pb_Sum_df_4_metal, 
-               aes(x = interaction(Site_Grouping, "f"), y = f_Pb_Sum_mcg_per_l, fill = factor(Site_Group)), 
-               width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Pb_Sum_df_4_metal, 
-              aes(x = interaction(Site_Grouping, "f"), y = f_Pb_Sum_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  geom_boxplot(data = Pb_Sum_df_4_metal, 
-               aes(x = interaction(Site_Grouping, "p"), y = p_Pb_Sum_mcg_per_l), 
-               fill = "darkgrey", width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(data = Pb_Sum_df_4_metal, 
-              aes(x = interaction(Site_Grouping, "p"), y = p_Pb_Sum_mcg_per_l, fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 2) +
-  
-  ylim(0.01, 500) +
-  scale_y_log10(limits = c(.01, 500), labels = scales::comma,
-                breaks = scales::trans_breaks("log10", function(x)10^x)) +
-
-  scale_fill_manual(name = "Site Group", values = boxplot_colors) +
+Pb_plot <- ggplot(Pb_long, aes(x = x_group, y = Metal_conc_plot)) +
+  geom_boxplot_pattern(
+    aes(fill = New_Groups, pattern = Metal_type, pattern_fill = Metal_type),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2,
+    pattern_density = 0.15,
+    pattern_spacing = 0.015,
+    pattern_angle = 45,
+    width = 0.75,
+    alpha = 0.85,
+    size = 0.75
+  ) +
+  scale_fill_manual(values = boxplot_colors) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey20")) +
+  scale_y_log10(
+    limits = c(0.007, 300),
+    labels = scales::comma,
+    breaks = c(0.01, 0.1, 1, 10, 100),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = ylab_Pb,  # make sure you define ylab_Pb beforehand
+    fill = "Metal Type"
+  ) +
   theme_minimal() +
+  boxplot_theme +
   theme(
-      axis.text.x = element_blank(),  
-      axis.title.x = element_blank(),
-      axis.title.y = element_blank(),
-      axis.text.y = element_text(size = 24, color = "black", face = "bold", margin = margin(r = 10)),
-      axis.ticks.y = element_line(size = 0.8, color = "black"),
-      plot.title = element_blank(),
-      legend.position = "none",
-      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
-      panel.background = element_rect(fill = "transparent"),  
-      plot.background = element_rect(fill = "transparent", color = NA),
-      axis.ticks.x = element_line(size = 0.8, color = "black"), # Make x-axis ticks visible
-      axis.ticks.length = unit(5, "pt")
-    ) +
-  scale_x_discrete(expand = expansion(mult = c(0.11, 0.08))) +
-  annotation_logticks(sides = "l")
+    legend.position = "none",
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
 
-Pb_Sum_plot
+Pb_plot
 
-ggsave("C:/Users/tayta/Downloads/Pb bp proximity_V1.png", Pb_Sum_plot, bg = "transparent", width = 4.5, height = 5, dpi = 300)
-
-
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Pb_V2 no labels.png", Pb_plot, width = 2.75, height = 3.25, dpi = 300)
 ```
 
 

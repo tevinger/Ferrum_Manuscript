@@ -2686,7 +2686,7 @@ Se_plot <- ggplot(Se_long, aes(x = x_group, y = Metal_conc_plot)) +
 
 Se_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Se_V2 no labels.png", Co_plot, width = 2.75, height = 3.25, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Se_V2 no labels.png", Se_plot, width = 2.75, height = 3.25, dpi = 300)
 ```
 
 ## Pb

@@ -1403,49 +1403,34 @@ Ca_labels
 
 ```{r}
 Ca_plot <- ggplot(Ca_long, aes(x = New_Groups, y = Conc)) +
-  #geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = 16,
-               #outlier.color = "black",
-               #outlier.size = 2, alpha = 0.85) +
-  geom_boxplot_pattern(
-    aes(fill = New_Groups),
-    pattern = "stripe",
-    pattern_fill = "grey20",
-    outlier.shape = 16,
-    outlier.color = "black",
-    outlier.size = 2, 
-    pattern_density = 0.35,
-    pattern_spacing = 0.015,
-    pattern_angle = 45,
-    width = 0.75,
-    alpha = 0.85,
-    size = 1
-    #,color = "black"
-  ) +
-  #geom_jitter(aes(fill = Watershed), 
-              #shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.5) +
+  geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = 16,
+               outlier.color = "black",
+               outlier.size = 2, alpha = 0.85, size = 0.75) +
   scale_fill_manual(values = boxplot_colors) +
   labs(
     title = NULL,
     x = NULL,
-    y = "Ca (mg/L)"
+    y = ylab_Ca
   ) +
-  #scale_y_log10(breaks = c(50, 100, 500)) +
-  #annotation_logticks(sides = "l") +
-  scale_y_continuous(breaks = Ca_breaks, labels = Ca_labels) +
+  scale_y_log10(limits = c(10, 500),
+                breaks = c(5, 10, 100, 1000)) +
+  annotation_logticks(sides = "l") +
+  # scale_y_continuous(breaks = Ca_breaks, labels = Ca_labels) +
   theme_minimal() +
   boxplot_theme +
   theme(
-    legend.position = "right",
-    axis.title.y = element_text(margin = margin(r = 6)),
-    #axis.ticks.length = unit(1, "cm"),
-    legend.title = element_text(size = 14),   # legend title size
-    legend.text = element_text(size = 12),    # legend item labels
-    legend.key.size = unit(5, "lines")      # size of legend keys (symbols)
+    legend.position = "none",
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
   ) +
   scale_x_discrete(expand = expansion(mult = c(0.2, 0.15)))
 
 Ca_plot
 
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Ca_V2 no labels.png", Ca_plot, width = 1.75, height = 3.25, dpi = 300)
 
 ```
 

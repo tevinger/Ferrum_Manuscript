@@ -11,7 +11,6 @@ editor_options:
 library(tidyverse)
 library(cowplot)
 library(ggplot2)
-library(PLS205)
 library(lubridate)
 library(emmeans)
 library(lme4)
@@ -50,7 +49,6 @@ library(emmeans)
 library(lme4)
 library(lmerTest)
 library(multcomp)
-library(PLS205)
 library(readxl)
 library(learnr)
 library(scatterplot3d)
@@ -177,22 +175,22 @@ unique(working_Ferrum_data$Watershed)
 Upstream_df <- working_Ferrum_data %>%
   filter(New_Grouping == "Upstream")
 
-view(Upstream_df)
+#view(Upstream_df)
 
 Downstream_df <- working_Ferrum_data %>%
   filter(New_Grouping == "Downstream MS")
 
-view(Downstream_df)
+#view(Downstream_df)
 
 Seep_df <- working_Ferrum_data %>%
   filter(New_Grouping == "Seep")
 
-view(Seep_df)
+#view(Seep_df)
 
 Seep_control_df <- working_Ferrum_data %>%
   filter(Field_label %in% c("TukC_Seep2_con", "TukC_seep_con"))
 
-view(Seep_control_df)
+#view(Seep_control_df)
 ```
 
 #1. Summary Stats
@@ -754,7 +752,7 @@ minor_anions_order <- c(
 # 3. Upstream Chemistry Barplots
 ### DF modifications
 ```{r}
-view(Upstream_df) # check the column numbers
+#view(Upstream_df) # check the column numbers
 
 # make a data frame for all variables other than metals
 Upstream_long <- Upstream_df %>%
@@ -958,6 +956,7 @@ upstream_metals_major <- df_major_upstream %>%
   barplot_theme + 
   theme(
     legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
     axis.title.y = element_text(margin = margin(r=1))
     #axis.title.y = element_blank()
   ) +
@@ -966,7 +965,7 @@ upstream_metals_major <- df_major_upstream %>%
 
 upstream_metals_major
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/Major metals_V1 no legend.png", upstream_metals_major, width = 6, height = 6, dpi = 300)
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/Major metals_V1 no legend.png", upstream_metals_major, width = 6, height = 7, dpi = 300)
 ```
 
 ## 3.2 Trace Metals

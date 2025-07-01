@@ -644,12 +644,119 @@ barplot_theme <- theme(
 )
 ```
 
-# 3. Upstream Chemistry Barplots
-
-
-###DF modifications
+### Plot and metal colors
 ```{r}
-# data other than metals
+watershed_colors <- c(  
+    "Agashashok River" = "#A1E3F9",   
+    "Anaktok River" = "#9F8383",
+    "Salmon River Watershed" = "#9F8383",
+    "Salmon River" = "#2DAA9E",   
+    "Kugururok River" = "#2D3D85",  
+    "Nakolikurok Creek" = "#F87FC7",
+    "Nakolikurok" = "#F87FC7",
+    "Tukpahlearik Creek" = "#FDDE74",
+    "Tukpahlearik" = "#FDDE74"
+    )
+
+
+
+cb_palette_metals <- c(
+  # Major metal colors
+  #"#FF7F00", "#56B4E9", "grey31", "#009E73", 
+  #"#FF7F00", "#56B4E9", "grey31", "#5d9b84",
+  #"#de8042", "#ffce96", "#5d455e", "#009E73",
+  "#D55E00", "#ffce96", "#5d455e", "#009E73",
+  "#D55E00", "#ffce96", "#5d455e", "#009E73",
+  
+  # Trace metal colors
+  #"#F0E442", "#0072B2","#D55E00", "#CC79A7", "#999999", "#E41A1C", "#E69F00",
+  #"#377EB8", "#4DAF4A", "#984EA3",
+  #"#F0E442", "#0072B2","#D55E00", "#CC79A7", "#999999", "#E41A1C", "#E69F00",
+  #"#377EB8", "#4DAF4A", "#984EA3",
+  
+  "#003f5c",  "#ffca67", "#752c48", "#80acff", "#3a5e9b", "#53B0AE", "#bc5090", "#ff6361", "#01796f",  "#bac4c8",
+  "#003f5c",  "#ffca67", "#752c48", "#80acff", "#3a5e9b", "#53B0AE", "#bc5090", "#ff6361", "#01796f",  "#bac4c8",
+  
+  # REE colors
+  #"#FF7F00", "#A65628", "#999999", "#66C2A5", "#FC8D62", "#8DA0CB"
+  
+  "#bc5259", "#c5e6a1", "#ab694e","#8dbfcb",  "#4eab69", "#6d7a6b",
+  "#bc5259", "#c5e6a1", "#ab694e","#8dbfcb",  "#4eab69", "#6d7a6b"
+  
+)
+
+metals_ordered <- c(
+  # Major
+  "f_Fe_mcg_per_l", "f_Al_mcg_per_l", "f_Mn_mcg_per_l", "f_Ba_mcg_per_l",
+  "p_Fe_mcg_per_l", "p_Al_mcg_per_l", "p_Mn_mcg_per_l", "p_Ba_mcg_per_l",
+  # Trace
+  "f_Pb_mcg_per_l", "f_As_mcg_per_l", "f_Cr_mcg_per_l", "f_Cd_mcg_per_l", 
+  "f_Cu_mcg_per_l", "f_Se_mcg_per_l", "f_U_mcg_per_l", "f_Co_mcg_per_l", 
+  "f_Ni_mcg_per_l", "f_Zn_mcg_per_l",
+  
+  "p_Pb_mcg_per_l", "p_As_mcg_per_l", "p_Cr_mcg_per_l", "p_Cd_mcg_per_l",
+"p_Cu_mcg_per_l", "p_Se_mcg_per_l", "p_U_mcg_per_l", "p_Co_mcg_per_l",
+"p_Ni_mcg_per_l", "p_Zn_mcg_per_l",
+  # REE
+  "f_Ce_mcg_per_l", "f_Dy_mcg_per_l", "f_Nd_mcg_per_l", "f_Pr_mcg_per_l", "f_La_mcg_per_l", "f_Y_mcg_per_l", 
+"p_Ce_mcg_per_l", "p_Dy_mcg_per_l", "p_Nd_mcg_per_l", "p_Pr_mcg_per_l","p_La_mcg_per_l", "p_Y_mcg_per_l"
+)
+
+metal_colors <- cb_palette_metals
+names(metal_colors) <- metals_ordered
+```
+
+### Metal order
+```{r}
+# Major metals
+major_order <- c("f_Ba_mcg_per_l", "p_Ba_mcg_per_l", "f_Al_mcg_per_l", "p_Al_mcg_per_l", "f_Fe_mcg_per_l", "p_Fe_mcg_per_l", "f_Mn_mcg_per_l", "p_Mn_mcg_per_l")
+
+# Trace metals
+trace_order <- c(
+"f_Pb_mcg_per_l", "p_Pb_mcg_per_l",
+"f_As_mcg_per_l", "p_As_mcg_per_l",
+"f_Cr_mcg_per_l", "p_Cr_mcg_per_l",
+"f_Cd_mcg_per_l", "p_Cd_mcg_per_l",
+"f_Cu_mcg_per_l", "p_Cu_mcg_per_l",
+"f_Se_mcg_per_l", "p_Se_mcg_per_l",
+"f_U_mcg_per_l",  "p_U_mcg_per_l",
+"f_Co_mcg_per_l", "p_Co_mcg_per_l",
+"f_Ni_mcg_per_l", "p_Ni_mcg_per_l",
+"f_Zn_mcg_per_l", "p_Zn_mcg_per_l")
+
+# REE metals
+ree_order <- c(
+"f_Ce_mcg_per_l", "p_Ce_mcg_per_l",
+"f_Dy_mcg_per_l", "p_Dy_mcg_per_l",
+"f_Nd_mcg_per_l", "p_Nd_mcg_per_l",
+"f_Pr_mcg_per_l", "p_Pr_mcg_per_l",
+"f_La_mcg_per_l", "p_La_mcg_per_l",
+"f_Y_mcg_per_l",  "p_Y_mcg_per_l"
+
+)
+
+#Cations
+major_cations_order <- c(
+  "f_Ca_mg_l", "f_Mg_mg_l"
+)
+
+minor_cations_order <- c(
+  "f_Na_mg_l", "f_K_mg_l"
+)
+
+#Anions
+minor_anions_order <- c(
+  "f_Cl_mg_per_l", "f_NO3_mg_per_l"
+)
+```
+
+
+# 3. Upstream Chemistry Barplots
+### DF modifications
+```{r}
+view(Upstream_df) # check the column numbers
+
+# make a data frame for all variables other than metals
 Upstream_long <- Upstream_df %>%
   dplyr::select(2,19:26) %>% # select watershed and data columns
   pivot_longer(
@@ -658,7 +765,7 @@ Upstream_long <- Upstream_df %>%
     values_to = "Value"
   ) %>%
   mutate(Metal_Group = case_when(
-    grepl("pH|DIC|Alk", Variable) ~ "Buffering",
+    grepl("pH|DIC|Alk|DOC", Variable) ~ "Buffering",
     TRUE ~ NA_character_  # Optional: NA if none match
   )) %>%
   # Add a column of watershed area to organize the watersheds by later
@@ -676,44 +783,31 @@ Upstream_long <- Upstream_df %>%
   )
 
 view(Upstream_long)
-  
+
+# summary values to use for bar plots for data that isn't metals
 Upstream_long_summary <- Upstream_long %>%
   group_by(Variable, Watershed, Metal_Group) %>%
   summarise(
-    mean_value = mean(Value, na.rm = TRUE),
-    sd_value = sd(Value, na.rm = TRUE),
-    Min = round(min(Value, na.rm = TRUE), 5),
-    Max = round(max(Value, na.rm = TRUE), 5),     
-    Count = n(),
+    mean_value = if (all(is.na(Value))) NA_real_ else mean(Value, na.rm = TRUE),
+    sd_value   = if (all(is.na(Value))) NA_real_ else sd(Value, na.rm = TRUE),
+    Min        = if (all(is.na(Value))) NA_real_ else round(min(Value, na.rm = TRUE), 5),
+    Max        = if (all(is.na(Value))) NA_real_ else round(max(Value, na.rm = TRUE), 5),
+    Count      = sum(!is.na(Value)),
     .groups = "drop"
   )
 
-df_buffering_capacity <- Upstream_long_summary %>%
-  filter(Metal_Group == "Buffering")
-
-#write_xlsx(df_buffering_capacity, "C:/Users/tayta/Downloads/Buffering Capacity Parameters Stats.xlsx")
-
+view(Upstream_long_summary)
 ```
 
 ```{r}
 # metal data columns only
-watershed_areas <- c(
-  "Agashashok River" = 762.96,
-  "Anaktok River" = 196.91,
-  "Kugururok River" = 2059.42,
-  "Tukpahlearik Creek" = 83.24,
-  "Salmon River" = 1740.33,
-  "Nakolikurok Creek" = 349.5
-)
-
-Upstream_f_metals_long <- Upstream_df %>%
-  dplyr::select(2,27:105) %>% #select Watershed column and all data including the metal data columns
+Upstream_metals_long <- Upstream_df %>%
+  dplyr::select(2, 27:105) %>% # select Watershed column and all data including the metal data columns
   pivot_longer(
     cols = 2:80,
     names_to = "Variable",
     values_to = "Value"
   ) %>%
-  dplyr::filter(grepl("f_", Variable)) %>% #keep only filtered metals
   # Add a column for grouping the metals 
   mutate(Metal_Group = case_when(
     grepl("Al|Fe|Mn|Ba", Variable) ~ "Major",
@@ -723,7 +817,14 @@ Upstream_f_metals_long <- Upstream_df %>%
     grepl("Cl|NO3", Variable) ~ "Minor Anions",
     grepl("Ca|Mg", Variable) ~ "Major Cations",
     grepl("SO4", Variable) ~ "Sulfate",
-    TRUE ~ NA_character_  # Optional: NA if none match
+    TRUE ~ NA_character_
+  )) %>%
+  # Create a Metal_Type column and assign a letter according to the type of metal measurement (f, p, or u)
+  mutate(Metal_Type = case_when(
+    grepl("f_", Variable) ~ "f",
+    grepl("p_", Variable) ~ "p",
+    grepl("u_", Variable) ~ "u",
+    TRUE ~ NA_character_
   )) %>%
   # Add a column of watershed area to organize the watersheds by later
   mutate(Watershed_area = case_when(
@@ -734,23 +835,74 @@ Upstream_f_metals_long <- Upstream_df %>%
     Watershed == "Salmon River"         ~ 1740.33,
     Watershed == "Nakolikurok Creek"    ~ 349.5,
     TRUE ~ NA_real_
-  )) %>% 
+  )) %>%
   mutate(
     Watershed = factor(Watershed, levels = names(sort(watershed_areas)))
   )
-  
-Upstream_f_metals_long_summary <- Upstream_f_metals_long %>%
-  group_by(Variable, Watershed, Metal_Group) %>%
-  summarise(
-    mean_value = mean(Value, na.rm = TRUE),
-    sd_value = sd(Value, na.rm = TRUE),
-    Min = round(min(Value, na.rm = TRUE), 5),
-    Max = round(max(Value, na.rm = TRUE), 5),     
-    Count = n(),
-    .groups = "drop"
+
+# Replace 0 values with sqrt(2)/2 of the element detection limit
+Upstream_metals_long <- Upstream_metals_long %>%
+  mutate(
+    Value = case_when(
+      str_detect(Variable, "p_Al|p_Mn|p_Ni|p_Cu|p_Zn") & Value == 0 ~ 0.07071,
+      str_detect(Variable, "p_Fe") & Value == 0 ~ 0.7071,
+      str_detect(Variable, "p_Be|p_V|p_Cr|p_Co|p_As|p_Se|p_Y|p_Ag|p_Cd|p_Ba|p_La|p_Ce|p_Pr|p_Nd|p_Dy|p_Tl|p_Pb|p_Th|p_U") & Value == 0 ~ 0.007071,
+      TRUE ~ Value
+    )
   )
 
-view(Upstream_f_metals_long)
+view(Upstream_metals_long)
+
+```
+
+## Metal group dataframes
+```{r}
+df_major_upstream <- Upstream_metals_long %>%
+  filter(Metal_Group == "Major") %>%
+  filter(!is.na(Variable)) %>%
+  filter(Metal_Type != "u") %>%  # filter out unfiltered metal data
+  mutate(Variable = factor(Variable, levels = major_order))
+
+#view(df_major_upstream)
+
+#write_xlsx(df_major_upstream, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Upstream Chemistry/Major metals bar plot stats.xlsx")
+
+
+df_trace_upstream <- Upstream_metals_long %>%
+  filter(Metal_Group == "Trace") %>%
+  filter(!is.na(Variable)) %>%
+  filter(Metal_Type != "u") %>%  # filter out unfiltered metal data
+  mutate(Variable = factor(Variable, levels = trace_order))
+
+#view(df_trace_upstream)
+
+#write_xlsx(df_trace_upstream, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Upstream Chemistry/Trace elements bar plot stats.xlsx")
+
+
+df_ree_upstream <- Upstream_metals_long %>%
+  filter(Metal_Group == "REE") %>%
+  filter(!is.na(Variable)) %>%
+  filter(Metal_Type != "u") %>%  # filter out unfiltered metal data
+  mutate(Variable = factor(Variable, levels = ree_order))
+
+#write_xlsx(df_ree_upstream, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Upstream Chemistry/REE bar plot stats.xlsx")
+
+
+df_major_cations_upstream <- Upstream_metals_long %>%
+  filter(Metal_Group == "Major Cations") %>%
+  mutate(Variable = factor(Variable, levels = major_cations_order))
+
+df_minor_cations_upstream <- Upstream_metals_long %>%
+  filter(Metal_Group == "Minor Cations") %>%
+  mutate(Variable = factor(Variable, levels = minor_cations_order))
+
+df_minor_anions_upstream <- Upstream_metals_long %>%
+  filter(Metal_Group == "Minor Anions") %>%
+  mutate(Variable = factor(Variable, levels = minor_anions_order))
+
+df_sulfate_upstream <- Upstream_metals_long %>%
+  filter(Metal_Group == "Sulfate")
+
 ```
 
 ```{r}
@@ -1209,111 +1361,6 @@ df_sulfate_seep <- Seep_metals_long_summary %>%
   filter(Metal_Group == "Sulfate")
 ```
 
-## Plot and metal colors
-```{r}
-watershed_colors <- c(  
-    "Agashashok River" = "#A1E3F9",   
-    "Anaktok River" = "#9F8383",
-    "Salmon River Watershed" = "#9F8383",
-    "Salmon River" = "#2DAA9E",   
-    "Kugururok River" = "#2D3D85",  
-    "Nakolikurok Creek" = "#F87FC7",
-    "Nakolikurok" = "#F87FC7",
-    "Tukpahlearik Creek" = "#FDDE74",
-    "Tukpahlearik" = "#FDDE74"
-    )
-
-
-
-cb_palette_metals <- c(
-  # Major metal colors
-  #"#FF7F00", "#56B4E9", "grey31", "#009E73", 
-  #"#FF7F00", "#56B4E9", "grey31", "#5d9b84",
-  #"#de8042", "#ffce96", "#5d455e", "#009E73",
-  "#D55E00", "#ffce96", "#5d455e", "#009E73",
-  "#D55E00", "#ffce96", "#5d455e", "#009E73",
-  
-  # Trace metal colors
-  #"#F0E442", "#0072B2","#D55E00", "#CC79A7", "#999999", "#E41A1C", "#E69F00",
-  #"#377EB8", "#4DAF4A", "#984EA3",
-  #"#F0E442", "#0072B2","#D55E00", "#CC79A7", "#999999", "#E41A1C", "#E69F00",
-  #"#377EB8", "#4DAF4A", "#984EA3",
-  
-  "#003f5c",  "#ffca67", "#752c48", "#80acff", "#3a5e9b", "#53B0AE", "#bc5090", "#ff6361", "#01796f",  "#bac4c8",
-  "#003f5c",  "#ffca67", "#752c48", "#80acff", "#3a5e9b", "#53B0AE", "#bc5090", "#ff6361", "#01796f",  "#bac4c8",
-  
-  # REE colors
-  #"#FF7F00", "#A65628", "#999999", "#66C2A5", "#FC8D62", "#8DA0CB"
-  
-  "#bc5259", "#c5e6a1", "#ab694e","#8dbfcb",  "#4eab69", "#6d7a6b",
-  "#bc5259", "#c5e6a1", "#ab694e","#8dbfcb",  "#4eab69", "#6d7a6b"
-  
-)
-
-metals_ordered <- c(
-  # Major
-  "f_Fe_mcg_per_l", "f_Al_mcg_per_l", "f_Mn_mcg_per_l", "f_Ba_mcg_per_l",
-  "p_Fe_mcg_per_l", "p_Al_mcg_per_l", "p_Mn_mcg_per_l", "p_Ba_mcg_per_l",
-  # Trace
-  "f_Pb_mcg_per_l", "f_As_mcg_per_l", "f_Cr_mcg_per_l", "f_Cd_mcg_per_l", 
-  "f_Cu_mcg_per_l", "f_Se_mcg_per_l", "f_U_mcg_per_l", "f_Co_mcg_per_l", 
-  "f_Ni_mcg_per_l", "f_Zn_mcg_per_l",
-  
-  "p_Pb_mcg_per_l", "p_As_mcg_per_l", "p_Cr_mcg_per_l", "p_Cd_mcg_per_l",
-"p_Cu_mcg_per_l", "p_Se_mcg_per_l", "p_U_mcg_per_l", "p_Co_mcg_per_l",
-"p_Ni_mcg_per_l", "p_Zn_mcg_per_l",
-  # REE
-  "f_Ce_mcg_per_l", "f_Dy_mcg_per_l", "f_Nd_mcg_per_l", "f_Pr_mcg_per_l", "f_La_mcg_per_l", "f_Y_mcg_per_l", 
-"p_Ce_mcg_per_l", "p_Dy_mcg_per_l", "p_Nd_mcg_per_l", "p_Pr_mcg_per_l","p_La_mcg_per_l", "p_Y_mcg_per_l"
-)
-
-metal_colors <- cb_palette_metals
-names(metal_colors) <- metals_ordered
-```
-
-## Metal order
-```{r}
-# Major metals
-major_order <- c("f_Ba_mcg_per_l", "p_Ba_mcg_per_l", "f_Al_mcg_per_l", "p_Al_mcg_per_l", "f_Fe_mcg_per_l", "p_Fe_mcg_per_l", "f_Mn_mcg_per_l", "p_Mn_mcg_per_l")
-
-# Trace metals
-trace_order <- c(
-"f_Pb_mcg_per_l", "p_Pb_mcg_per_l",
-"f_As_mcg_per_l", "p_As_mcg_per_l",
-"f_Cr_mcg_per_l", "p_Cr_mcg_per_l",
-"f_Cd_mcg_per_l", "p_Cd_mcg_per_l",
-"f_Cu_mcg_per_l", "p_Cu_mcg_per_l",
-"f_Se_mcg_per_l", "p_Se_mcg_per_l",
-"f_U_mcg_per_l",  "p_U_mcg_per_l",
-"f_Co_mcg_per_l", "p_Co_mcg_per_l",
-"f_Ni_mcg_per_l", "p_Ni_mcg_per_l",
-"f_Zn_mcg_per_l", "p_Zn_mcg_per_l")
-
-# REE metals
-ree_order <- c(
-"f_Ce_mcg_per_l", "p_Ce_mcg_per_l",
-"f_Dy_mcg_per_l", "p_Dy_mcg_per_l",
-"f_Nd_mcg_per_l", "p_Nd_mcg_per_l",
-"f_Pr_mcg_per_l", "p_Pr_mcg_per_l",
-"f_La_mcg_per_l", "p_La_mcg_per_l",
-"f_Y_mcg_per_l",  "p_Y_mcg_per_l"
-
-)
-
-#Cations
-major_cations_order <- c(
-  "f_Ca_mg_l", "f_Mg_mg_l"
-)
-
-minor_cations_order <- c(
-  "f_Na_mg_l", "f_K_mg_l"
-)
-
-#Anions
-minor_anions_order <- c(
-  "f_Cl_mg_per_l", "f_NO3_mg_per_l"
-)
-```
 
 
 

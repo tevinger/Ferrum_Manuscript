@@ -855,20 +855,37 @@ view(Upstream_metals_long)
 
 ```
 
+```{r}
+# summary of values for bar plots
+Upstream_metals_long_summary <- Upstream_metals_long %>%
+  group_by(Variable, Watershed, Metal_Group, Metal_Type) %>%
+  summarise(
+    mean_value = if (all(is.na(Value))) NA_real_ else mean(Value, na.rm = TRUE),
+    sd_value   = if (all(is.na(Value))) NA_real_ else sd(Value, na.rm = TRUE),
+    Min        = if (all(is.na(Value))) NA_real_ else round(min(Value, na.rm = TRUE), 5),
+    Max        = if (all(is.na(Value))) NA_real_ else round(max(Value, na.rm = TRUE), 5),
+    Count      = sum(!is.na(Value)),
+    .groups = "drop"
+  )
+
+view(Upstream_metals_long_summary)
+
+```
+
 ## Metal group dataframes
 ```{r}
-df_major_upstream <- Upstream_metals_long %>%
+df_major_upstream <- Upstream_metals_long_summary %>%
   filter(Metal_Group == "Major") %>%
   filter(!is.na(Variable)) %>%
   filter(Metal_Type != "u") %>%  # filter out unfiltered metal data
   mutate(Variable = factor(Variable, levels = major_order))
 
-#view(df_major_upstream)
+view(df_major_upstream)
 
 #write_xlsx(df_major_upstream, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Upstream Chemistry/Major metals bar plot stats.xlsx")
 
 
-df_trace_upstream <- Upstream_metals_long %>%
+df_trace_upstream <- Upstream_metals_long_summary %>%
   filter(Metal_Group == "Trace") %>%
   filter(!is.na(Variable)) %>%
   filter(Metal_Type != "u") %>%  # filter out unfiltered metal data
@@ -879,7 +896,7 @@ df_trace_upstream <- Upstream_metals_long %>%
 #write_xlsx(df_trace_upstream, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Upstream Chemistry/Trace elements bar plot stats.xlsx")
 
 
-df_ree_upstream <- Upstream_metals_long %>%
+df_ree_upstream <- Upstream_metals_long_summary %>%
   filter(Metal_Group == "REE") %>%
   filter(!is.na(Variable)) %>%
   filter(Metal_Type != "u") %>%  # filter out unfiltered metal data
@@ -888,31 +905,29 @@ df_ree_upstream <- Upstream_metals_long %>%
 #write_xlsx(df_ree_upstream, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Upstream Chemistry/REE bar plot stats.xlsx")
 
 
-df_major_cations_upstream <- Upstream_metals_long %>%
+df_major_cations_upstream <- Upstream_metals_long_summary %>%
   filter(Metal_Group == "Major Cations") %>%
   mutate(Variable = factor(Variable, levels = major_cations_order))
 
-df_minor_cations_upstream <- Upstream_metals_long %>%
+df_minor_cations_upstream <- Upstream_metals_long_summary %>%
   filter(Metal_Group == "Minor Cations") %>%
   mutate(Variable = factor(Variable, levels = minor_cations_order))
 
-df_minor_anions_upstream <- Upstream_metals_long %>%
+df_minor_anions_upstream <- Upstream_metals_long_summary %>%
   filter(Metal_Group == "Minor Anions") %>%
   mutate(Variable = factor(Variable, levels = minor_anions_order))
 
-df_sulfate_upstream <- Upstream_metals_long %>%
+df_sulfate_upstream <- Upstream_metals_long_summary %>%
   filter(Metal_Group == "Sulfate")
-
 ```
 
 ## 3.1 Major Metals
 ```{r}
 #Grouped by watershed on the y-axis
-upstream_metals_major <- df_major_seep %>%
+upstream_metals_major <- df_major_upstream %>%
   ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
   geom_col_pattern(aes(fill = Variable, pattern = Metal_Type, pattern_fill = Metal_Type),
     position = position_dodge(width = 0.9),
-    color = "black",
     size = 0.75,
     pattern_density = 0.2,
     pattern_spacing = 0.02,

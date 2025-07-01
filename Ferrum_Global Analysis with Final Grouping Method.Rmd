@@ -1137,7 +1137,7 @@ Cl_plot
 ## DIC
 ```{r}
 # Select DOC data
-DIC_df <- working_Ferrum_data %>%
+DIC_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, DIC_mgC_per_l)
 
 # Filter NA values in the grouping variable and make long format
@@ -1181,7 +1181,8 @@ DIC_plot <- ggplot(DIC_long, aes(x = New_Groups, y = Conc)) +
   boxplot_theme +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(margin = margin(r = 6)),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
     #axis.ticks.length = unit(1, "cm"),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels
@@ -1191,6 +1192,7 @@ DIC_plot <- ggplot(DIC_long, aes(x = New_Groups, y = Conc)) +
 
 DIC_plot
 
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/DIC_V2 no labels.png", DIC_plot, width = 1.75, height = 3.25, dpi = 300)
 ```
 
 ## Alkalinity
@@ -1378,7 +1380,7 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 ##Ca
 ```{r}
 # Select alkalinity data
-Ca_df <- Final_groups_df %>%
+Ca_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Ca_mg_l)
 
 # Filter NA values in the grouping variable and make long format

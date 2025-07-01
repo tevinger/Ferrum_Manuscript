@@ -905,137 +905,73 @@ df_sulfate_upstream <- Upstream_metals_long %>%
 
 ```
 
-```{r}
-# Major metals
-major_order <- c("f_Al_mcg_per_l", "f_Fe_mcg_per_l", "f_Mn_mcg_per_l", "f_Ba_mcg_per_l")
-
-# Trace metals
-trace_order <- c(
-  "f_Pb Sum_mcg_per_l", "f_As_mcg_per_l", "f_Cr_mcg_per_l", "f_Cd_mcg_per_l", "f_Cu_mcg_per_l", "f_Se_mcg_per_l", "f_U_mcg_per_l", "f_Co_mcg_per_l", "f_Ni_mcg_per_l", "f_Zn_mcg_per_l")
-
-# REE metals
-ree_order <- c(
-  "f_Ce_mcg_per_l", "f_Dy_mcg_per_l", "f_Nd_mcg_per_l", "f_Pr_mcg_per_l",
-  "f_La_mcg_per_l", "f_Y_mcg_per_l"
-)
-
-#Cations
-major_cations_order <- c(
-  "f_Ca_mg_l", "f_Mg_mg_l"
-)
-
-minor_cations_order <- c(
-  "f_Na_mg_l", "f_K_mg_l"
-)
-
-#Anions
-minor_anions_order <- c(
-  "f_Cl_mg_per_l", "f_NO3_mg_per_l"
-)
-
-
-df_major <- Upstream_f_metals_long_summary %>%
-  filter(Metal_Group == "Major") %>%
-  filter(Variable != "NA") %>%
-  mutate(Variable = factor(Variable, levels = major_order))
-
-df_trace <- Upstream_f_metals_long_summary %>%
-  filter(Metal_Group == "Trace") %>%
-  mutate(Variable = factor(Variable, levels = trace_order))
-
-df_ree <- Upstream_f_metals_long_summary %>%
-  filter(Metal_Group == "REE") %>%
-  mutate(Variable = factor(Variable, levels = ree_order))
-
-df_minor_cations <- Upstream_f_metals_long_summary %>%
-  filter(Metal_Group == "Minor Cations") %>%
-  mutate(Variable = factor(Variable, levels = minor_cations_order))
-
-df_major_cations <- Upstream_f_metals_long_summary %>%
-  filter(Metal_Group == "Major Cations") %>%
-  mutate(Variable = factor(Variable, levels = major_cations_order))
-
-df_minor_anions <- Upstream_f_metals_long_summary %>%
-  filter(Metal_Group == "Minor Anions") %>%
-  mutate(Variable = factor(Variable, levels = minor_anions_order))
-
-df_anions <- Upstream_f_metals_long_summary %>%
-  filter(Metal_Group == "Sulfate") 
-```
-
-```{r}
-# comparing the concentrations of Zn, Ni, Cu, Se, U to other major metals
-major_order_2 <- c("f_Cu_mcg_per_l", "f_Se_mcg_per_l", "f_U_mcg_per_l", "f_Co_mcg_per_l", "f_Ni_mcg_per_l", "f_Zn_mcg_per_l", "f_Al_mcg_per_l", "f_Fe_mcg_per_l", "f_Mn_mcg_per_l", "f_Ba_mcg_per_l")
-
-df_major_2 <- Upstream_f_metals_long_summary %>%
-  filter(Metal_Group == "Major") %>%
-  mutate(Variable = factor(Variable, levels = major_order_2))
-```
-
-```{r}
-write_xlsx(df_major, "C:/Users/tayta/Downloads/Major Metals Summary Stats.xlsx")
-
-write_xlsx(df_trace, "C:/Users/tayta/Downloads/Trace Metals Summary Stats.xlsx")
-
-write_xlsx(df_ree, "C:/Users/tayta/Downloads/REE Metals Summary Stats.xlsx")
-```
-
-###Set the colors of the metals
-```{r}
-cb_palette_20 <- c(
-  "#E69F00", "#56B4E9", "#000000", "#009E73", "#F0E442", "#0072B2",
-  "#D55E00", "#CC79A7", "#999999", "#E41A1C",
-  "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#A65628",
-  "#F781BF", "#999999", "#66C2A5", "#FC8D62", "#8DA0CB"
-)
-
-metals_ordered <- c(
-  # Major
-  "f_Fe_mcg_per_l", "f_Al_mcg_per_l", "f_Mn_mcg_per_l", "f_Ba_mcg_per_l",
-  # Trace
-  "f_Pb Sum_mcg_per_l", "f_As_mcg_per_l", "f_Cd_mcg_per_l", "f_Co_mcg_per_l", "f_Cr_mcg_per_l", "f_Cu_mcg_per_l", "f_Ni_mcg_per_l", "f_Zn_mcg_per_l", "f_Se_mcg_per_l",
-  # REE
-  "f_Ce_mcg_per_l", "f_Dy_mcg_per_l", "f_Nd_mcg_per_l", "f_Pr_mcg_per_l", "f_La_mcg_per_l", "f_U_mcg_per_l", "f_Y_mcg_per_l"
-)
-
-metal_colors <- cb_palette_20
-names(metal_colors) <- metals_ordered
-```
-
 ## 3.1 Major Metals
 ```{r}
 #Grouped by watershed on the y-axis
-upstream_metals_major <- df_major %>%
+upstream_metals_major <- df_major_seep %>%
   ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
-        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_col_pattern(aes(fill = Variable, pattern = Metal_Type, pattern_fill = Metal_Type),
+    position = position_dodge(width = 0.9),
+    color = "black",
+    size = 0.75,
+    pattern_density = 0.2,
+    pattern_spacing = 0.02,
+    pattern_angle = 45,
+    #width = 0.75,
+    alpha = 0.8,
+    width = 0.9,
+    color = "black"
+    ) +
+        #geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
   geom_errorbar(
     aes(ymin = mean_value, ymax = mean_value + sd_value),
     position = position_dodge(width = 0.9),
     width = 0.3
   ) +
   labs(
-    title = "Major Metals by Watershed",
-    x = "Watershed",
+    title = NULL,
+    #title = "Major Metals by Watershed",
+    x = NULL,
     y = "Concentration (μg/L)"
   ) +
-  #coord_cartesian(ylim = c(0,15)) +
-  #scale_fill_manual(labels = c("f_Al_mcg_per_l" = "Al", "f_Fe_mcg_per_l" = "Fe", "f_Mn_mcg_per_l" = "Mn", "f_Ba_mcg_per_l" = "Ba")) +
+  #scale_y_continuous(trans = scales::pseudo_log_trans(base = 10), breaks = c(0,10,100,1000,10000,100000,1000000,10000000), labels = label_comma(), expand = expansion(mult = c(0, 0.06))) +
+  #annotation_logticks(sides = "l") +
+  scale_fill_manual(values = c(metal_colors)) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "black")) +
   theme_minimal() +
   barplot_theme + 
   theme(
     legend.position = "none",
-    axis.title.y = element_blank()
-  )
+    axis.title.y = element_text(margin = margin(r=1))
+    #axis.title.y = element_blank()
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.25, 0.2))) +
+  guides(fill = guide_legend(nrow = 2))
+  
 
 upstream_metals_major
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/Major metals_V1 no legend.png", upstream_metals_major, width = 6, height = 6, dpi = 300)
 ```
 
 ## 3.2 Trace Metals
 ```{r}
 #grouped by watershed on the y-axis
-upstream_metals_trace_bottom <- df_trace %>%
+upstream_metals_trace_bottom <- df_trace_seep %>%
   ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
-        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_col_pattern(aes(fill = Variable, pattern = Metal_Type, pattern_fill = Metal_Type),
+    position = position_dodge(width = 0.9),
+    size = 0.75,
+    pattern_density = 0.2,
+    pattern_spacing = 0.02,
+    pattern_angle = 45,
+    #width = 0.75,
+    alpha = 0.75,
+    width = 0.9,
+    color = "black"
+    ) +
+        #geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
   geom_errorbar(
     aes(ymin = mean_value, ymax = mean_value + sd_value),
     position = position_dodge(width = 0.9),
@@ -1043,41 +979,28 @@ upstream_metals_trace_bottom <- df_trace %>%
   ) +
   labs(
     title = NULL,
+    #title = "Trace Elements by Watershed",
     x = NULL,
-    y = NULL
+    y = "Concentration (μg/L)"
   ) +
-  coord_cartesian(ylim = c(0, 25)) +
-  scale_fill_manual(values = metal_colors) +
-  theme_minimal() +
-  barplot_theme + 
-  theme(
-    legend.position = "none"
-    #axis.text.x = element_blank()
-  )
-
-upstream_metals_trace_bottom
-
-upstream_metals_trace_top <- df_trace %>%
-  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
-        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
-  geom_errorbar(
-    aes(ymin = mean_value, ymax = mean_value + sd_value),
-    position = position_dodge(width = 0.9),
-    width = 0.3
-  ) +
-  labs(
-    title = NULL,
-    x = NULL,
-    y = NULL
-  ) +
-  coord_cartesian(ylim = c(90, 100)) +
-  scale_fill_manual(values = metal_colors) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10), breaks = c(0,10,100,1000,10000,100000,1000000,10000000), labels = label_comma(), expand = expansion(mult = c(0, 0.05))) +
+  annotation_logticks(sides = "l") +
+  scale_fill_manual(values = c(metal_colors)) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey28")) +
   theme_minimal() +
   barplot_theme + 
   theme(
     legend.position = "none",
-    axis.text.x = element_blank()
-  )
+    axis.title.y = element_text(margin = margin(r=1))
+    #axis.title.y = element_blank()
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.25, 0.2))) +
+  guides(fill = guide_legend(nrow = 2))
+
+seep_metals_trace_bottom
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/Trace elements_V2 no legend.png", seep_metals_trace_bottom, width = 8, height = 6, dpi = 300)
 
 upstream_metals_trace_top
 ```

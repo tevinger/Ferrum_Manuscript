@@ -960,7 +960,7 @@ upstream_metals_major <- df_major_upstream %>%
     axis.title.y = element_text(margin = margin(r=1))
     #axis.title.y = element_blank()
   ) +
-  scale_x_discrete(expand = expansion(mult = c(0.17, 0.15)))
+  scale_x_discrete(expand = expansion(mult = c(0.14, 0.11)))
   
 
 upstream_metals_major
@@ -971,7 +971,7 @@ upstream_metals_major
 ## 3.2 Trace Metals
 ```{r}
 #grouped by watershed on the y-axis
-upstream_metals_trace_bottom <- df_trace_seep %>%
+upstream_metals_trace_bottom <- df_trace_upstream %>%
   ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
   geom_col_pattern(aes(fill = Variable, pattern = Metal_Type, pattern_fill = Metal_Type),
     position = position_dodge(width = 0.9),
@@ -980,7 +980,7 @@ upstream_metals_trace_bottom <- df_trace_seep %>%
     pattern_spacing = 0.02,
     pattern_angle = 45,
     #width = 0.75,
-    alpha = 0.75,
+    alpha = 0.8,
     width = 0.9,
     color = "black"
     ) +
@@ -1000,22 +1000,23 @@ upstream_metals_trace_bottom <- df_trace_seep %>%
   annotation_logticks(sides = "l") +
   scale_fill_manual(values = c(metal_colors)) +
   scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
-  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey28")) +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "black")) +
   theme_minimal() +
   barplot_theme + 
   theme(
     legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
     axis.title.y = element_text(margin = margin(r=1))
     #axis.title.y = element_blank()
   ) +
-  scale_x_discrete(expand = expansion(mult = c(0.25, 0.2))) +
+  scale_x_discrete(expand = expansion(mult = c(0.12, 0.11))) +
   guides(fill = guide_legend(nrow = 2))
 
-seep_metals_trace_bottom
+upstream_metals_trace_bottom
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/Trace elements_V2 no legend.png", seep_metals_trace_bottom, width = 8, height = 6, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/Trace elements_V1 no legend.png", upstream_metals_trace_bottom, width = 8, height = 7, dpi = 300)
 
-upstream_metals_trace_top
+#upstream_metals_trace_top
 ```
 
 ```{r}
@@ -1036,42 +1037,63 @@ upstream_metals_trace_combo
 ###2.4.3 REE Metals
 ```{r}
 #grouped by watershed on the y-axis
-upstream_metals_REE <- df_ree %>%
+upstream_metals_REE <- df_ree_upstream %>%
   ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
-        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_col_pattern(aes(fill = Variable, pattern = Metal_Type, pattern_fill = Metal_Type),
+    position = position_dodge(width = 0.9),
+    size = 0.75,
+    pattern_density = 0.2,
+    pattern_spacing = 0.02,
+    pattern_angle = 45,
+    #width = 0.75,
+    alpha = 0.8,
+    width = 0.9,
+    color = "black"
+    ) +
+        #geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
   geom_errorbar(
     aes(ymin = mean_value, ymax = mean_value + sd_value),
     position = position_dodge(width = 0.9),
     width = 0.3
   ) +
   labs(
-    title = "REE Metals by Watershed",
-    x = "Watershed",
+    title = NULL,
+    #title = "Rare Earth Elements by Watershed",
+    x = NULL,
     y = "Concentration (μg/L)"
   ) +
-  #coord_cartesian(ylim = c(0, 6)) +
-  scale_fill_manual(values = metal_colors) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+  #annotation_logticks(sides = "l") +
+  scale_fill_manual(values = c(metal_colors)) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "black")) +
   theme_minimal() +
   barplot_theme + 
   theme(
     legend.position = "none",
-    axis.title.y = element_blank()
-  )
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title.y = element_text(margin = margin(r=1))
+    #axis.title.y = element_blank()
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.13, 0.11)))
 
 upstream_metals_REE
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/REE_V1 no legend.png", upstream_metals_REE, width = 7, height = 7, dpi = 300)
 ```
 
 ###2.4.4 Upstream Cations
 Ca, Mg, Na, K
 ```{r}
-upstream_major_cations <- df_cations %>%
+upstream_major_cations <- df_major_cations_upstream %>%
   ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
-        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9), color = "black", size = 0.75, alpha = 0.8) +
   geom_errorbar(
     aes(ymin = mean_value, ymax = mean_value + sd_value),
     position = position_dodge(width = 0.9),
     width = 0.3
   ) +
+  scale_fill_manual(values = c("f_Ca_mg_l" = "#087830", "f_Mg_mg_l" = "#1dcbd6")) +
   labs(
     title = "Major Cations by Watershed",
     x = "Watershed",
@@ -1083,9 +1105,41 @@ upstream_major_cations <- df_cations %>%
   barplot_theme + 
   theme(
     legend.position = "top"
-  )
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.05)))
 
 upstream_major_cations
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/major cations.png", upstream_major_cations, width = 7, height = 7, dpi = 300)
+```
+
+```{r}
+upstream_minor_cations <- df_minor_cations_upstream %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9), color = "black", size = 0.75, alpha = 0.8) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  scale_fill_manual(values = c("f_Na_mg_l" = "#087830", "f_K_mg_l" = "#1dcbd6")) +
+  labs(
+    title = "Major Cations by Watershed",
+    x = "Watershed",
+    y = "Concentration (mg/L)"
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "top"
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.05)))
+
+upstream_minor_cations
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/minor cations.png", upstream_minor_cations, width = 7, height = 7, dpi = 300)
 ```
 
 ###2.4.5 Upstream Anions
@@ -1158,6 +1212,95 @@ upstream_pH <- df_upstream_buffering %>%
 upstream_pH
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/pH.png", seep_pH, width = 6, height = 6, dpi = 300)
+```
+
+```{r}
+upstream_DIC <- df_upstream_buffering %>%
+  filter(str_detect(Variable, "DIC")) %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9), fill =  "#f79fff", color = "black", size = 0.75, width = 0.6) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "DIC by Watershed",
+    x = "Watershed",
+    y = ylab_DIC
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+upstream_DIC
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/DIC.png", upstream_DIC, width = 4, height = 7, dpi = 300)
+
+```
+
+```{r}
+upstream_Alk <- df_upstream_buffering %>%
+  filter(str_detect(Variable, "Alk")) %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9), fill =  "pink", color = "black", size = 0.75) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "Alk by Watershed",
+    x = "Watershed",
+    y = ylab_Alk
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+upstream_Alk
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/Alk.png", upstream_Alk, width = 4, height = 7, dpi = 300)
+```
+
+```{r}
+upstream_DOC <- df_upstream_buffering %>%
+  filter(str_detect(Variable, "DOC")) %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9), fill =  "#d1834a", color = "black", size = 0.75) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "DOC by Watershed",
+    x = "Watershed",
+    y = "DOC (mgC/L)"
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  scale_y_continuous(breaks = c(0,2,4,6,8,10), labels = c(0,2,4,6,8,10), expand = expansion(mult = c(0, 0.1)))
+
+upstream_DOC
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/DOC.png", upstream_DOC, width = 4, height = 7, dpi = 300)
 ```
 
 # 4. Seep Chemistry

@@ -1335,7 +1335,7 @@ Seep_long <- Seep_df %>%
     Watershed = factor(Watershed, levels = names(sort(watershed_areas)))
   )
 
-view(Seep_long)
+#view(Seep_long)
 
 # summary values to use for bar plots for data that isn't metals
 Seep_long_summary <- Seep_long %>%
@@ -1349,7 +1349,7 @@ Seep_long_summary <- Seep_long %>%
   .groups = "drop"
 )
 
-view(Seep_long_summary)
+#view(Seep_long_summary)
 ```
 
 All metals
@@ -1459,6 +1459,8 @@ df_ree_seep <- Seep_metals_long_summary %>%
   filter(!is.na(Variable)) %>%
   filter(Metal_Type != "u") %>% # filter out unfiltered metal data
   mutate(Variable = factor(Variable, levels = ree_order))
+
+view(df_ree_seep)
 
 #write_xlsx(df_ree_seep, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/REE bar plot stats.xlsx")
 
@@ -1685,7 +1687,7 @@ Seep_metals_REE <- df_ree_seep %>%
 
 Seep_metals_REE 
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/REE_V2 no legend.png", Seep_metals_REE, width = 6, height = 6, dpi = 300)
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/REE_V2 no legend.png", Seep_metals_REE, width = 6, height = 6, dpi = 300)
 ```
 
 ### 2.5.4 Seep Cations

@@ -663,8 +663,8 @@ cb_palette_metals <- c(
   #"#FF7F00", "#56B4E9", "grey31", "#009E73", 
   #"#FF7F00", "#56B4E9", "grey31", "#5d9b84",
   #"#de8042", "#ffce96", "#5d455e", "#009E73",
-  "#D55E00", "#ffce96", "#5d455e", "#009E73",
-  "#D55E00", "#ffce96", "#5d455e", "#009E73",
+  "#D55E00", "#ffce96", "#5d455e", 
+  "#D55E00", "#ffce96", "#5d455e", 
   
   # Trace metal colors
   #"#F0E442", "#0072B2","#D55E00", "#CC79A7", "#999999", "#E41A1C", "#E69F00",
@@ -672,8 +672,9 @@ cb_palette_metals <- c(
   #"#F0E442", "#0072B2","#D55E00", "#CC79A7", "#999999", "#E41A1C", "#E69F00",
   #"#377EB8", "#4DAF4A", "#984EA3",
   
-  "#003f5c",  "#ffca67", "#752c48", "#80acff", "#3a5e9b", "#53B0AE", "#bc5090", "#ff6361", "#01796f",  "#bac4c8",
-  "#003f5c",  "#ffca67", "#752c48", "#80acff", "#3a5e9b", "#53B0AE", "#bc5090", "#ff6361", "#01796f",  "#bac4c8",
+  
+  "#003f5c", "#fdb5e1", "#ffca67", "#752c48", "#80acff", "#3a5e9b", "#53B0AE", "#bc5090", "#ff6361", "#01796f",  "#bac4c8",
+  "#003f5c",  "#fdb5e1", "#ffca67", "#752c48", "#80acff", "#3a5e9b", "#53B0AE", "#bc5090", "#ff6361", "#01796f",  "#bac4c8",
   
   # REE colors
   #"#FF7F00", "#A65628", "#999999", "#66C2A5", "#FC8D62", "#8DA0CB"
@@ -685,14 +686,14 @@ cb_palette_metals <- c(
 
 metals_ordered <- c(
   # Major
-  "f_Fe_mcg_per_l", "f_Al_mcg_per_l", "f_Mn_mcg_per_l", "f_Ba_mcg_per_l",
-  "p_Fe_mcg_per_l", "p_Al_mcg_per_l", "p_Mn_mcg_per_l", "p_Ba_mcg_per_l",
+  "f_Fe_mcg_per_l", "f_Al_mcg_per_l", "f_Mn_mcg_per_l", 
+  "p_Fe_mcg_per_l", "p_Al_mcg_per_l", "p_Mn_mcg_per_l", 
   # Trace
-  "f_Pb_mcg_per_l", "f_As_mcg_per_l", "f_Cr_mcg_per_l", "f_Cd_mcg_per_l", 
+  "f_Pb_mcg_per_l", "f_Ba_mcg_per_l", "f_As_mcg_per_l", "f_Cr_mcg_per_l", "f_Cd_mcg_per_l", 
   "f_Cu_mcg_per_l", "f_Se_mcg_per_l", "f_U_mcg_per_l", "f_Co_mcg_per_l", 
   "f_Ni_mcg_per_l", "f_Zn_mcg_per_l",
   
-  "p_Pb_mcg_per_l", "p_As_mcg_per_l", "p_Cr_mcg_per_l", "p_Cd_mcg_per_l",
+  "p_Pb_mcg_per_l", "p_Ba_mcg_per_l", "p_As_mcg_per_l", "p_Cr_mcg_per_l", "p_Cd_mcg_per_l",
 "p_Cu_mcg_per_l", "p_Se_mcg_per_l", "p_U_mcg_per_l", "p_Co_mcg_per_l",
 "p_Ni_mcg_per_l", "p_Zn_mcg_per_l",
   # REE
@@ -707,11 +708,12 @@ names(metal_colors) <- metals_ordered
 ### Metal order
 ```{r}
 # Major metals
-major_order <- c("f_Ba_mcg_per_l", "p_Ba_mcg_per_l", "f_Al_mcg_per_l", "p_Al_mcg_per_l", "f_Fe_mcg_per_l", "p_Fe_mcg_per_l", "f_Mn_mcg_per_l", "p_Mn_mcg_per_l")
+major_order <- c("f_Al_mcg_per_l", "p_Al_mcg_per_l", "f_Fe_mcg_per_l", "p_Fe_mcg_per_l", "f_Mn_mcg_per_l", "p_Mn_mcg_per_l")
 
 # Trace metals
 trace_order <- c(
 "f_Pb_mcg_per_l", "p_Pb_mcg_per_l",
+"f_Ba_mcg_per_l", "p_Ba_mcg_per_l", 
 "f_As_mcg_per_l", "p_As_mcg_per_l",
 "f_Cr_mcg_per_l", "p_Cr_mcg_per_l",
 "f_Cd_mcg_per_l", "p_Cd_mcg_per_l",
@@ -808,8 +810,8 @@ Upstream_metals_long <- Upstream_df %>%
   ) %>%
   # Add a column for grouping the metals 
   mutate(Metal_Group = case_when(
-    grepl("Al|Fe|Mn|Ba", Variable) ~ "Major",
-    grepl("Pb|As|Cd|Cr|Co|Cu|Zn|Ni|U|Se", Variable) ~ "Trace",
+    grepl("Al|Fe|Mn", Variable) ~ "Major",
+    grepl("Pb|As|Cd|Cr|Co|Cu|Zn|Ni|U|Se|Ba", Variable) ~ "Trace",
     grepl("Ce|Dy|Nd|Pr|La|Y", Variable) ~ "REE",
     grepl("K|Na", Variable) ~ "Minor Cations",
     grepl("Cl|NO3", Variable) ~ "Minor Anions",
@@ -965,7 +967,7 @@ upstream_metals_major <- df_major_upstream %>%
 
 upstream_metals_major
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/Major metals_V1 no legend.png", upstream_metals_major, width = 6, height = 7, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/Major metals_V1 no legend.png", upstream_metals_major, width = 6, height = 7, dpi = 300)
 ```
 
 ## 3.2 Trace Metals
@@ -1014,7 +1016,7 @@ upstream_metals_trace_bottom <- df_trace_upstream %>%
 
 upstream_metals_trace_bottom
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/Trace elements_V1 no legend.png", upstream_metals_trace_bottom, width = 8, height = 7, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/Trace elements_V1 no legend.png", upstream_metals_trace_bottom, width = 10, height = 7, dpi = 300)
 
 #upstream_metals_trace_top
 ```
@@ -1394,8 +1396,8 @@ Seep_metals_long <- Seep_df %>%
   #dplyr::filter(grepl("f_", Variable)) %>% #keep only filtered metals
   # Add a column for grouping the metals 
   mutate(Metal_Group = case_when(
-    grepl("Al|Fe|Mn|Ba", Variable) ~ "Major",
-    grepl("Pb|As|Cd|Cr|Co|Cu|Zn|Ni|U|Se", Variable) ~ "Trace",
+    grepl("Al|Fe|Mn", Variable) ~ "Major",
+    grepl("Pb|As|Cd|Cr|Co|Cu|Zn|Ni|U|Se|Ba", Variable) ~ "Trace",
     grepl("Ce|Dy|Nd|Pr|La|Y", Variable) ~ "REE",
     grepl("K|Na", Variable) ~ "Minor Cations",
     grepl("Cl|NO3", Variable) ~ "Minor Anions",
@@ -1572,8 +1574,7 @@ seep_metals_major_2 <- df_major_seep %>%
     pattern_angle = 45,
     #width = 0.75,
     alpha = 0.8,
-    width = 0.9,
-    color = "black"
+    width = 0.9
     ) +
         #geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
   geom_errorbar(
@@ -1605,7 +1606,7 @@ seep_metals_major_2 <- df_major_seep %>%
 
 seep_metals_major_2
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/Major metals_V2 no legend.png", seep_metals_major_2, width = 6, height = 6, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry by watershed/Major metals_V1 no legend.png", seep_metals_major_2, width = 5.5, height = 7, dpi = 300)
 ```
 
 ```{r}
@@ -1664,7 +1665,7 @@ seep_metals_trace_bottom <- df_trace_seep %>%
 
 seep_metals_trace_bottom
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry/Trace elements_V2 no legend.png", seep_metals_trace_bottom, width = 8, height = 6, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry by watershed/trace metals_V1 no legend.png", seep_metals_trace_bottom, width = 8, height = 6, dpi = 300)
 ```
 
 ### 2.5.3 Seep REE Metals

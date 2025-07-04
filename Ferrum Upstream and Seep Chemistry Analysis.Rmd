@@ -1175,7 +1175,32 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 ```
 
 ###2.4.6 Upstream SpC, Temp, DOC
+```{r}
+upstream_SpC <- Upstream_long_summary %>%
+  filter(str_detect(Variable, "Spec_Cond_microS_per_cm")) %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  labs(
+    title = "pH by Watershed",
+    x = "Watershed",
+    y = "SpC"
+  ) +
+  #coord_cartesian(ylim = c(0, 6)) +
+  #scale_fill_manual(values = metal_colors) +
+  theme_minimal() +
+  barplot_theme + 
+  theme(
+    legend.position = "none"
+  )
 
+upstream_SpC
+
+```
 
 ###2.4.7 Upstream Buffering Capacity
 pH, DIC, Alk

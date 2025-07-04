@@ -1829,6 +1829,48 @@ seep_sulfate
 
 ```
 
+### 2.5.6 Dual axis
+```{r}
+# Define scaling factor to bring Ca and Mg up to Sulfate scale
+scaling_factor <- 10
+
+data <- bind_rows(df_major_cations_seep, df_sulfate_seep)
+
+plot_data <- data %>%
+  filter(!is.na(mean_value)) %>%
+  mutate(Scaled_Mean = case_when(
+    Variable %in% c("SO4") ~ mean_value,
+    Variable %in% c("Ca", "Mg") ~ mean_value * scaling_factor,
+    TRUE ~ NA_real_
+  )) %>%
+  mutate(Scaled_SD = case_when(
+    Variable %in% c("SO4") ~ sd_value,
+    Variable %in% c("Ca", "Mg") ~ sd_value * scaling_factor,
+    TRUE ~ NA_real_
+  ))
+```
+
+```{r}
+anions_cations_seep <- plot_data %>%
+  filter(is.finite(Scaled_Mean)) %>%
+  ggplot(aes(x = Watershed, y = Scaled_Mean, fill = Variable)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  scale_y_continuous(
+    name = "Sulfate (mg/L)",
+    sec.axis = sec_axis(~ . / 10, name = "Calcium and Magnesium (mg/L)") #10 is the scaling factor applied to the calcium and magnesium data
+  ) +
+  #scale_fill_manual(values = c("Sulfate" = "gray50", "Calcium" = "steelblue", "Magnesium" = "darkgreen")) +
+  labs(x = NULL, fill = "Variable") +
+  theme_minimal() +
+  theme(
+    axis.title.y.right = element_text(color = "black"),
+    axis.title.y.left = element_text(color = "black"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+anions_cations_seep
+```
+
 ###2.5.6 Seep SpC, Temp
 
 ###2.5.7 Seep Buffering Capacity

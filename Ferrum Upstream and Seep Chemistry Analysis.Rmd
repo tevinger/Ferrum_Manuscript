@@ -1839,13 +1839,13 @@ data <- bind_rows(df_major_cations_seep, df_sulfate_seep)
 plot_data <- data %>%
   filter(!is.na(mean_value)) %>%
   mutate(Scaled_Mean = case_when(
-    Variable %in% c("SO4") ~ mean_value,
-    Variable %in% c("Ca", "Mg") ~ mean_value * scaling_factor,
+    Metal_Group %in% c("Sulfate") ~ mean_value,
+    Metal_Group %in% c("Major Cations") ~ mean_value * 5,
     TRUE ~ NA_real_
   )) %>%
   mutate(Scaled_SD = case_when(
-    Variable %in% c("SO4") ~ sd_value,
-    Variable %in% c("Ca", "Mg") ~ sd_value * scaling_factor,
+    Metal_Group %in% c("Sulfate") ~ sd_value,
+    Metal_Group %in% c("Major Cations") ~ sd_value * 5,
     TRUE ~ NA_real_
   ))
 ```
@@ -1854,14 +1854,20 @@ plot_data <- data %>%
 anions_cations_seep <- plot_data %>%
   filter(is.finite(Scaled_Mean)) %>%
   ggplot(aes(x = Watershed, y = Scaled_Mean, fill = Variable)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9), color = "black", size = 0.75, alpha = 0.8) +
+  geom_errorbar(
+    aes(ymin = Scaled_Mean, ymax = Scaled_Mean + Scaled_SD),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
   scale_y_continuous(
     name = "Sulfate (mg/L)",
     sec.axis = sec_axis(~ . / 10, name = "Calcium and Magnesium (mg/L)") #10 is the scaling factor applied to the calcium and magnesium data
   ) +
-  #scale_fill_manual(values = c("Sulfate" = "gray50", "Calcium" = "steelblue", "Magnesium" = "darkgreen")) +
+  scale_fill_manual(values = c("f_Ca_mg_l" = "#087830", "f_Mg_mg_l" = "#1dcbd6", "f_SO4_mg_per_l" = "#ffe562")) +
   labs(x = NULL, fill = "Variable") +
   theme_minimal() +
+  barplot_theme +
   theme(
     axis.title.y.right = element_text(color = "black"),
     axis.title.y.left = element_text(color = "black"),

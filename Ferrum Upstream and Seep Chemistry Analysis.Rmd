@@ -1840,12 +1840,12 @@ plot_data <- data %>%
   filter(!is.na(mean_value)) %>%
   mutate(Scaled_Mean = case_when(
     Metal_Group %in% c("Sulfate") ~ mean_value,
-    Metal_Group %in% c("Major Cations") ~ mean_value * 5,
+    Metal_Group %in% c("Major Cations") ~ mean_value * 6,
     TRUE ~ NA_real_
   )) %>%
   mutate(Scaled_SD = case_when(
     Metal_Group %in% c("Sulfate") ~ sd_value,
-    Metal_Group %in% c("Major Cations") ~ sd_value * 5,
+    Metal_Group %in% c("Major Cations") ~ sd_value * 6,
     TRUE ~ NA_real_
   ))
 ```
@@ -1862,7 +1862,12 @@ anions_cations_seep <- plot_data %>%
   ) +
   scale_y_continuous(
     name = "Sulfate (mg/L)",
-    sec.axis = sec_axis(~ . / 10, name = "Calcium and Magnesium (mg/L)") #10 is the scaling factor applied to the calcium and magnesium data
+    breaks = c(0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000), 
+    labels = c("0","","2000","","4000","","6000","","8000"),
+    sec.axis = sec_axis(~ . / 6, 
+                        name = "Calcium and Magnesium (mg/L)") #5 is the scaling factor applied to the calcium and magnesium data
+                        #breaks = c(0,500,1000,1500,2000,2500,3000,3500,4000), 
+                        #labels = c("0","","200","","400","","600","","800")
   ) +
   scale_fill_manual(values = c("f_Ca_mg_l" = "#087830", "f_Mg_mg_l" = "#1dcbd6", "f_SO4_mg_per_l" = "#ffe562")) +
   labs(x = NULL, fill = "Variable") +

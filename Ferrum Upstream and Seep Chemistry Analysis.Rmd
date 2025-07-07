@@ -1172,8 +1172,40 @@ upstream_sulfate <- df_sulfate_upstream %>%
 
 upstream_sulfate
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/SO4.png", upstream_sulfate, width = 6, height = 7, dpi = 300)
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/SO4.png", upstream_sulfate, width = 6, height = 7, dpi = 300)
 
+```
+
+### 2.4.6 Dual axis
+```{r}
+upstream_data <- bind_rows(df_major_cations_upstream, df_sulfate_upstream)
+```
+
+```{r}
+anions_cations_upstream <- upstream_data %>%
+  #filter(is.finite(Scaled_Mean)) %>%
+  ggplot(aes(x = Watershed, y = mean_value, fill = Variable)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.9), color = "black", size = 0.75, alpha = 0.8) +
+  geom_errorbar(
+    aes(ymin = mean_value, ymax = mean_value + sd_value),
+    position = position_dodge(width = 0.9),
+    width = 0.3
+  ) +
+  #scale_y_continuous(name = "Sulfate (mg/L)",sec.axis = sec_axis(~ . / 1, name = "Calcium and Magnesium (mg/L)")) +
+  scale_fill_manual(values = c("f_Ca_mg_l" = "#087830", "f_Mg_mg_l" = "#1dcbd6", "f_SO4_mg_per_l" = "#ffe562")) +
+  labs(x = NULL, fill = "Variable", y = NULL) +
+  theme_minimal() +
+  barplot_theme +
+  theme(
+    axis.title.y.right = element_text(color = "black"),
+    axis.title.y.left = element_text(color = "black"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.05)))
+
+anions_cations_upstream
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry by watershed/dual axis cations and anions.png", anions_cations_seep, width = 6, height = 6, dpi = 300)
 ```
 
 ###2.4.6 Upstream SpC, Temp, DOC

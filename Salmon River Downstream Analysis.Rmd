@@ -1480,7 +1480,250 @@ SalmonR_Ni <- SalmonR_2023_river_data %>%
 view(SalmonR_Ni)
 ```
 
+```{r}
+SalmonR_MS_Ni_area <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Ni_mcg_per_l, u_Ni_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Ni_mcg_per_l, u_Ni_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Ni_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
 
+# Split by type
+MS_f_Ni_area <- SalmonR_MS_Ni_area %>%
+  filter(Metal_type == "f")
+
+MS_u_Ni_area <- SalmonR_MS_Ni_area %>%
+  filter(Metal_type == "u")
+
+```
+
+```{r}
+SalmonR_trib_Ni_area <- SalmonR_filtered_Trib %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Ni_mcg_per_l, u_Ni_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Ni_mcg_per_l, u_Ni_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Ni_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+# Split by type
+trib_f_Ni_area <- SalmonR_trib_Ni_area %>%
+  filter(Metal_type == "f")
+
+trib_u_Ni_area <- SalmonR_trib_Ni_area %>%
+  filter(Metal_type == "u")
+
+```
+
+```{r}
+SalmonR_Ni_area <- ggplot() +
+  # area plots
+  geom_area(data = MS_u_Ni_area, 
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#28968b") +
+  
+  geom_line(data = MS_u_Ni_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), 
+            color = "#1d6e66", linewidth = 0.5) +
+  
+  geom_area(data = MS_f_Ni_area, 
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#c9f1e4") +
+  
+  geom_line(data = MS_f_Ni_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), 
+            color = "#1d6e66", linewidth = 0.4) +
+  
+  # lines for locations of sampled tributaries
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "grey15", linewidth = 0.5) +
+  coord_cartesian(x = c(1,22.5), y = c(0,150)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
+  #scale_y_log10(breaks = c(0.01,0.1,1,10,100), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02))) +
+  #annotation_logticks(sides = "l") +
+  labs(
+    x = "Relative Water Area",
+    y = "Ni (µg/L)",
+    title = "Unfiltered and Filtered"
+  ) +
+  theme_minimal() +
+  DA_theme
+
+SalmonR_Ni_area
+
+```
+
+## Cd
+```{r}
+## Cd
+SalmonR_Cd <- SalmonR_2023_river_data %>%
+  dplyr::select(SamplingEventID, New_Grouping, Hyd_Classification, Rel_Water_Area_plotting, u_Cd_mcg_per_l, f_Cd_mcg_per_l, p_Cd_mcg_per_l) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+
+view(SalmonR_Cd)
+```
+
+```{r}
+SalmonR_MS_Cd_area <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Cd_mcg_per_l, u_Cd_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Cd_mcg_per_l, u_Cd_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Cd_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+# Split by type
+MS_f_Cd_area <- SalmonR_MS_Cd_area %>%
+  filter(Metal_type == "f")
+
+MS_u_Cd_area <- SalmonR_MS_Cd_area %>%
+  filter(Metal_type == "u")
+
+```
+
+```{r}
+SalmonR_trib_Cd_area <- SalmonR_filtered_Trib %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Cd_mcg_per_l, u_Cd_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Cd_mcg_per_l, u_Cd_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Cd_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+# Split by type
+trib_f_Cd_area <- SalmonR_trib_Cd_area %>%
+  filter(Metal_type == "f")
+
+trib_u_Cd_area <- SalmonR_trib_Cd_area %>%
+  filter(Metal_type == "u")
+
+```
+
+```{r}
+SalmonR_Cd_area <- ggplot() +
+  # area plots
+  geom_area(data = MS_u_Cd_area, 
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#28968b") +
+  
+  geom_line(data = MS_u_Cd_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), 
+            color = "#1d6e66", linewidth = 0.5) +
+  
+  geom_area(data = MS_f_Cd_area, 
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#c9f1e4") +
+  
+  geom_line(data = MS_f_Cd_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), 
+            color = "#1d6e66", linewidth = 0.4) +
+  
+  # lines for locations of sampled tributaries
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "grey15", linewidth = 0.5) +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0.001, ymax = 0.01),
+            fill = "gray80", alpha = 0.4) +
+  coord_cartesian(x = c(1,22.5), y = c(0,5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.0, 0.01))) +
+  labs(
+    x = "Relative Water Area",
+    y = "Cd (µg/L)",
+    title = "Unfiltered and Filtered"
+  ) +
+  theme_minimal() +
+  DA_theme
+
+SalmonR_Cd_area
+
+```
+
+## Cu
+```{r}
+## Cu
+SalmonR_Cu <- SalmonR_2023_river_data %>%
+  dplyr::select(SamplingEventID, New_Grouping, Hyd_Classification, Rel_Water_Area_plotting, u_Cu_mcg_per_l, f_Cu_mcg_per_l, p_Cu_mcg_per_l) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+
+view(SalmonR_Cu)
+```
+
+```{r}
+SalmonR_MS_Cu_area <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Cu_mcg_per_l, u_Cu_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Cu_mcg_per_l, u_Cu_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Cu_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+# Split by type
+MS_f_Cu_area <- SalmonR_MS_Cu_area %>%
+  filter(Metal_type == "f")
+
+MS_u_Cu_area <- SalmonR_MS_Cu_area %>%
+  filter(Metal_type == "u")
+
+```
+
+```{r}
+SalmonR_trib_Cu_area <- SalmonR_filtered_Trib %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Cu_mcg_per_l, u_Cu_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Cu_mcg_per_l, u_Cu_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Cu_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+# Split by type
+trib_f_Cu_area <- SalmonR_trib_Cu_area %>%
+  filter(Metal_type == "f")
+
+trib_u_Cu_area <- SalmonR_trib_Cu_area %>%
+  filter(Metal_type == "u")
+
+```
+
+```{r}
+SalmonR_Cu_area <- ggplot() +
+  # area plots
+  geom_area(data = MS_u_Cu_area, 
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#28968b") +
+  
+  geom_line(data = MS_u_Cu_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), 
+            color = "#1d6e66", linewidth = 0.5) +
+  
+  geom_area(data = MS_f_Cu_area, 
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#c9f1e4") +
+  
+  geom_line(data = MS_f_Cu_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), 
+            color = "#1d6e66", linewidth = 0.4) +
+  
+  # lines for locations of sampled tributaries
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "grey15", linewidth = 0.5) +
+  
+  labs(
+    x = "Relative Water Area",
+    y = "Cu (µg/L)",
+    title = "Unfiltered and Filtered"
+  ) +
+  theme_minimal() +
+  DA_theme
+
+SalmonR_Cu_area
+
+```
 
 # Geom Point Plots
 ## Zn

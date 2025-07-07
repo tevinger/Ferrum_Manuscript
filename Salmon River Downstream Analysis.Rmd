@@ -882,12 +882,21 @@ trib_u_Fe_area <- SalmonR_trib_Fe_area %>%
 Plotting the actual tributary concentrations
 ```{r}
 SalmonR_Fe_area <- ggplot() +
-  geom_tile(data = trib_f_Fe_area,
-            aes(x = Rel_Water_Area_plotting, y = 100, fill = Metal_conc),
-            color = "white",
-            height = 100,  # controls thickness of tile band
-            width = 0.15) +  # controls horizontal width
-  scale_fill_gradient(low = "lightblue", high = "darkred", name = "Heatmap\nFe conc") +
+  # filtered tributary heat map
+  geom_tile(data = rel_data_to_plot_interp,
+            aes(x = Rel_Water_Area_plotting, y = 50000, fill = rel_f_Fe),
+            color = NA,
+            height = 0.3,  # controls thickness of tile band
+            width = 0.05) +  # controls horizontal width
+   
+  # particulate tributary heat map
+  geom_tile(data = rel_data_to_plot_interp,
+            aes(x = Rel_Water_Area_plotting, y = 10000, fill = rel_p_Fe),
+            color = NA,
+            height = 0.3,  # controls thickness of tile band
+            width = 0.05) +  # controls horizontal width
+  
+  scale_fill_gradient(low = "white", high = "darkred") +
   
   geom_area(data = MS_u_Fe_area, 
             aes(x = Rel_Water_Area_plotting, y = Metal_conc),
@@ -903,19 +912,14 @@ SalmonR_Fe_area <- ggplot() +
             fill = "#c9f1e4") + # light blue/green for filtered
             #fill = "#28968b") + # darker green for filtered paired with grey for particulate
             #fill = "#caf1ed",
-            
-            #alpha = 0.8,
-            #pattern = "crosshatch",
-            #pattern_fill = "grey70",
-            #pattern_angle = 45,
-            #pattern_density = 0.1,
-            #pattern_spacing = 0.03,
-            #pattern_size = 0.2,
-            #pattern_alpha = 1) +
   
   geom_line(data = MS_f_Fe_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), color = "#1d6e66", linewidth = 0.4) +
   
-  coord_cartesian(x = c(1,22.5), y = c(1,10000)) +
+  # lines for locations of sampled tributaries
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "grey15", linewidth = 0.5) +
+  
+  coord_cartesian(x = c(1,22.5), y = c(1,100000)) +
   scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
   scale_y_log10(breaks = c(0.01,0.1,1,10,100,1000,10000), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02))) +
   annotation_logticks(sides = "l") +

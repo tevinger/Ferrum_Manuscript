@@ -598,6 +598,49 @@ view(temporal_filled)
 temporal_df <- temporal_filled
 ```
 
+```{r}
+temporal_df <- temporal_df %>%
+  mutate(year = as.integer(year)) %>%
+  complete(
+    Subcatchment,
+    variable,
+    year = seq(2015, 2024, by = 0.5)  # Adds 2015, 2015.5, 2016, ..., 2024
+  ) %>%
+  mutate(
+    Subcatchment = factor(Subcatchment, levels = c("South Fork", "North Fork", "Main")),
+    year = as.character(year),  # Optional: only if treating year as a discrete axis
+    year_sub = interaction(year, Subcatchment, sep = "_")
+  )
+
+
+temporal_df$year_sub <- factor(
+  temporal_df$year_sub,
+  levels = c(
+  "2015_South Fork", "2015_North Fork", "2015_Main",
+  "2015.5_South Fork", "2015.5_North Fork", "2015.5_Main",
+  "2016_South Fork", "2016_North Fork", "2016_Main",
+  "2016.5_South Fork", "2016.5_North Fork", "2016.5_Main",
+  "2017_South Fork", "2017_North Fork", "2017_Main",
+  "2017.5_South Fork", "2017.5_North Fork", "2017.5_Main",
+  "2018_South Fork", "2018_North Fork", "2018_Main",
+  "2018.5_South Fork", "2018.5_North Fork", "2018.5_Main",
+  "2019_South Fork", "2019_North Fork", "2019_Main",
+  "2019.5_South Fork", "2019.5_North Fork", "2019.5_Main",
+  "2020_South Fork", "2020_North Fork", "2020_Main",
+  "2020.5_South Fork", "2020.5_North Fork", "2020.5_Main",
+  "2021_South Fork", "2021_North Fork", "2021_Main",
+  "2021.5_South Fork", "2021.5_North Fork", "2021.5_Main",
+  "2022_South Fork", "2022_North Fork", "2022_Main",
+  "2022.5_South Fork", "2022.5_North Fork", "2022.5_Main",
+  "2023_South Fork", "2023_North Fork", "2023_Main",
+  "2023.5_South Fork", "2023.5_North Fork", "2023.5_Main",
+  "2024_South Fork", "2024_North Fork", "2024_Main"
+)
+)
+
+view(temporal_df)
+```
+
 ## regression data frames
 Make a data frame for each subcatchment 
 ```{r}
@@ -754,12 +797,16 @@ write_xlsx(final_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders
 # SO4 by subcatchment
 SO4_aggie <- temporal_df %>%
   filter(variable == "f_SO4_mg_per_l") %>%
-  ggplot(aes(x = year_sub, y = median, color = Subcatchment)) +
-   geom_vline(xintercept = 12.5, linetype = "dashed", color = "black", size = 1, alpha = 0.5) +
-  #geom_line(size = 1) +
-  geom_point(size = 3) +
-  #geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
-  geom_errorbar(aes(ymin = Q1, ymax = Q3), width = 0.2) +
+  ggplot(aes(x = year_sub, y = mean, fill = Subcatchment, shape = Subcatchment)) +
+  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
+  geom_point(aes(size = Subcatchment), color = "black", stroke = 1.1) +
+  
+  scale_fill_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_shape_manual(values = c("Main" = 23, "North Fork" = 21, "South Fork" = 24)) +
+  scale_size_manual(values = c("Main" = 3, "North Fork" = 4, "South Fork" = 3)) +
+  
+   geom_vline(xintercept = 23, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
+  
   scale_x_discrete(
     breaks = north_fork_ticks,
     labels = north_fork_labels

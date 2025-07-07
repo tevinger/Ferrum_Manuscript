@@ -645,6 +645,7 @@ ggsave("C:/Users/tevinger/Downloads/SalmonR Mg.png", SalmonR_Mg_combo, width = 5
 
 ```
 
+# Area Plots
 ## Fe
 ```{r}
 SalmonR_Fe <- SalmonR_2023_river_data %>%
@@ -1289,6 +1290,199 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 
 ```
 
+## Zn
+```{r}
+SalmonR_Zn <- SalmonR_2023_river_data %>%
+  dplyr::select(SamplingEventID, New_Grouping, Hyd_Classification,Rel_Water_Area_plotting, u_Zn_mcg_per_l, f_Zn_mcg_per_l, p_Zn_mcg_per_l) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+
+view(SalmonR_Zn)
+```
+
+Mainstem data frame
+```{r}
+SalmonR_MS_Zn_area <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Zn_mcg_per_l, u_Zn_mcg_per_l) %>%
+  #filter(!(New_Groups == "NA")) %>%
+  #filter(p_Fe_mcg_per_l >= 0.01) %>%
+  pivot_longer(
+    cols = c(f_Zn_mcg_per_l, u_Zn_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Zn_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
+
+#view(SalmonR_MS_Zn_area)
+
+MS_f_Zn_area <- SalmonR_MS_Zn_area %>%
+  filter(Metal_type == "f")
+
+MS_u_Zn_area <- SalmonR_MS_Zn_area %>%
+  filter(Metal_type == "u")
+```
+
+Tributary data frame
+```{r}
+SalmonR_trib_Zn_area <- SalmonR_filtered_Trib %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Zn_mcg_per_l, u_Zn_mcg_per_l) %>%
+  #filter(!(New_Groups == "NA")) %>%
+  #filter(p_Fe_mcg_per_l >= 0.01) %>%
+  pivot_longer(
+    cols = c(f_Zn_mcg_per_l, u_Zn_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Fe_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc)) # filtering out here means only the f or p value that is NA is excluded, not both measurements for the same sample
+
+#view(SalmonR_trib_Zn_area)
+
+trib_f_Zn_area <- SalmonR_trib_Zn_area %>%
+  filter(Metal_type == "f")
+
+trib_u_Zn_area <- SalmonR_trib_Zn_area %>%
+  filter(Metal_type == "u")
+```
+
+```{r}
+SalmonR_Zn_area <- ggplot() +
+  # area plots
+  geom_area(data = MS_u_Zn_area, 
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#28968b"
+            #fill = "grey28",
+            #alpha = 0.85
+            ) +
+  
+  geom_line(data = MS_u_Zn_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), color = "#1d6e66", linewidth = 0.5) +
+  
+  geom_area(data = MS_f_Zn_area, 
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#c9f1e4") + # light blue/green for filtered
+            #fill = "#28968b") + # darker green for filtered paired with grey for particulate
+            #fill = "#caf1ed",
+  
+  geom_line(data = MS_f_Zn_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), color = "#1d6e66", linewidth = 0.4) +
+  
+  # lines for locations of sampled tributaries
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "grey15", linewidth = 0.5) +
+  
+  #coord_cartesian(x = c(1,22.5), y = c(1,100)) +
+  #scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
+  #scale_y_log10(breaks = c(0.01,0.1,1,10,100,1000,10000), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02))) +
+  #annotation_logticks(sides = "l") +
+  labs(
+    x = "Relative Water Area",
+    y = "Zn (ug/L)",
+    title = "Unfiltered and Filtered"
+  ) +
+  theme_minimal() +
+  DA_theme
+
+SalmonR_Zn_area
+```
+
+## Al
+```{r}
+## Al
+SalmonR_Al <- SalmonR_2023_river_data %>%
+  dplyr::select(SamplingEventID, New_Grouping, Hyd_Classification, Rel_Water_Area_plotting, u_Al_mcg_per_l, f_Al_mcg_per_l, p_Al_mcg_per_l) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+
+view(SalmonR_Al)
+```
+
+```{r}
+SalmonR_MS_Al_area <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Al_mcg_per_l, u_Al_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Al_mcg_per_l, u_Al_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Al_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+# Split by type
+MS_f_Al_area <- SalmonR_MS_Al_area %>%
+  filter(Metal_type == "f")
+
+MS_u_Al_area <- SalmonR_MS_Al_area %>%
+  filter(Metal_type == "u")
+
+```
+
+```{r}
+SalmonR_trib_Al_area <- SalmonR_filtered_Trib %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Al_mcg_per_l, u_Al_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Al_mcg_per_l, u_Al_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Al_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+# Split by type
+trib_f_Al_area <- SalmonR_trib_Al_area %>%
+  filter(Metal_type == "f")
+
+trib_u_Al_area <- SalmonR_trib_Al_area %>%
+  filter(Metal_type == "u")
+
+```
+
+```{r}
+SalmonR_Al_area <- ggplot() +
+  # area plots
+  geom_area(data = MS_u_Al_area, 
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#28968b") +
+  
+  geom_line(data = MS_u_Al_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), 
+            color = "#1d6e66", linewidth = 0.5) +
+  
+  geom_area(data = MS_f_Al_area, 
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#c9f1e4") +
+  
+  geom_line(data = MS_f_Al_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), 
+            color = "#1d6e66", linewidth = 0.4) +
+  
+  # lines for locations of sampled tributaries
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "grey15", linewidth = 0.5) +
+  coord_cartesian(x = c(1,22.5), y = c(1,4000)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
+  scale_y_log10(breaks = c(0.01,0.1,1,10,100,1000), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02))) +
+  annotation_logticks(sides = "l") +
+  labs(
+    x = "Relative Water Area",
+    y = "Al (µg/L)",
+    title = "Unfiltered and Filtered"
+  ) +
+  theme_minimal() +
+  DA_theme
+
+SalmonR_Al_area
+
+```
+
+## Ni
+```{r}
+## Ni
+SalmonR_Ni <- SalmonR_2023_river_data %>%
+  dplyr::select(SamplingEventID, New_Grouping, Hyd_Classification, Rel_Water_Area_plotting, u_Ni_mcg_per_l, f_Ni_mcg_per_l, p_Ni_mcg_per_l) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+
+view(SalmonR_Ni)
+```
+
+
+
+# Geom Point Plots
 ## Zn
 ```{r}
 # MS Zn data

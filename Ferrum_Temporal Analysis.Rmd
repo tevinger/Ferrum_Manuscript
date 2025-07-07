@@ -557,14 +557,28 @@ view(summary_combined)
 ```{r}
 temporal_df <- summary_combined %>%
   separate(Subcatchment_year, into = c("Subcatchment", "year"), sep = "_") %>%
+  mutate(year = as.integer(year))  # Ensure year is an integer
+```
+
+```{r}
+# Add missing years
+temporal_filled <- temporal_df %>%
+  complete(
+    Subcatchment,
+    variable,
+    year = 2015:2024
+  ) %>%
   mutate(
     Subcatchment = factor(Subcatchment, levels = c("South Fork", "North Fork", "Main")),
     year = as.character(year),  # ensure year is treated as categorical if needed
     year_sub = interaction(year, Subcatchment, sep = "_")
-  )
+  ) 
+  
+```
 
-temporal_df$year_sub <- factor(
-  temporal_df$year_sub,
+```{r}
+temporal_filled$year_sub <- factor(
+  temporal_filled$year_sub,
   levels = c(
     "2015_South Fork", "2015_North Fork", "2015_Main",
     "2016_South Fork", "2016_North Fork", "2016_Main",
@@ -579,7 +593,22 @@ temporal_df$year_sub <- factor(
   )
 )
 
-view(temporal_df)
+view(temporal_filled)
+
+temporal_df <- temporal_filled
+```
+
+## regression data frames
+Make a data frame for each subcatchment 
+```{r}
+Aggie_Main <- temporal_filled %>%
+  filter(Subcatchment == "Main")
+
+Aggie_SF <- temporal_filled %>%
+  filter(Subcatchment == "South Fork")
+
+Aggie_NF <- temporal_filled %>%
+  filter(Subcatchment == "North Fork")
 ```
 
 ## Labels
@@ -627,6 +656,98 @@ north_fork_ticks <- levels(temporal_df$year_sub)[grepl("North Fork$", levels(tem
 north_fork_labels <- gsub("_North Fork", "", north_fork_ticks)
 ```
 
+## Statistics
+Regressions to evaluate concentrations over time
+```{r}
+AMS_sulfate_df <- Aggie_Main %>%
+  filter(variable == "f_SO4_mg_per_l") %>%
+  mutate(year = as.integer(as.character(year))) # make year continuous 
+
+AMS_sulfate_model <- lm(mean ~ year, data = AMS_sulfate_df)
+summary(AMS_sulfate_model)
+
+
+ANF_sulfate_df <- Aggie_NF %>%
+  filter(variable == "f_SO4_mg_per_l") %>%
+  mutate(year = as.integer(as.character(year))) # make year continuous 
+
+ANF_sulfate_model <- lm(mean ~ year, data = ANF_sulfate_df)
+summary(ANF_sulfate_model)
+
+
+ASF_sulfate_df <- Aggie_SF %>%
+  filter(variable == "f_SO4_mg_per_l") %>%
+  mutate(year = as.integer(as.character(year))) # make year continuous 
+
+ASF_sulfate_model <- lm(mean ~ year, data = ASF_sulfate_df)
+summary(ASF_sulfate_model)
+  
+```
+
+```{r}
+library(dplyr)
+library(purrr)
+
+# Vectors of variable names
+elements_2 <- c(
+  "pH",  "Spec_Cond", "DIC", "Alk", "DOC", "f_Cl", "f_NO3", "f_SO4", "f_Ca", "f_Mg", "f_Na", "f_K",
+  "f_SiO2", "f_Al", "p_Al", "f_As", "p_As", "f_Ba", "p_Ba", "f_Cd", "p_Cd", "f_Ce", "p_Ce",
+  "f_Co", "p_Co", "f_Cr", "p_Cr", "f_Cu", "p_Cu", "f_Dy", "p_Dy", "f_Fe", "p_Fe", "f_La", "p_La",
+  "f_Mn", "p_Mn", "f_Nd", "p_Nd", "f_Ni", "p_Ni", "f_Pb", "p_Pb", "f_Pr", "p_Pr", "f_Se", "p_Se",
+  "f_Tl", "p_Tl", "f_U", "p_U", "f_Y", "p_Y", "f_Zn", "p_Zn", "f_REE", "p_REE"
+)
+
+columns_2 <- c(
+  "pH", "Spec_Cond_microS_per_cm", "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mgN_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l", "f_SiO2_mg_per_l",
+  "f_Al_mcg_per_l", "p_Al_mcg_per_l", "f_As_mcg_per_l", "p_As_mcg_per_l", "f_Ba_mcg_per_l", "p_Ba_mcg_per_l",
+  "f_Cd_mcg_per_l", "p_Cd_mcg_per_l", "f_Ce_mcg_per_l", "p_Ce_mcg_per_l", "f_Co_mcg_per_l", "p_Co_mcg_per_l",
+  "f_Cr_mcg_per_l", "p_Cr_mcg_per_l", "f_Cu_mcg_per_l", "p_Cu_mcg_per_l", "f_Dy_mcg_per_l", "p_Dy_mcg_per_l",
+  "f_Fe_mcg_per_l", "p_Fe_mcg_per_l", "f_La_mcg_per_l", "p_La_mcg_per_l", "f_Mn_mcg_per_l", "p_Mn_mcg_per_l",
+  "f_Nd_mcg_per_l", "p_Nd_mcg_per_l", "f_Ni_mcg_per_l", "p_Ni_mcg_per_l", "f_Pb_mcg_per_l", "p_Pb_mcg_per_l",
+  "f_Pr_mcg_per_l", "p_Pr_mcg_per_l", "f_Se_mcg_per_l", "p_Se_mcg_per_l", "f_Tl_mcg_per_l", "p_Tl_mcg_per_l",
+  "f_U_mcg_per_l", "p_U_mcg_per_l", "f_Y_mcg_per_l", "p_Y_mcg_per_l", "f_Zn_mcg_per_l", "p_Zn_mcg_per_l",
+  "f_REE", "p_REE"
+)
+
+site_dfs <- list(Aggie_Main = Aggie_Main, Aggie_NF = Aggie_NF, Aggie_SF = Aggie_SF)
+
+results_list <- list()
+
+for (i in seq_along(elements_2)) {
+  element <- elements_2[i]
+  column <- columns_2[i]
+  
+  for (site_name in names(site_dfs)) {
+    site_df <- site_dfs[[site_name]] %>%
+      filter(variable == column) %>%
+      mutate(year = as.integer(as.character(year)))
+    
+    if (nrow(site_df) >= 3) {
+      model <- lm(mean ~ year, data = site_df)
+      model_sum <- summary(model)
+      
+      results_list[[paste0(site_name, "_", element)]] <- data.frame(
+        Site = site_name,
+        Variable = element,
+        Estimate = coef(model_sum)[2, 1],
+        Std_Error = coef(model_sum)[2, 2],
+        t_value = coef(model_sum)[2, 3],
+        p_value = coef(model_sum)[2, 4],
+        R_squared = model_sum$r.squared
+      )
+    }
+  }
+}
+
+# Combine all into one dataframe
+final_results <- dplyr::bind_rows(results_list)
+
+view(final_results)
+
+write_xlsx(final_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Aggie temporal regression results.xlsx")
+```
+
 ## Sulfate
 
 ```{r}
@@ -655,7 +776,7 @@ SO4_aggie <- temporal_df %>%
 
 SO4_aggie
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4.png", SO4_aggie, width = 4, height = 5, dpi = 300)
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4.png", SO4_aggie, width = 4, height = 5, dpi = 300)
 ```
 
 ```{r}

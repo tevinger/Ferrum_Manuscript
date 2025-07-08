@@ -665,6 +665,9 @@ ylab_Chloride <- expression(bold(Chloride)~bold((mg~L^-1)))
 ylab_Sulfate <- expression(bold(SO[4]^-2)~bold((mg~L^-1)))
 ylab_SpC <- expression(bold(Specific~Conductivity)~bold((μS~cm^-1)))
 ylab_Alk <- expression(bold(Alkalinity~bold((mgCaCO[3]~L^-1))))
+
+north_fork_ticks <- levels(temporal_filled$year_sub)[grepl("North Fork$", levels(temporal_filled$year_sub))]
+north_fork_labels <- gsub("_North Fork", "", north_fork_ticks)
 ```
 
 ##Theme
@@ -694,9 +697,6 @@ temporal_theme <-
     plot.background = element_rect(fill = "transparent", color = NA) # Plot background
 
   )
-
-north_fork_ticks <- levels(temporal_df$year_sub)[grepl("North Fork$", levels(temporal_df$year_sub))]
-north_fork_labels <- gsub("_North Fork", "", north_fork_ticks)
 ```
 
 ## Statistics
@@ -773,6 +773,8 @@ for (i in seq_along(elements_2)) {
       results_list[[paste0(site_name, "_", element)]] <- data.frame(
         Site = site_name,
         Variable = element,
+        Intercept = coef(model_sum)[1, 1],
+        Intercept_SE = coef(model_sum)[1, 2],
         Estimate = coef(model_sum)[2, 1],
         Std_Error = coef(model_sum)[2, 2],
         t_value = coef(model_sum)[2, 3],
@@ -792,16 +794,56 @@ write_xlsx(final_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders
 ```
 
 ## Sulfate
+regression equations
+```{r}
+sulfate_equation_df <- final_results %>%
+  filter(Variable == "f_SO4") %>%
+  group_by(Site) %>%
+  mutate(
+    intercept = round(Intercept,1),
+    slope     = round(Estimate,1),
+    r2        = round(R_squared,2),
+    eq_label  = paste0("y = ", slope, "x + ", intercept, "\nR² = ", r2),
+    x = 1,
+    y = 250
+  ) %>%
+  mutate(
+    Subcatchment = case_when(
+      Site == "Aggie_Main" ~ "Main",
+      Site == "Aggie_NF" ~ "North Fork",
+      Site == "Aggie_SF" ~ "South Fork"
+    )
+  ) %>%
+  mutate( # set the y axis position for each equation
+  y = case_when(
+    Subcatchment == "North Fork" ~ 250,
+    Subcatchment == "South Fork" ~ 240,
+    Subcatchment == "Main" ~ 230
+  )
+)
+
+view(sulfate_equation_df)
+```
 
 ```{r}
 # SO4 by subcatchment
 SO4_aggie <- temporal_df %>%
   filter(variable == "f_SO4_mg_per_l") %>%
   ggplot(aes(x = year_sub, y = mean, fill = Subcatchment, shape = Subcatchment)) +
+  
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, aes(group = Subcatchment, color = Subcatchment)) +
+  
+  labs(
+    x = "Year",
+    y = "Mean Value",
+    color = "Subcatchment"
+  ) +
+  
   geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
   geom_point(aes(size = Subcatchment), color = "black", stroke = 1.1) +
   
   scale_fill_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_color_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
   scale_shape_manual(values = c("Main" = 23, "North Fork" = 21, "South Fork" = 24)) +
   scale_size_manual(values = c("Main" = 3, "North Fork" = 4, "South Fork" = 3)) +
   
@@ -809,13 +851,20 @@ SO4_aggie <- temporal_df %>%
   
   scale_x_discrete(
     breaks = north_fork_ticks,
-    labels = north_fork_labels
+    labels = north_fork_labels,
+    expand = expansion(mult = c(0.03, 0.03))
   ) +
-  #scale_x_discrete(labels = x_labels) +
+  
+  scale_y_continuous(
+    breaks = c(0,25,50,75,100,125,150,175,200,225,250,275),
+    labels = c(0,"",50,"",100,"",150,"",200,"",250,""),
+    expand = expansion(mult = c(0.01, 0.03))
+  ) +
+  
   labs(
     title = NULL,
     x = "Year",
-    y = "Median SO4",
+    y = "Mean SO4",
     color = "Subcatchment"
   ) +
   theme_minimal() +

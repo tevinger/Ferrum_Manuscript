@@ -300,6 +300,8 @@ site_counts_by_year <- Agashashok_River_Data_filtered %>%
   filter(sample_collection_year == "2015")
 
 view(site_counts_by_year)
+
+write_xlsx(site_counts_by_year, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Aggie temporal sites per subcatchment.xlsx")
 ```
 
 ## Plot SiteID by year
@@ -868,11 +870,12 @@ SO4_aggie <- temporal_df %>%
     color = "Subcatchment"
   ) +
   theme_minimal() +
-  temporal_theme
+  temporal_theme +
+  theme(legend.position = "none")
 
 SO4_aggie
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4.png", SO4_aggie, width = 4, height = 5, dpi = 300)
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4_no legend.png", SO4_aggie, width = 4.5, height = 5, dpi = 300)
 ```
 
 ```{r}
@@ -919,6 +922,8 @@ SpC_aggie <- temporal_df %>%
   temporal_theme
 
 SpC_aggie
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4.png", SO4_aggie, width = 4, height = 5, dpi = 300)
 ```
 
 ## pH

@@ -580,6 +580,8 @@ onset_means <- onset_df %>%
   dplyr::select(-SiteID_total_count)
   
 view(onset_means)
+
+write_xlsx(onset_means, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Aggie temporal sulfate pre vs post means.xlsx")
 ```
 
 ```{r}

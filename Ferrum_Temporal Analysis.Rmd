@@ -594,6 +594,92 @@ Aggie_NF_onset_df <- onset_df %>%
   filter(Subcatchment == "North Fork")
 ```
 
+## Sulfate
+```{r}
+# use onset_df with sub_temp column that has pre and post
+library(lme4)
+library(emmeans)
+
+AMS_SO4_model <- lm(f_SO4_mg_per_l ~ temporal_status, data = Aggie_Main_onset_df)
+AMS_SO4_emm <- emmeans(AMS_SO4_model, ~ temporal_status)
+AMS_SO4_contrast <- contrast(AMS_SO4_emm, method = "pairwise")
+print(AMS_SO4_contrast)
+
+ANF_SO4_model <- lm(f_SO4_mg_per_l ~ temporal_status, data = Aggie_NF_onset_df)
+ANF_SO4_emm <- emmeans(ANF_SO4_model, ~ temporal_status)
+ANF_SO4_contrast <- contrast(ANF_SO4_emm, method = "pairwise")
+print(ANF_SO4_contrast)
+
+ASF_SO4_model <- lm(f_SO4_mg_per_l ~ temporal_status, data = Aggie_SF_onset_df)
+ASF_SO4_emm <- emmeans(ASF_SO4_model, ~ temporal_status)
+ASF_SO4_contrast <- contrast(ASF_SO4_emm, method = "pairwise")
+print(ASF_SO4_contrast)
+
+# Convert to data frames
+df1 <- as.data.frame(AMS_SO4_contrast)
+df2 <- as.data.frame(ANF_SO4_contrast)
+df3 <- as.data.frame(ASF_SO4_contrast)
+
+# Add a column to identify the model or variable
+df1$Subcatchment <- "Main"
+df2$Subcatchment <- "NF"
+df3$Subcatchment <- "SF"
+
+df1$Variable <- "f_SO4_mg_l"
+df2$Variable <- "f_SO4_mg_l"
+df3$Variable <- "f_SO4_mg_l"
+
+# Combine them into one data frame
+combined_contrasts_SO4 <- bind_rows(df1, df2, df3)
+
+# View the result
+view(combined_contrasts_SO4)
+```
+
+## Alkalinity
+```{r}
+# use onset_df with sub_temp column that has pre and post
+library(lme4)
+library(emmeans)
+
+# Models for Alkalinity instead of Sulfate
+AMS_Alk_model <- lm(Alk_mgCaCO3_per_l ~ temporal_status, data = Aggie_Main_onset_df)
+AMS_Alk_emm <- emmeans(AMS_Alk_model, ~ temporal_status)
+AMS_Alk_contrast <- contrast(AMS_Alk_emm, method = "pairwise")
+print(AMS_Alk_contrast)
+
+ANF_Alk_model <- lm(Alk_mgCaCO3_per_l ~ temporal_status, data = Aggie_NF_onset_df)
+ANF_Alk_emm <- emmeans(ANF_Alk_model, ~ temporal_status)
+ANF_Alk_contrast <- contrast(ANF_Alk_emm, method = "pairwise")
+print(ANF_Alk_contrast)
+
+ASF_Alk_model <- lm(Alk_mgCaCO3_per_l ~ temporal_status, data = Aggie_SF_onset_df)
+ASF_Alk_emm <- emmeans(ASF_Alk_model, ~ temporal_status)
+ASF_Alk_contrast <- contrast(ASF_Alk_emm, method = "pairwise")
+print(ASF_Alk_contrast)
+
+# Convert to data frames
+df1 <- as.data.frame(AMS_Alk_contrast)
+df2 <- as.data.frame(ANF_Alk_contrast)
+df3 <- as.data.frame(ASF_Alk_contrast)
+
+# Add a column to identify the model or variable
+df1$Subcatchment <- "Main"
+df2$Subcatchment <- "NF"
+df3$Subcatchment <- "SF"
+
+df1$Variable <- "Alk_mgCaCO3_per_l"
+df2$Variable <- "Alk_mgCaCO3_per_l"
+df3$Variable <- "Alk_mgCaCO3_per_l"
+
+# Combine them into one data frame
+combined_contrasts_Alk <- bind_rows(df1, df2, df3)
+
+# View the result
+view(combined_contrasts_Alk)
+
+```
+
 
 #Temporal Boxplots
 ## df
@@ -866,44 +952,6 @@ sulfate_equation_df <- final_results %>%
 )
 
 view(sulfate_equation_df)
-```
-
-pre vs post comparison
-```{r}
-# use onset_df with sub_temp column that has pre and post
-library(lme4)
-library(emmeans)
-
-AMS_SO4_model <- lm(f_SO4_mg_per_l ~ temporal_status, data = Aggie_Main_onset_df)
-AMS_SO4_emm <- emmeans(AMS_SO4_model, ~ temporal_status)
-AMS_SO4_contrast <- contrast(AMS_SO4_emm, method = "pairwise")
-print(AMS_SO4_contrast)
-
-ANF_SO4_model <- lm(f_SO4_mg_per_l ~ temporal_status, data = Aggie_NF_onset_df)
-ANF_SO4_emm <- emmeans(ANF_SO4_model, ~ temporal_status)
-ANF_SO4_contrast <- contrast(ANF_SO4_emm, method = "pairwise")
-print(ANF_SO4_contrast)
-
-ASF_SO4_model <- lm(f_SO4_mg_per_l ~ temporal_status, data = Aggie_SF_onset_df)
-ASF_SO4_emm <- emmeans(ASF_SO4_model, ~ temporal_status)
-ASF_SO4_contrast <- contrast(ASF_SO4_emm, method = "pairwise")
-print(ASF_SO4_contrast)
-
-# Convert to data frames
-df1 <- as.data.frame(AMS_SO4_contrast)
-df2 <- as.data.frame(ANF_SO4_contrast)
-df3 <- as.data.frame(ASF_SO4_contrast)
-
-# Add a column to identify the model or variable
-df1$Subcatchment <- "Main"
-df2$Subcatchment <- "NF"
-df3$Subcatchment <- "SF"
-
-# Combine them into one data frame
-combined_contrasts <- bind_rows(df1, df2, df3)
-
-# View the result
-print(combined_contrasts)
 ```
 
 ```{r}

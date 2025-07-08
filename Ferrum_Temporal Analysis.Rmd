@@ -898,6 +898,168 @@ ggplot(aes(x = factor(sample_collection_year), y = f_SO4_mg_per_l, fill = sample
 sulfate_temporal
 ```
 
+## Calcium
+```{r}
+# SO4 by subcatchment
+Ca_aggie <- temporal_df %>%
+  filter(variable == "f_Ca_mg_l") %>%
+  ggplot(aes(x = year_sub, y = mean, fill = Subcatchment, shape = Subcatchment)) +
+  
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, aes(group = Subcatchment, color = Subcatchment)) +
+  
+  labs(
+    x = "Year",
+    y = "Mean Value",
+    color = "Subcatchment"
+  ) +
+  
+  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
+  geom_point(aes(size = Subcatchment), color = "black", stroke = 1.1) +
+  
+  scale_fill_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_color_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_shape_manual(values = c("Main" = 23, "North Fork" = 21, "South Fork" = 24)) +
+  scale_size_manual(values = c("Main" = 3, "North Fork" = 4, "South Fork" = 3)) +
+  
+   geom_vline(xintercept = 23, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
+  
+  scale_x_discrete(
+    breaks = north_fork_ticks,
+    labels = north_fork_labels,
+    expand = expansion(mult = c(0.03, 0.03))
+  ) +
+  
+  scale_y_continuous(
+    breaks = c(0,25,50,75,100,125,150,175,200,225,250,275),
+    labels = c(0,25,50,75,100,125,150,"",200,"",250,""),
+    expand = expansion(mult = c(0.01, 0.03))
+  ) +
+  
+  labs(
+    title = NULL,
+    x = "Year",
+    y = "Mean SO4",
+    color = "Subcatchment"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none"
+        ,axis.text.y = element_blank()
+        )
+
+Ca_aggie
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Ca_V2 no labels.png",Ca_aggie, width = 4, height = 5, dpi = 300)
+```
+
+## DOC
+```{r}
+# SO4 by subcatchment
+DOC_aggie <- temporal_df %>%
+  filter(variable == "DOC_mgC_per_l") %>%
+  ggplot(aes(x = year_sub, y = mean, fill = Subcatchment, shape = Subcatchment)) +
+  
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, aes(group = Subcatchment, color = Subcatchment)) +
+  
+  labs(
+    x = "Year",
+    y = "Mean Value",
+    color = "Subcatchment"
+  ) +
+  
+  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
+  geom_point(aes(size = Subcatchment), color = "black", stroke = 1.1) +
+  
+  scale_fill_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_color_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_shape_manual(values = c("Main" = 23, "North Fork" = 21, "South Fork" = 24)) +
+  scale_size_manual(values = c("Main" = 3, "North Fork" = 4, "South Fork" = 3)) +
+  
+   geom_vline(xintercept = 23, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
+  
+  scale_x_discrete(
+    breaks = north_fork_ticks,
+    labels = north_fork_labels,
+    expand = expansion(mult = c(0.03, 0.03))
+  ) +
+  
+  scale_y_continuous(
+    #breaks = c(0,5,10,15,20,25,30,35,40,45),
+    #labels = c(0,"",10,"",20,"",30,"",40,45),
+    expand = expansion(mult = c(0.01, 0.03))
+  ) +
+  
+  labs(
+    title = NULL,
+    x = "Year",
+    y = "Mean SO4",
+    color = "Subcatchment"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none"
+        ,axis.text.y = element_blank()
+        )
+
+DOC_aggie
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/DOC_V2 no labels.png",DOC_aggie, width = 4, height = 5, dpi = 300)
+```
+
+## Magnesium
+```{r}
+# SO4 by subcatchment
+Mg_aggie <- temporal_df %>%
+  filter(variable == "f_Mg_mg_l") %>%
+  ggplot(aes(x = year_sub, y = mean, fill = Subcatchment, shape = Subcatchment)) +
+  
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, aes(group = Subcatchment, color = Subcatchment)) +
+  
+  labs(
+    x = "Year",
+    y = "Mean Value",
+    color = "Subcatchment"
+  ) +
+  
+  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
+  geom_point(aes(size = Subcatchment), color = "black", stroke = 1.1) +
+  
+  scale_fill_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_color_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_shape_manual(values = c("Main" = 23, "North Fork" = 21, "South Fork" = 24)) +
+  scale_size_manual(values = c("Main" = 3, "North Fork" = 4, "South Fork" = 3)) +
+  
+   geom_vline(xintercept = 23, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
+  
+  scale_x_discrete(
+    breaks = north_fork_ticks,
+    labels = north_fork_labels,
+    expand = expansion(mult = c(0.03, 0.03))
+  ) +
+  
+  scale_y_continuous(
+    breaks = c(0,5,10,15,20,25,30,35,40,45),
+    labels = c(0,"",10,"",20,"",30,"",40,45),
+    expand = expansion(mult = c(0.01, 0.03))
+  ) +
+  
+  labs(
+    title = NULL,
+    x = "Year",
+    y = "Mean SO4",
+    color = "Subcatchment"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none"
+        #,axis.text.y = element_blank()
+        )
+
+Mg_aggie
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Ca_V2 no labels.png",Ca_aggie, width = 4, height = 5, dpi = 300)
+```
+
 ## SpC
 ```{r}
 SpC_aggie <- temporal_df %>%
@@ -931,21 +1093,55 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 ## pH
 ```{r}
 # pH by subcatchment
-
 pH_aggie <- temporal_df %>%
   filter(variable == "pH") %>%
-  ggplot(aes(x = year, y = mean, color = Subcatchment)) +
-  geom_line(size = 1) +
-  geom_point(size = 2) +
+  ggplot(aes(x = year_sub, y = mean, fill = Subcatchment, shape = Subcatchment)) +
+  
+  #geom_smooth(method = "lm", se = FALSE, formula = y ~ x, aes(group = Subcatchment, color = Subcatchment)) +
+  
   labs(
-    title = "Mean pH by Year and Subcatchment",
+    x = "Year",
+    y = "Mean Value",
+    color = "Subcatchment"
+  ) +
+  
+  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
+  geom_point(aes(size = Subcatchment), color = "black", stroke = 1.1) +
+  
+  scale_fill_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_color_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_shape_manual(values = c("Main" = 23, "North Fork" = 21, "South Fork" = 24)) +
+  scale_size_manual(values = c("Main" = 3, "North Fork" = 4, "South Fork" = 3)) +
+  
+   geom_vline(xintercept = 23, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
+  
+  scale_x_discrete(
+    breaks = north_fork_ticks,
+    labels = north_fork_labels,
+    expand = expansion(mult = c(0.03, 0.03))
+  ) +
+  
+  scale_y_continuous(
+    #breaks = c(0,25,50,75,100,125,150,175,200,225,250,275),
+    #labels = c(0,"",50,"",100,"",150,"",200,"",250,""),
+    expand = expansion(mult = c(0.01, 0.03))
+  ) +
+  
+  labs(
+    title = NULL,
     x = "Year",
     y = "Mean pH",
     color = "Subcatchment"
   ) +
-  theme_minimal()
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none"
+        ,axis.text.y = element_blank()
+        )
 
 pH_aggie
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/pH_V2 no labels.png", pH_aggie, width = 4, height = 5, dpi = 300)
 ```
 
 ```{r}
@@ -1088,21 +1284,57 @@ Alk_temporal
 
 ## Fe
 ```{r}
-Fe_temporal <- Agashashok_for_plots %>%
-ggplot(aes(x = factor(sample_collection_year), y = f_Fe_mcg_per_l, fill = sample_collection_season)) +
-  geom_boxplot(position = position_dodge(width = 0.8)) +
+Fe_temporal <- temporal_df %>%
+  filter(variable == "f_Fe_mcg_per_l") %>%
+  ggplot(aes(x = year_sub, y = mean, fill = Subcatchment, shape = Subcatchment)) +
+  
+  #geom_smooth(method = "lm", se = FALSE, formula = y ~ x, aes(group = Subcatchment, color = Subcatchment)) +
+  
   labs(
-    title = "Concentration by Year and Season",
     x = "Year",
-    y = "Concentration (units)",  # replace with actual units
-    fill = "Season"
+    y = "Mean Value",
+    color = "Subcatchment"
+  ) +
+  
+  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
+  geom_point(aes(size = Subcatchment), color = "black", stroke = 1.1) +
+  
+  scale_fill_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_color_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_shape_manual(values = c("Main" = 23, "North Fork" = 21, "South Fork" = 24)) +
+  scale_size_manual(values = c("Main" = 3, "North Fork" = 4, "South Fork" = 3)) +
+  
+   geom_vline(xintercept = 23, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
+  
+  scale_x_discrete(
+    breaks = north_fork_ticks,
+    labels = north_fork_labels,
+    expand = expansion(mult = c(0.03, 0.03))
+  ) +
+  
+  scale_y_continuous(
+    #breaks = c(0,25,50,75,100,125,150,175,200,225,250,275),
+    #labels = c(0,"",50,"",100,"",150,"",200,"",250,""),
+    expand = expansion(mult = c(0.01, 0.03))
+  ) +
+  
+  labs(
+    title = NULL,
+    x = "Year",
+    y = "Mean pH",
+    color = "Subcatchment"
   ) +
   theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
+  temporal_theme +
+  theme(legend.position = "none"
+        #,axis.text.y = element_blank()
+        )
 
 Fe_temporal
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/pH_V2 no labels.png", Fe_temporal, width = 4, height = 5, dpi = 300)
+
+
 ```
 
 ## Ni

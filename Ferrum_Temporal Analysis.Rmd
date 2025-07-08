@@ -634,6 +634,8 @@ combined_contrasts_SO4 <- bind_rows(df1, df2, df3)
 
 # View the result
 view(combined_contrasts_SO4)
+
+write_xlsx(combined_contrasts_SO4, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Aggie temporal sulfate pre vs post.xlsx")
 ```
 
 ## Alkalinity
@@ -678,6 +680,7 @@ combined_contrasts_Alk <- bind_rows(df1, df2, df3)
 # View the result
 view(combined_contrasts_Alk)
 
+write_xlsx(combined_contrasts_Alk, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Aggie temporal alkalinity pre vs post.xlsx")
 ```
 
 

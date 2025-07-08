@@ -554,6 +554,47 @@ view(summary_combined)
 #write_xlsx(summary_combined, "C:/Users/tevinger/Downloads/Group with Watersheds summary stats_rstatix.xlsx")
 ```
 
+
+# Pre vs Post onset comparison
+```{r}
+onset_df <- Agashashok_for_plots %>%
+  mutate(temporal_status = case_when(
+    sample_collection_year %in% c("2015", "2016", "2017", "2018") ~ "pre",
+    sample_collection_year %in% c("2019", "2020", "2021","2022","2023","2024") ~ "post",
+    TRUE ~ NA_character_
+  )) %>%
+  relocate(temporal_status, .after = Subcatchment_year) %>%
+  mutate(sub_temp = paste(Subcatchment, temporal_status, sep = "_")) %>%
+  relocate(sub_temp, .after = temporal_status)
+
+view(onset_df)
+```
+
+```{r}
+onset_means <- onset_df %>%
+  group_by(Subcatchment, temporal_status) %>%
+  summarise(across(
+    .cols = where(is.numeric) & !any_of(c("sample_collection_year")),  # exclude non-data numeric columns if needed
+    .fns = \(x) mean(x, na.rm = TRUE)
+  ), .groups = "drop") %>% # to return an ungrouped data frame 
+  dplyr::select(-SiteID_total_count)
+  
+view(onset_means)
+```
+
+```{r}
+# specific data frames for each subcatchment for statistics
+Aggie_Main_onset_df <- onset_df %>%
+  filter(Subcatchment == "Main")
+
+Aggie_SF_onset_df <- onset_df %>%
+  filter(Subcatchment == "South Fork")
+
+Aggie_NF_onset_df <- onset_df %>%
+  filter(Subcatchment == "North Fork")
+```
+
+
 #Temporal Boxplots
 ## df
 ```{r}
@@ -825,6 +866,44 @@ sulfate_equation_df <- final_results %>%
 )
 
 view(sulfate_equation_df)
+```
+
+pre vs post comparison
+```{r}
+# use onset_df with sub_temp column that has pre and post
+library(lme4)
+library(emmeans)
+
+AMS_SO4_model <- lm(f_SO4_mg_per_l ~ temporal_status, data = Aggie_Main_onset_df)
+AMS_SO4_emm <- emmeans(AMS_SO4_model, ~ temporal_status)
+AMS_SO4_contrast <- contrast(AMS_SO4_emm, method = "pairwise")
+print(AMS_SO4_contrast)
+
+ANF_SO4_model <- lm(f_SO4_mg_per_l ~ temporal_status, data = Aggie_NF_onset_df)
+ANF_SO4_emm <- emmeans(ANF_SO4_model, ~ temporal_status)
+ANF_SO4_contrast <- contrast(ANF_SO4_emm, method = "pairwise")
+print(ANF_SO4_contrast)
+
+ASF_SO4_model <- lm(f_SO4_mg_per_l ~ temporal_status, data = Aggie_SF_onset_df)
+ASF_SO4_emm <- emmeans(ASF_SO4_model, ~ temporal_status)
+ASF_SO4_contrast <- contrast(ASF_SO4_emm, method = "pairwise")
+print(ASF_SO4_contrast)
+
+# Convert to data frames
+df1 <- as.data.frame(AMS_SO4_contrast)
+df2 <- as.data.frame(ANF_SO4_contrast)
+df3 <- as.data.frame(ASF_SO4_contrast)
+
+# Add a column to identify the model or variable
+df1$Subcatchment <- "Main"
+df2$Subcatchment <- "NF"
+df3$Subcatchment <- "SF"
+
+# Combine them into one data frame
+combined_contrasts <- bind_rows(df1, df2, df3)
+
+# View the result
+print(combined_contrasts)
 ```
 
 ```{r}
@@ -1354,4 +1433,269 @@ ggplot(aes(x = factor(sample_collection_year), y = f_Cd_mcg_per_l, fill = sample
   )
 
 Cd_temporal
+```
+
+
+# stats
+```{r}
+library(dplyr)
+library(purrr)
+library(broom)
+library(rstatix)
+
+# List of columns to analyze
+columns_to_model <- c("pH", "Spec_Cond_microS_per_cm", 
+  "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mgN_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l",
+  "f_SiO2_mg_per_l",
+  "f_Al_mcg_per_l",
+  "f_As_mcg_per_l",
+  "f_Ba_mcg_per_l",
+  "f_Cd_mcg_per_l",
+  "f_Ce_mcg_per_l",
+  "f_Co_mcg_per_l",
+  "f_Cr_mcg_per_l",
+  "f_Cu_mcg_per_l",
+  "f_Dy_mcg_per_l",
+  "f_Fe_mcg_per_l",
+  "f_La_mcg_per_l",
+  "f_Mn_mcg_per_l",
+  "f_Nd_mcg_per_l",
+  "f_Ni_mcg_per_l",
+  "f_Pb_mcg_per_l", 
+  "f_Pr_mcg_per_l",
+  "f_Se_mcg_per_l",
+  "f_Tl_mcg_per_l",
+  "f_U_mcg_per_l",
+  "f_Y_mcg_per_l",
+  "f_Zn_mcg_per_l")
+
+
+pdf("Aggie_temporal_residuals_plots.pdf")  # Start a new PDF file
+
+# Initialize a results list
+model_results <- list()
+
+# Loop through each variable
+for (col in columns_to_model) {
+
+  # Get the relevant subset
+  df_sub <- onset_df %>%
+    dplyr::select(sub_temp, all_of(col)) %>%
+    filter(!is.na(.data[[col]]), !is.na(sub_temp))
+
+  # Check if temporal_status and the variable both have enough data
+  if (n_distinct(df_sub$sub_temp) < 2 || nrow(df_sub) < 3) {
+    model_results[[col]] <- data.frame(
+      Variable = col,
+      W = NA,
+      p_value = NA,
+      Interpretation = "Insufficient data or sub_temp lacks ≥2 levels"
+    )
+    next
+  }
+
+  # Fit the model
+  model <- lm(df_sub[[col]] ~ df_sub$sub_temp)
+
+  # Extract residuals
+  residuals <- resid(model)
+
+  # Plot histogram
+  hist(residuals, main = paste("Residuals Histogram:", col), xlab = "Residuals")
+
+  # QQ plot
+  qqnorm(residuals, main = paste("QQ Plot of Residuals:", col))
+  qqline(residuals)
+
+  # Shapiro-Wilk test
+  test_result <- tryCatch(
+    shapiro.test(residuals),
+    error = function(e) NULL
+  )
+
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "Residuals likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "Residuals not normally distributed (reject H0); consider non-parametric test."
+  } else {
+    "Shapiro test failed or insufficient data."
+  }
+
+  # Save results
+  model_results[[col]] <- data.frame(
+    Variable = col,
+    W = if (!is.null(test_result)) test_result$statistic else NA,
+    p_value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+}
+
+dev.off()  # Close the PDF device
+
+# Combine all results into a single data frame
+shapiro_results <- bind_rows(model_results)
+
+# Print results
+view(shapiro_results)
+
+#write_xlsx(shapiro_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Aggie temporal - pre vs post dataset shapiro.xlsx")
+```
+
+
+
+```{r}
+# List of columns to analyze - variables removed from the list because shapiro showed normality
+nonparametric_columns <- c("pH", "Spec_Cond_microS_per_cm", 
+  "DIC_mgC_per_l", 
+  #"Alk_mgCaCO3_per_l", 
+  "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mgN_per_l", 
+  "f_SO4_mg_per_l", 
+  #"f_Ca_mg_l", 
+  #"f_Mg_mg_l", 
+  "f_Na_mg_l", "f_K_mg_l")
+
+# set the data to be used as stats_data
+stats_data <- Aggie_Main_onset_df
+#stats_data <- Aggie_SF_onset_df
+#stats_data <- Aggie_NF_onset_df
+
+# Initialize a results list
+kruskal_results_list <- list()
+
+# Loop through each variable in your list
+for (col in nonparametric_columns) {
+  
+  # Filter out NAs for the current variable
+  df_filtered <- onset_df %>%
+    filter(!is.na(.data[[col]]))
+  
+  # Perform Kruskal-Wallis test
+  test_result <- tryCatch(
+    {
+      kruskal_test(as.formula(paste(col, "~ sub_temp")), data = df_filtered)
+    },
+    error = function(e) {
+      # Return a default result if test fails
+      data.frame(
+        variable = col,
+        statistic = NA,
+        p = NA,
+        df = NA
+      )
+    }
+  )
+  
+  # Create interpretation
+  interpretation <- if (!is.null(test_result$p) && test_result$p < 0.05) {
+    "Significant difference among groups (reject H0)."
+  } else if (!is.null(merged_result$p)) {
+    "No significant difference among groups (fail to reject H0)."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  test_result$Interpretation <- interpretation
+  
+  # Store the result
+  kruskal_results_list[[col]] <- test_result
+}
+
+# Combine all results into a single dataframe
+kruskal_results_df <- bind_rows(kruskal_results_list)
+
+# Print the results
+view(kruskal_results_df)
+```
+
+
+```{r}
+
+columns_for_dunn <- c(
+  #"pH", 
+  "Spec_Cond_microS_per_cm", 
+  "DIC_mgC_per_l", 
+  "DOC_mgC_per_l", 
+  "f_Cl_mg_per_l", 
+  #"f_NO3_mgN_per_l", 
+  "f_SO4_mg_per_l", 
+  "f_Na_mg_l", 
+  "f_K_mg_l")
+
+
+# Initialize a results list
+dunn_results_list <- list()
+
+# Loop through each variable in columns_for_dunn
+for (col in columns_for_dunn) {
+  
+  # Filter out NAs for the current variable
+  df_filtered <- onset_df %>%
+    filter(!is.na(.data[[col]]))
+  
+  # Try performing Dunn's test with Bonferroni adjustment
+  test_result <- tryCatch(
+    {
+      df_filtered %>%
+        dunn_test(as.formula(paste(col, "~ sub_temp")), p.adjust.method = "bonferroni")
+    },
+    error = function(e) {
+      # Return a default result if test fails
+      data.frame(
+        Variable = col,
+        group1 = NA,
+        group2 = NA,
+        Z = NA,
+        p = NA,
+        p.adj = NA
+      )
+    }
+  )
+  
+  # Add the variable name to each row
+  test_result$Variable <- col
+  
+  # Store the result
+  dunn_results_list[[col]] <- test_result
+  
+  # If there is at least one valid pairwise comparison, generate the CLD
+  if (!all(is.na(test_result$p.adj))) {
+     # Build a matrix of p-values manually
+    groups <- unique(c(test_result$group1, test_result$group2))
+    pval_matrix <- matrix(1, nrow = length(groups), ncol = length(groups),
+                          dimnames = list(groups, groups))
+    
+    for (i in seq_len(nrow(test_result))) {
+      g1 <- as.character(test_result$group1[i])
+      g2 <- as.character(test_result$group2[i])
+      pval <- test_result$p.adj[i]
+      
+      pval_matrix[g1, g2] <- pval
+      pval_matrix[g2, g1] <- pval  # symmetric
+    }
+    
+    # Generate CLD using multcompView
+    cld <- multcompLetters(pval_matrix)
+    
+    # Convert to a tidy data frame
+    cld_df <- data.frame(
+      Variable = col,
+      Group = names(cld$Letters),
+      Letters = cld$Letters
+    )
+    
+    # Store the CLD result
+    cld_results_list[[col]] <- cld_df
+  }
+}
+
+# Combine all Dunn's test results into a single dataframe
+dunn_results_df <- bind_rows(dunn_results_list)
+
+# Combine all CLD results into a single dataframe
+cld_results_df <- bind_rows(cld_results_list)
+
+# Print the results
+view(dunn_results_df)
+view(cld_results_df)
 ```

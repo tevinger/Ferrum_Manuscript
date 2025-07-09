@@ -979,7 +979,7 @@ SalmonR_Fe_area_no_tribs <- ggplot() +
   geom_area(data = MS_u_Fe_area, 
             aes(x = Rel_Water_Area_plotting, y = Metal_conc),
             #fill = "#28968b"
-            fill = "grey30",
+            fill = "grey30"
             #alpha = 0.85
             ) +
   
@@ -1005,7 +1005,7 @@ SalmonR_Fe_area_no_tribs <- ggplot() +
   # lines for locations of sampled tributaries
   geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11), linetype = "dashed", color = "grey15", linewidth = 0.5) +
   
-  coord_cartesian(x = c(1,22.5), y = c(1,10000)) +
+  coord_cartesian(x = c(1,22.5), y = c(0.1,10000)) +
   scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
   scale_y_log10(breaks = c(0.01,0.1,1,10,100,1000,10000, 100000), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02))) +
   annotation_logticks(sides = "l") +
@@ -1413,6 +1413,7 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 ```
 
 ## Zn
+### Data frames
 ```{r}
 SalmonR_Zn <- SalmonR_2023_river_data %>%
   dplyr::select(SamplingEventID, New_Grouping, Hyd_Classification,Rel_Water_Area_plotting, u_Zn_mcg_per_l, f_Zn_mcg_per_l, p_Zn_mcg_per_l) %>%
@@ -1467,43 +1468,267 @@ trib_u_Zn_area <- SalmonR_trib_Zn_area %>%
   filter(Metal_type == "u")
 ```
 
+Modifications for heat plots
+```{r}
+# Calculate tributary metal concentrations relative to the nearest upstream MS sample concentration for heat plot
+
+# Step 1: A reference map for each row that needs normalization
+ref_map <- tibble(
+  SamplingEventID = c(
+    "SalmonR_Trib1_20230722_1745",
+    "SalmonR_Trib2_20230722_1911",
+    "SheepC_1_20230719_0923",
+    "Anaktok_1_20230723_1945",
+    "SalmonR_Trib3_20230724_1140",
+    "SalmonR_Trib4_20230724_1155",
+    "SalmonR_Trib5_20230724_1311",
+    "SalmonR_Trib6_20230724_1428",
+    "SalmonR_Trib7_20230724_1453"
+  ),
+  RefID = c(
+    "SalmonR_MS_above_Trib1_20230722_1753",
+    "SalmonR_MS_above_Trib2_20230722_1915",
+    "SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_above_Trib6_20230724_1439",
+    "SalmonR_MS_above_Trib6_20230724_1439"
+  )
+)
+
+# Step 2: Join main data to get both the value row and its reference row
+rel_data <- SalmonR_Zn %>%
+  inner_join(ref_map, by = "SamplingEventID") %>%
+  relocate(RefID, .after = SamplingEventID) %>%
+  left_join(SalmonR_Zn %>%
+              dplyr::select(RefID = SamplingEventID, 
+                            ref_u_Zn = u_Zn_mcg_per_l,
+                            ref_f_Zn = f_Zn_mcg_per_l,
+                            ref_p_Zn = p_Zn_mcg_per_l),
+            by = "RefID") %>%
+  mutate(
+    rel_u_Zn = u_Zn_mcg_per_l / ref_u_Zn,
+    rel_f_Zn = f_Zn_mcg_per_l / ref_f_Zn,
+    rel_p_Zn = p_Zn_mcg_per_l / ref_p_Zn
+  )
+
+view(rel_data)
+
+```
+
+```{r}
+# Join the relative concentrations to the main data
+rel_data_to_join <- rel_data %>%
+  dplyr::select(SamplingEventID, rel_u_Zn, rel_f_Zn, rel_p_Zn)
+
+SalmonR_Zn_with_rel <- SalmonR_Zn %>%
+  left_join(rel_data_to_join, by = "SamplingEventID")
+
+view(SalmonR_Zn_with_rel)
+
+```
+
+```{r}
+# Extend the data to have a fake continuous x axis with fake data
+
+# Create full sequence from 0 to 22.5 by 0.05
+full_sequence <- data.frame(Rel_Water_Area_plotting = seq(0, 22.5, by = 0.05))
+
+# Join original df with the full sequence
+df_expanded <- full_sequence %>%
+  left_join(rel_data, by = "Rel_Water_Area_plotting")
+
+rel_data_to_plot <- df_expanded %>%
+  dplyr::select(-c(u_Zn_mcg_per_l, f_Zn_mcg_per_l, p_Zn_mcg_per_l, ref_u_Zn, ref_f_Zn, ref_p_Zn)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+Anaktok_salmon <- rel_data %>%
+  filter(Rel_Water_Area_plotting == 6.35) %>%
+  dplyr::select(-c(u_Zn_mcg_per_l, f_Zn_mcg_per_l, p_Zn_mcg_per_l, ref_u_Zn, ref_f_Zn, ref_p_Zn)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+# Replace the existing row with the one from Anaktok_salmon
+rel_data_to_plot <- rel_data_to_plot %>%
+  rows_update(Anaktok_salmon, by = "Rel_Water_Area_plotting")
+
+view(rel_data_to_plot)
+
+```
+
+Manually add data values to relative data to control more of how the NA values are interpolated
+```{r}
+## Use this if values need to be set manually prior to filling the missing values
+
+mod_data <- data.frame(
+  Rel_Water_Area_plotting = c(4.35, 6.2, 6.3, 7.95, 8.95, 10.75, 10.95, 14),
+  rel_u_Zn = c(2, 0.6, 0.02, 0.15, 0.01, 0.2, 2, 0),
+  rel_f_Zn = c(4, 3, 0.06, 0.3, 0.01, 0.4, 1, 0),
+  rel_p_Zn = c(2, 0.004, 0.004, 0.055, 0.01, 0.1, 6, 0)
+) %>%
+  mutate(across(everything(), as.numeric))
+
+rel_data_mod <- rel_data_to_plot %>%
+  rows_update(mod_data, by = "Rel_Water_Area_plotting")
+
+view(rel_data_mod)
+```
+
+Linear interpolation using na.approx
+```{r}
+## use this if any values need to be manually changed for the way the plot looks
+
+# Manually change the highest value
+rel_data_mod2 <- rel_data_mod %>%
+  mutate(rel_f_Zn = case_when(
+    Rel_Water_Area_plotting == 4.75 ~ 75,
+    TRUE ~ rel_f_Zn  # keep original value if no match
+  ))
+```
+
+```{r}
+# Apply linear interpolation to all numeric columns except Rel_Water_Area_plotting
+rel_data_to_plot_interp <- rel_data_mod %>%
+  mutate(across(
+    .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
+    .fns = ~ na.approx(., x = Rel_Water_Area_plotting, na.rm = FALSE, rule = 2)
+  ))
+
+# Make the values before the first tributary 0 (adjust column indices if needed)
+rel_data_to_plot_interp[1:75, 6:8] <- 0
+
+view(rel_data_to_plot_interp)
+
+```
+
+### Trib heat plots
+```{r}
+# Heatmap for filtered Zn
+f_Zn_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Zn)) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "white", high = "darkred") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = NULL,
+    fill = "Tributary:Mainstem"
+  ) +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.text.y = element_blank(),
+    legend.position = "none",
+    axis.ticks.y = element_blank(),
+    panel.grid = element_blank(),
+    axis.text.x = element_blank()
+  )
+
+f_Zn_heat
+
+# Heatmap for particulate Zn
+p_Zn_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_p_Zn)) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "white", high = "#301934") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = NULL,
+    fill = "Tributary:Mainstem"
+  ) +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    legend.position = "none",
+    axis.ticks.x = element_blank(),
+    panel.grid = element_blank(),
+    axis.text.x = element_blank()
+  )
+
+p_Zn_heat
+```
+
+```{r}
+# Combine Zn heatmaps
+Salmon_Zn_combined <- p_Zn_heat / f_Zn_heat
+Salmon_Zn_combined
+
+# Save final plot
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Zn trib heat plots with legend.png", 
+       Salmon_Zn_combined, width = 5, height = 2.5, dpi = 300)
+```
+
 ```{r}
 SalmonR_Zn_area <- ggplot() +
   # area plots
   geom_area(data = MS_u_Zn_area, 
             aes(x = Rel_Water_Area_plotting, y = Metal_conc),
-            fill = "#28968b"
-            #fill = "grey28",
+            #fill = "#28968b"
+            fill = "grey30",
             #alpha = 0.85
             ) +
   
-  geom_line(data = MS_u_Zn_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), color = "#1d6e66", linewidth = 0.5) +
+  geom_line(data = MS_u_Zn_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), color = "grey28", linewidth = 0.5) +
   
   geom_area(data = MS_f_Zn_area, 
             aes(x = Rel_Water_Area_plotting, y = Metal_conc),
-            fill = "#c9f1e4") + # light blue/green for filtered
-            #fill = "#28968b") + # darker green for filtered paired with grey for particulate
+            #fill = "#c9f1e4") + # light blue/green for filtered
+            fill = "#2daa9e") + # darker green for filtered paired with grey for particulate
             #fill = "#caf1ed",
   
   geom_line(data = MS_f_Zn_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), color = "#1d6e66", linewidth = 0.4) +
   
   # lines for locations of sampled tributaries
-  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
-             linetype = "dashed", color = "grey15", linewidth = 0.5) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11), linetype = "dashed", color = "grey15", linewidth = 0.5) +
   
-  #coord_cartesian(x = c(1,22.5), y = c(1,100)) +
-  #scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
-  #scale_y_log10(breaks = c(0.01,0.1,1,10,100,1000,10000), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02))) +
-  #annotation_logticks(sides = "l") +
+  coord_cartesian(x = c(1,22.5), y = c(1,230)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
+  #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225), labels = c(0,"",50,"",100,"",150,"",200,""), expand = expansion(mult = c(0.01, 0.02))) +
+  scale_y_log10(breaks = c(0.1,1,10,100), labels = scales::comma, expand = expansion(mult = c(0.02,0.02))) +
+  annotation_logticks(sides = "l") +
   labs(
-    x = "Relative Water Area",
-    y = "Zn (ug/L)",
-    title = "Unfiltered and Filtered"
+    x = NULL,
+    y = NULL,
+    title = NULL
+    #x = "Relative Water Area",
+    #y = "Zn (ug/L)",
+    #title = "Unfiltered and Filtered"
   ) +
   theme_minimal() +
   DA_theme
 
 SalmonR_Zn_area
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Zn area.png", SalmonR_Zn_area, width = 4.8, height = 1.92, dpi = 300)
+```
+
+```{r}
+# Final Zn composite plot
+SalmonR_Zn_area_combo <- (
+  Salmon_Zn_combined / SalmonR_Zn_area +
+  plot_layout(ncol = 1, nrow = 3, heights = c(1, 1, 6), guides = "collect")
+) &
+  theme(
+    plot.margin = margin(1, 1, 1, 1),
+    panel.background = element_rect(fill = NA, color = NA),
+    plot.background = element_rect(fill = NA, color = NA)
+  )
+
+SalmonR_Zn_area_combo
+
+# Save final plot
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Zn area plus heat plot.png",SalmonR_Zn_area_combo, width = 5, height = 2.5, dpi = 300)
+
 ```
 
 ## Al

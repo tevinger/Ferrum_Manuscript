@@ -395,7 +395,7 @@ geom_point(data = SalmonR_filtered_MS, aes(x = Rel_Water_Area_plotting, y = pH,
 SalmonR_pH_top
 
 
-SalmonR_pH_top_boxplot_colors
+#SalmonR_pH_top_boxplot_colors
 ```
 
 ```{r}
@@ -975,26 +975,11 @@ trib_u_Fe_area <- SalmonR_trib_Fe_area %>%
 Plotting the actual tributary concentrations
 ```{r}
 SalmonR_Fe_area <- ggplot() +
-  # filtered tributary heat map
-  geom_tile(data = rel_data_to_plot_interp,
-            aes(x = Rel_Water_Area_plotting, y = 50000, fill = rel_f_Fe),
-            color = NA,
-            height = 0.3,  # controls thickness of tile band
-            width = 0.05) +  # controls horizontal width
-   
-  # particulate tributary heat map
-  geom_tile(data = rel_data_to_plot_interp,
-            aes(x = Rel_Water_Area_plotting, y = 10000, fill = rel_p_Fe),
-            color = NA,
-            height = 0.3,  # controls thickness of tile band
-            width = 0.05) +  # controls horizontal width
-  
-  scale_fill_gradient(low = "white", high = "darkred") +
-  
+
   geom_area(data = MS_u_Fe_area, 
             aes(x = Rel_Water_Area_plotting, y = Metal_conc),
-            fill = "#28968b"
-            #fill = "grey28",
+            #fill = "#28968b"
+            fill = "grey28",
             #alpha = 0.85
             ) +
   
@@ -1002,24 +987,52 @@ SalmonR_Fe_area <- ggplot() +
   
   geom_area(data = MS_f_Fe_area, 
             aes(x = Rel_Water_Area_plotting, y = Metal_conc),
-            fill = "#c9f1e4") + # light blue/green for filtered
-            #fill = "#28968b") + # darker green for filtered paired with grey for particulate
+            #fill = "#c9f1e4") + # light blue/green for filtered
+            fill = "#28968b") + # darker green for filtered paired with grey for particulate
             #fill = "#caf1ed",
   
   geom_line(data = MS_f_Fe_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), color = "#1d6e66", linewidth = 0.4) +
   
-  # lines for locations of sampled tributaries
-  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
-             linetype = "dashed", color = "grey15", linewidth = 0.5) +
+  # Points for SalmonR_filtered_Trib
+  geom_point(data = trib_f_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", 
+             #fill = "#c0eeea",
+             fill = "#a1e6ce",
+             #fill = "#92e2c6",
+             #fill = "#b1ead6",
+             size = 3.4, stroke = 1.2) +
+  # Points for impaired tribs
+  geom_point(data = impaired_f_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, 
+             #color = "black", 
+             color = "indianred2", 
+             size = 4, stroke = 1.2) +
   
-  coord_cartesian(x = c(1,22.5), y = c(1,100000)) +
+  # Particulate Fe
+  
+  # Points for SalmonR_filtered_Trib
+  geom_point(data = trib_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", 
+             #fill = "#c0eeea",
+             fill = "grey",
+             #fill = "#92e2c6",
+             #fill = "#b1ead6",
+             size = 3.4, stroke = 1.2) +
+  geom_point(data = impaired_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, 
+             #color = "black", 
+             color = "indianred4", 
+             size = 4, stroke = 1.2) +
+  
+  # lines for locations of sampled tributaries
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11), linetype = "dashed", color = "grey15", linewidth = 0.5) +
+  
+  coord_cartesian(x = c(1,22.5), y = c(1,50000)) +
   scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
-  scale_y_log10(breaks = c(0.01,0.1,1,10,100,1000,10000), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02))) +
+  scale_y_log10(breaks = c(0.01,0.1,1,10,100,1000,10000, 100000), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02))) +
   annotation_logticks(sides = "l") +
   labs(
     x = "Relative Water Area",
-    y = "Metal Concentration",
-    title = "Fe Area Plot - Unfiltered and Filtered"
+    #y = "Metal Concentration",
+    y = NULL,
+    title = NULL
+    #title = "Fe Area Plot - Unfiltered and Filtered"
   ) +
   theme_minimal() +
   DA_theme
@@ -1038,17 +1051,23 @@ f_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
              linetype = "dashed", color = "black", linewidth = 0.5) +
   scale_fill_gradient(low = "white", high = "darkred") +
   labs(
-    title = "na.approx method",
-    x = "Relative Water Area",
+     title = NULL,
+    #title = "na.approx method",
+    x = NULL,
     y = NULL,
     fill = "Tributary:Mainstem"
   ) +
+  coord_cartesian(x = c(1,22.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
   theme_minimal() +
   DA_theme +
   theme(
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
-    panel.grid = element_blank()
+    #axis.ticks.x = element_blank(),
+    panel.grid = element_blank(),
+    axis.text.x = element_blank(),
+    legend.position = "none"
   )
 
 f_Fe_heat
@@ -1059,21 +1078,45 @@ p_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
              linetype = "dashed", color = "black", linewidth = 0.5) +
   scale_fill_gradient(low = "white", high = "#301934") +
   labs(
-    title = "na.approx method",
-    x = "Relative Water Area",
+    title = NULL,
+    #title = "na.approx method",
+    x = NULL,
     y = NULL,
     fill = "Tributary:Mainstem"
   ) +
+  coord_cartesian(x = c(1,22.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
   theme_minimal() +
   DA_theme +
   theme(
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
-    panel.grid = element_blank()
+    axis.ticks.x = element_blank(),
+    panel.grid = element_blank(),
+    axis.text.x = element_blank(),
+    legend.position = "none"
   )
 
 p_Fe_heat
 
+Salmon_Fe_combined <- p_Fe_heat / f_Fe_heat
+Salmon_Fe_combined
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR Fe tributary heat plot with legend.png", Salmon_Fe_combined, width = 5.1, height = 2.5, dpi = 300)
+```
+
+```{r}
+SalmonR_Fe_area_combo <- (
+  Salmon_Fe_combined / SalmonR_Fe_area +
+  plot_layout(ncol = 1, nrow = 3, heights = c(1, 1, 5), guides = "collect")
+) &
+  theme(
+    plot.margin = margin(1, 1, 1, 1),
+    panel.background = element_rect(fill = NA, color = NA),
+    plot.background = element_rect(fill = NA, color = NA)
+  )
+
+SalmonR_Fe_area_combo
 ```
 
 na_interpolation - spline

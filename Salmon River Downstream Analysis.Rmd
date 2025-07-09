@@ -1727,7 +1727,7 @@ SalmonR_Zn_area_combo <- (
 SalmonR_Zn_area_combo
 
 # Save final plot
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Zn area plus heat plot.png",SalmonR_Zn_area_combo, width = 5, height = 2.5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Zn area plus heat plot.png",SalmonR_Zn_area_combo, width = 4.6, height = 2.5, dpi = 300)
 
 ```
 

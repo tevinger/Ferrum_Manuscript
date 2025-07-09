@@ -976,8 +976,8 @@ SO4_aggie <- temporal_df %>%
   geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
   geom_point(aes(size = Subcatchment), color = "black", stroke = 1.1) +
   
-  scale_fill_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
-  scale_color_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_fill_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f1c029")) +
+  scale_color_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#efb911")) +
   scale_shape_manual(values = c("Main" = 23, "North Fork" = 21, "South Fork" = 24)) +
   scale_size_manual(values = c("Main" = 3, "North Fork" = 4, "South Fork" = 3)) +
   
@@ -1004,12 +1004,14 @@ SO4_aggie <- temporal_df %>%
   theme_minimal() +
   temporal_theme +
   theme(legend.position = "none",
-        axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1))
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
 
 SO4_aggie
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4_V4 angled labels.png", SO4_aggie, width = 4, height = 5, dpi = 300)
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4_V6 angled labels darker yellow labels.png", SO4_aggie, width = 4, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ```{r}
@@ -1359,8 +1361,8 @@ Alk_aggie <- temporal_df %>%
   geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.2) +
   geom_point(aes(size = Subcatchment), color = "black", stroke = 1.1) +
   
-  scale_fill_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
-  scale_color_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f6d571")) +
+  scale_fill_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#f1c029")) +
+  scale_color_manual(values = c("Main" = "#71d5f6", "North Fork" = "#f67192", "South Fork" = "#efb911")) +
   scale_shape_manual(values = c("Main" = 23, "North Fork" = 21, "South Fork" = 24)) +
   scale_size_manual(values = c("Main" = 3, "North Fork" = 4, "South Fork" = 3)) +
   
@@ -1387,12 +1389,14 @@ Alk_aggie <- temporal_df %>%
   theme_minimal() +
   temporal_theme +
   theme(legend.position = "none",
-        axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1))
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
 
 Alk_aggie
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Alk_V3 angled labels.png",Alk_aggie, width = 4, height = 5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Alk_V6 angled labels darker yellow with labels.png",Alk_aggie, width = 4, height = 5, dpi = 300, bg = "transparent")
 ```
 
 

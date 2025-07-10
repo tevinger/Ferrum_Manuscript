@@ -1005,7 +1005,7 @@ SalmonR_Fe_area_no_tribs <- ggplot() +
   # lines for locations of sampled tributaries
   geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11), linetype = "dashed", color = "grey15", linewidth = 0.5) +
   
-  coord_cartesian(x = c(1,22.5), y = c(0.1,10000)) +
+  coord_cartesian(x = c(1,22.5), y = c(1,10000)) +
   scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
   scale_y_log10(breaks = c(0.01,0.1,1,10,100,1000,10000, 100000), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02))) +
   annotation_logticks(sides = "l") +
@@ -1043,7 +1043,7 @@ f_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
     fill = "Tributary:Mainstem"
   ) +
   coord_cartesian(x = c(1,22.5)) +
-  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
   theme_minimal() +
   DA_theme +
   theme(
@@ -1070,7 +1070,7 @@ p_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
     fill = "Tributary:Mainstem"
   ) +
   coord_cartesian(x = c(1,22.5)) +
-  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
   theme_minimal() +
   DA_theme +
   theme(
@@ -1617,7 +1617,7 @@ f_Zn_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
     fill = "Tributary:Mainstem"
   ) +
   coord_cartesian(x = c(1, 22.5)) +
-  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
   theme_minimal() +
   DA_theme +
   theme(
@@ -1643,7 +1643,7 @@ p_Zn_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
     fill = "Tributary:Mainstem"
   ) +
   coord_cartesian(x = c(1, 22.5)) +
-  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.02, 0.01))) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
   theme_minimal() +
   DA_theme +
   theme(
@@ -1664,8 +1664,7 @@ Salmon_Zn_combined <- p_Zn_heat / f_Zn_heat
 Salmon_Zn_combined
 
 # Save final plot
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Zn trib heat plots with legend.png", 
-       Salmon_Zn_combined, width = 5, height = 2.5, dpi = 300)
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Zn trib heat plots with legend.png", Salmon_Zn_combined, width = 5, height = 2.5, dpi = 300)
 ```
 
 ```{r}

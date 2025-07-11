@@ -96,6 +96,64 @@ SalmonR_2023_river_data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Pro
 
 ```
 
+# Calculate Alkalinity from DIC
+```{r}
+# the calculate_Alk_from_DIC function was made in R file called "DIC and Alkalinity Conversions" on Box
+SalmonR_2023_alkalinity <- calculate_Alk_from_DIC(data = SalmonR_2023_river_data) %>%
+  relocate(Alk_eq_L, Alk_mEq_L, Alk_mgCaCO3_L, .after = DIC_mgC_per_l_qa)
+
+view(SalmonR_2023_alkalinity)
+```
+
+## Manual check of calculation
+```{r}
+# manual check that alkalinity calculation function worked
+SalmonR_MS2 <- SalmonR_2023_river_data %>%
+  filter(SiteID == "SalmonR_MS2") %>%
+  dplyr::select(SiteID, pH, Temp_deg_celsius, DIC_mgC_per_l)
+
+SalmonR_MS2_alkalinity <- SalmonR_2023_alkalinity %>%
+  filter(SiteID == "SalmonR_MS2") %>%
+  dplyr::select(SiteID, pH, Temp_deg_celsius, DIC_mgC_per_l, Alk_eq_L, Alk_mEq_L, Alk_mgCaCO3_L)
+```
+
+```{r}
+# site values
+pH <- 8.33
+Temp_K <- 6.7 + 273.15
+DIC_mgC_per_l <- 28.39
+
+# equilibrium constants
+logK1 <-  (-356.3094) + ((-0.06091964) * Temp_K) + ((21834.37) / Temp_K) + ((126.8339) * log10(Temp_K)) + ((-1119669) / (Temp_K^2))
+K1 <- 10^logK1
+
+logK2 <- (-107.8871) + ((-0.03252849) * Temp_K) + ((5151.79) / Temp_K) + ((38.92561) * log10(Temp_K)) + ((-563713.9) / (Temp_K^2))
+K2 <- 10^logK2
+
+# Calculate [H+] from pH
+  H <- 10^(-pH)
+  
+  # Alpha fractions
+  alpha_1 <- (K1 * H) / (H^2 + (K1 * H) + (K1 * K2))
+  alpha_2 <- (K1 * K2) / (H^2 + (K1 * H) + (K1 * K2))
+  
+  # Convert DIC (mgC/L) to mol/L
+  DIC_mol_L <- DIC_mgC_per_l / (12.01*1000) # (12.01 g/mol)
+  
+  # Calculate alkalinity
+  Alk_eq_L <- (alpha_1 + 2 * alpha_2) * DIC_mol_L
+  Alk_mEq_L <- Alk_eq_L * 1000
+  Alk_mgCaCO3_L <- Alk_mEq_L * (100.087 / 2)  # CaCO3 MW = 100.087 g/mol, valence = 2
+  
+  # Add result to data
+  SalmonR_MS2$Alk_eq_L <- Alk_eq_L
+  SalmonR_MS2$Alk_mEq_L <- Alk_mEq_L
+  SalmonR_MS2$Alk_mgCaCO3_L <- Alk_mgCaCO3_L
+
+view(SalmonR_MS2)
+
+```
+
 ## Filter Data
 ```{r}
 SalmonR_filtered_MS <- SalmonR_2023_river_data %>%

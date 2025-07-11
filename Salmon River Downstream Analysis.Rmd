@@ -99,10 +99,21 @@ SalmonR_2023_river_data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Pro
 # Calculate Alkalinity from DIC
 ```{r}
 # the calculate_Alk_from_DIC function was made in R file called "DIC and Alkalinity Conversions" on Box
-SalmonR_2023_alkalinity <- calculate_Alk_from_DIC(data = SalmonR_2023_river_data) %>%
-  relocate(Alk_eq_L, Alk_mEq_L, Alk_mgCaCO3_L, .after = DIC_mgC_per_l_qa)
+SalmonR_2023_alkalinity <- calculate_Alk_from_DIC(SalmonR_2023_river_data)
+view(SalmonR_2023_alkalinity)
+
+SalmonR_2023_alkalinity <- SalmonR_2023_alkalinity %>%
+  relocate(Alk_eq_L, Alk_mEq_L, Alk_mgCaCO3_L, .after = pH) 
+  
+SalmonR_2023_alkalinity$Alk_eq_L <- as.numeric(Alk_eq_L)
+SalmonR_2023_alkalinity$Alk_mEq_L <- as.numeric(Alk_mEq_L)
+SalmonR_2023_alkalinity$Alk_mgCaCO3_L <- as.numeric(Alk_mgCaCO3_L)
 
 view(SalmonR_2023_alkalinity)
+
+SalmonR_MS_alkalinity <- SalmonR_2023_alkalinity %>%
+  filter(SiteID %in% c("SalmonR_MS2", "SalmonR_MS6")) %>%
+  dplyr::select(SiteID, pH, Temp_deg_celsius, DIC_mgC_per_l, Alk_eq_L, Alk_mEq_L, Alk_mgCaCO3_L)
 ```
 
 ## Manual check of calculation
@@ -156,18 +167,18 @@ view(SalmonR_MS2)
 
 ## Filter Data
 ```{r}
-SalmonR_filtered_MS <- SalmonR_2023_river_data %>%
+SalmonR_filtered_MS <- SalmonR_2023_alkalinity %>%
   filter(Hyd_Classification == "Mainstem") %>%
   mutate(New_Grouping = ifelse(is.na(New_Grouping), "normal", New_Grouping))
 
-SalmonR_filtered_Trib <- SalmonR_2023_river_data %>%
+SalmonR_filtered_Trib <- SalmonR_2023_alkalinity %>%
   filter(Hyd_Classification == "Tributary") %>%
   mutate(New_Grouping = ifelse(New_Grouping == "Downstream MS", "Impaired Tributary", New_Grouping))
 
-Salmon_impaired_tribs <- SalmonR_filtered_Trib %>%
+Salmon_impaired_tribs <- SalmonR_2023_alkalinity %>%
   dplyr::filter(Site_Classification == "Impaired")
 
-Salmon_unimpaired_tribs <- SalmonR_filtered_Trib %>%
+Salmon_unimpaired_tribs <- SalmonR_2023_alkalinity %>%
   dplyr::filter(Site_Classification == "Unimpaired")
 ```
 
@@ -180,7 +191,7 @@ Salmon_downstream_difference <- SalmonR_filtered_MS %>%
                 Diss_oxy_percent_sat,
                 Spec_Cond_microS_per_cm,
                 DIC_mgC_per_l,
-                Alk_mgCaCO3_per_l,
+                Alk_mgCaCO3_L,
                 DOC_mgC_per_l,
                 f_Cl_mg_per_l,
                 f_NO3_mgN_per_l,
@@ -260,7 +271,7 @@ u_Zn_mcg_per_l) %>%
 
 view(Salmon_downstream_difference)
 
-#write_xlsx(Salmon_downstream_difference, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Salmon River Downstream Differences.xlsx")
+write_xlsx(Salmon_downstream_difference, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Salmon River Downstream Analysis/Salmon River Downstream Differences.xlsx")
 ```
 
 

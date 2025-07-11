@@ -250,7 +250,7 @@ Wulik_q.p <- ggplot(wulik_discharge_data, aes(x = Date, y = X_00060_00003, color
 Wulik_q.p
 ```
 
-# LOad Aggie Data
+# Load Aggie Data
 ```{r}
 Agashashok_River_Data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Agashashok_Temporal_Data.xlsx")
 View(Agashashok_River_Data)
@@ -414,7 +414,9 @@ Agashashok_for_plots <- Agashashok_for_plots %>%
   relocate(Subcatchment_year, .after = Subcatchment)
 ```
 
-#Summary Stats by Subcatment_year
+## Calculate Alkalinity from DIC
+
+# Summary Stats by Subcatment_year
 ```{r}
 elements <- c(
   "pH", "Temp", "Diss_oxy", "Diss_oxy_percent_sat", "Spec_Cond", "DIC", 

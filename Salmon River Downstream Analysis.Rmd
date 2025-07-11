@@ -277,7 +277,7 @@ u_Zn_mcg_per_l) %>%
 
 view(Salmon_downstream_difference)
 
-write_xlsx(Salmon_downstream_difference, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Salmon River Downstream Analysis/Salmon River Downstream Differences.xlsx")
+#write_xlsx(Salmon_downstream_difference, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Salmon River Downstream Analysis/Salmon River Downstream Differences.xlsx")
 ```
 
 

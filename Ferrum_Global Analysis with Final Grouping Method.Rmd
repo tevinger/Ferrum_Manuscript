@@ -224,61 +224,6 @@ view(working_Ferrum_data)
 
 ```
 
-
-## Calculate Alkalinity from DIC
-```{r}
-# practice_Ferrum_2022_2023_data was made in Downstream Analysis R file and has the metal data in it from AGU
-
-view(working_Ferrum_data)
-
-#change the names of the columns I will be using in this calculation
-colnames(working_Ferrum_data)[colnames(working_Ferrum_data) == "Temp_deg_celsius"] <- "Temp_C"
-colnames(working_Ferrum_data)[colnames(working_Ferrum_data) == "DIC_mgC_per_l"] <- "DIC_mg_L"
-colnames(working_Ferrum_data)[colnames(working_Ferrum_data) == "Alk_mgCaCO3_per_l"] <- "Alk_mg_L"
-
-```
-
-```{r}
-# Calculate Alkalinity from DIC using the function I made in the DIC and Alkalinity Calculations R file
-
-working_Ferrum_data <- calculate_Alk_from_DIC(working_Ferrum_data, Temp_C_col = "Temp_C", DIC_mg_L_col = "DIC_mg_L", pH_col = "pH")
-
-view(working_Ferrum_data)
-
-# move the Alk calculated column
-working_Ferrum_data <- working_Ferrum_data %>%
-  relocate(Alk_mgCaCO3_l, .after = Alk_mg_L)
-
-# add a column to show which samples Alk was calculated for
-working_Ferrum_data <- working_Ferrum_data %>%
-  mutate(Alk_Calc_Flag = ifelse(is.na(Alk_mg_L) & !is.na(Alk_mgCaCO3_l), "CALC", NA))
-
-# move that calc flag column
-working_Ferrum_data <- working_Ferrum_data %>%
-  relocate(Alk_Calc_Flag, .after = Alk_mg_L)
-
-# replace the Alk_mg_L (measured) column with the calculated Alk value
-working_Ferrum_data <- working_Ferrum_data %>%
-  mutate(Alk_mg_L = ifelse(is.na(Alk_mg_L), Alk_mgCaCO3_l, Alk_mg_L))
-
-# remove the calculated column
-working_Ferrum_data <- working_Ferrum_data %>%
-  dplyr::select(-Alk_mgCaCO3_l)
-
-```
-
-``` {r}
-group_subset <- working_Ferrum_data %>%
-  filter(Site_Grouping == 1 | Site_Grouping == 2 | Site_Grouping == 5 | Site_Grouping == 6)
-
-group_subset <- group_subset %>%
-  mutate(Site_Grouping = factor(Site_Grouping, levels = c(1, 2, 5, 6)))
-
-view(group_subset)
-#str(group_subset)
-
-```
-
 # Summary Stats
 
 ## Sample Count

@@ -135,7 +135,7 @@ view(Grouped_Ferrum_2022_2023_data)
 ### All data excluding seeps
 ```{r}
 # filter out seep samples - use for summary stats of all data, grouped by watershed, year, and month
-stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
+stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V10 %>%
   dplyr::select(ParkID,
                 Watershed,
                 New_Grouping,
@@ -662,7 +662,7 @@ for (i in seq_along(elements)) {
     #dplyr::select(6,9:70) %>% # Season
     dplyr::select(2,4,19:82) %>% # New Grouping
     filter(!is.na(.data[[column]])) %>%
-    group_by(New_Grouping, Watershed) %>% #This is where you can change what variable you want to group the data by
+    group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
     summarise(
     Variable = element,
     Mean = round(mean(.data[[column]], na.rm = TRUE), 2),
@@ -687,7 +687,7 @@ summary_stats_results <- do.call(rbind, summary_stats_list)
 
 view(summary_stats_results)
 
-#write_xlsx(summary_stats_results, "C:/Users/tevinger/Downloads/Group summary stats with Watershed.xlsx")
+write_xlsx(summary_stats_results, "C:/Users/tevinger/Downloads/Group summary stats by Group_updated alkalinity.xlsx")
 ```
 
 # Site Classification Group Comparison Statistics

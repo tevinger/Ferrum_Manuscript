@@ -1187,7 +1187,7 @@ Alk_plot <- ggplot(Alk_long, aes(x = New_Groups, y = Conc)) +
   theme(
     legend.position = "none",
     axis.title.y = element_blank(),
-    axis.text.y = element_blank(),
+    #axis.text.y = element_blank(),
     #axis.title.y = element_text(margin = margin(r = 6)),
     #axis.ticks.length = unit(1, "cm"),
     legend.title = element_text(size = 14),   # legend title size
@@ -1198,7 +1198,7 @@ Alk_plot <- ggplot(Alk_long, aes(x = New_Groups, y = Conc)) +
 
 Alk_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Alk_V3 no labels.png", Alk_plot, width = 1.75, height = 3.25, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Alk_V4 labels.png", Alk_plot, width = 1.75, height = 3.25, dpi = 300)
 
 ```
 

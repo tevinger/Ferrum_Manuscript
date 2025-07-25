@@ -75,11 +75,11 @@ library(ggpattern) #need to install rlang package I think for ggpattern to be ab
 
 #view(working_Ferrum_data)
 
-Alaska_DataRelease_2022_2023_Ferrum_V9 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V9_REE.xlsx")
+Alaska_DataRelease_2022_2023_Ferrum_V10 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V10.xlsx")
 ```
 
 ```{r}
-working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V10 %>%
   dplyr::select(ParkID,
                 Watershed,
                 #Subcatchment,
@@ -1366,7 +1366,7 @@ upstream_DOC
 ## DF modifications
 Everything other than metals
 ```{r}
-view(Seep_df) # check the column numbers
+#view(Seep_df) # check the column numbers
 
 # make a data frame for all variables other than metals
 Seep_long <- Seep_df %>%
@@ -1415,7 +1415,7 @@ All metals
 ```{r}
 # create a data frame for all metal data - filtered, unfiltered, and particulate
 
-view(Seep_df) # check the column numbers
+#view(Seep_df) # check the column numbers
 
 
 Seep_metals_long <- Seep_df %>%

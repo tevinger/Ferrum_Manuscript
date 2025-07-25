@@ -662,7 +662,7 @@ for (i in seq_along(elements)) {
     #dplyr::select(6,9:70) %>% # Season
     dplyr::select(2,4,19:82) %>% # New Grouping
     filter(!is.na(.data[[column]])) %>%
-    group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
+    group_by(New_Grouping, Watershed) %>% #This is where you can change what variable you want to group the data by
     summarise(
     Variable = element,
     Mean = round(mean(.data[[column]], na.rm = TRUE), 2),
@@ -685,9 +685,12 @@ for (i in seq_along(elements)) {
 # Combine all individual data frames into one
 summary_stats_results <- do.call(rbind, summary_stats_list)
 
+summary_stats_results <- summary_stats_results %>%
+  arrange(Watershed)
+
 view(summary_stats_results)
 
-write_xlsx(summary_stats_results, "C:/Users/tevinger/Downloads/Group summary stats by Group_updated alkalinity.xlsx")
+write_xlsx(summary_stats_results, "C:/Users/tevinger/Downloads/Group summary stats by Group and Watershed_updated alkalinity_ordered by watershed.xlsx")
 ```
 
 # Site Classification Group Comparison Statistics

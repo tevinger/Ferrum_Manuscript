@@ -639,6 +639,7 @@ write_xlsx(summary_stats_wide, "C:/Users/tayta/Downloads/Reference Site Summary 
 ```
 
 # Updated Alkalinity Stats
+## Summary stats
 ```{r}
 elements <- c("Alk")
 columns <- c("Alk_mgCaCO3_per_l")
@@ -692,6 +693,111 @@ view(summary_stats_results)
 
 write_xlsx(summary_stats_results, "C:/Users/tevinger/Downloads/Summ.Stats.by Group and Watershed_updated alk_V2.xlsx")
 ```
+
+## Shapiro Test for normality
+```{r}
+library(dplyr)
+library(purrr)
+library(broom)
+library(rstatix)
+
+# List of columns to analyze
+columns_to_model <- c("Alk_mgCaCO3_per_l")
+
+pdf("residuals_plots.pdf")  # Start a new PDF file
+
+# Initialize a results list
+model_results <- list()
+
+# Loop through each variable
+for (col in columns_to_model) {
+  
+  # Fit the model (example: linear model with New_Grouping as predictor)
+  model <- lm(Grouped_Ferrum_2022_2023_data[[col]] ~ Grouped_Ferrum_2022_2023_data$New_Grouping, data = Grouped_Ferrum_2022_2023_data)
+  
+  # Extract residuals
+  residuals <- resid(model)
+  
+  # Plot histogram
+  hist(residuals, main = paste("Residuals Histogram:", col), xlab = "Residuals")
+  
+  # Plot QQ plot
+  qqnorm(residuals, main = paste("QQ Plot of Residuals:", col))
+  qqline(residuals)
+  
+  # Perform Shapiro-Wilk test on residuals
+  test_result <- tryCatch(
+    shapiro.test(residuals),
+    error = function(e) NULL
+  )
+  
+  # Create the interpretation
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The residuals are likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store the results in a data frame
+  model_results[[col]] <- data.frame(
+    Variable = col,
+    W = if (!is.null(test_result)) test_result$statistic else NA,
+    p_value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+}
+
+dev.off()  # Close the PDF device
+
+# Combine all results into a single data frame
+shapiro_results <- bind_rows(model_results)
+
+# Print results
+view(shapiro_results)
+
+# alkalinity data is still normally distributed
+```
+
+## ANOVA
+```{r}
+# make model for Alkalinity
+# using lmer because alkalinity was measured multiple times per site in this dataset across 2022 and 2023 making them not entirely independent 
+alk_model <- lmer(Alk_mgCaCO3_per_l ~ New_Grouping + (1 | Field_label), data = Grouped_Ferrum_2022_2023_data)
+
+# run a one-way ANOVA on Alkalinity
+alk_anova <- anova(alk_model) # Gives Type III ANOVA table with p-values
+print(alk_anova)
+write.csv(as.data.frame(alk_anova), "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/alk_anova_results.csv", row.names = TRUE) # save ANOVA table
+
+#ANOVA Results explanation
+  # Sum Sq (20833): The variation in alkalinity explained by New_Grouping
+  # Mean Sq (5208.2): The average variation per degree of freedom
+  # NumDF (4): Degrees of freedom for New_Grouping (number of levels - 1)
+  # DenDF = 41.39: Estimated denominator degrees of freedom from Satterthwaite approximation (accounts for random effect structure)
+  # F value = 9.56: This is the ratio of between-group variance to within-group variance — a higher F suggests more evidence that group means differ
+  # The p-value — the probability that this effect is due to random chance
+    # p-value = 1.438e-05 (or 0.00001438): This is highly significant (p < 0.001), meaning there is strong evidence that New_Grouping has a statistically significant effect on the response variable.
+
+# Estimated marginal means (group means adjusted for random effects)
+alk_means <- emmeans(alk_model, ~ New_Grouping)
+
+# Tukey-adjusted pairwise comparisons
+alk_pairwise_results <- contrast(alk_means, method = "pairwise", adjust = "tukey")
+summary(alk_pairwise_results)
+
+pairwise_df <- as.data.frame(summary(alk_pairwise_results))
+write.csv(alk_pairwise_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/alk_tukey_pairwise_results.csv", row.names = FALSE)
+
+alk_cld <- cld(alk_means, Letters = letters, adjust = "tukey")
+cld_df <- as.data.frame(alk_cld)
+write.csv(cld_df,
+          "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/alk_tukey_grouping_cld.csv", row.names = FALSE)
+
+# No differences from the tukey adjusted pairwise comparison
+```
+
 
 # Site Classification Group Comparison Statistics
 ## set elements and columns for group comparison stats loop

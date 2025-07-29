@@ -98,18 +98,18 @@ SalmonR_2023_river_data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Pro
 
 ## Filter Data
 ```{r}
-SalmonR_filtered_MS <- SalmonR_2023_alkalinity %>%
+SalmonR_filtered_MS <- SalmonR_2023_river_data %>%
   filter(Hyd_Classification == "Mainstem") %>%
-  mutate(New_Grouping = ifelse(is.na(New_Grouping), "normal", New_Grouping))
+  mutate(New_Grouping = ifelse(is.na(New_Grouping), "normal", New_Grouping)) # fill in the groups that don't have a site_group with normal
 
-SalmonR_filtered_Trib <- SalmonR_2023_alkalinity %>%
+SalmonR_filtered_Trib <- SalmonR_2023_river_data %>%
   filter(Hyd_Classification == "Tributary") %>%
-  mutate(New_Grouping = ifelse(New_Grouping == "Downstream MS", "Impaired Tributary", New_Grouping))
+  mutate(New_Grouping = ifelse(New_Grouping == "Downstream MS", "Impaired Tributary", New_Grouping)) # this fixes the group that Anaktok_1 is in for the Salmon River
 
-Salmon_impaired_tribs <- SalmonR_2023_alkalinity %>%
+Salmon_impaired_tribs <- SalmonR_2023_river_data %>%
   dplyr::filter(Site_Classification == "Impaired")
 
-Salmon_unimpaired_tribs <- SalmonR_2023_alkalinity %>%
+Salmon_unimpaired_tribs <- SalmonR_2023_river_data %>%
   dplyr::filter(Site_Classification == "Unimpaired")
 ```
 

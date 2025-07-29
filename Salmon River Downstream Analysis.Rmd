@@ -384,7 +384,11 @@ Data frames
 ```{r}
 SalmonR_pH <- SalmonR_2023_river_data %>%
   dplyr::select(SamplingEventID, New_Grouping, Hyd_Classification,Rel_Water_Area_plotting, pH) %>%
-  filter(!is.na(Rel_Water_Area_plotting))
+  filter(!is.na(Rel_Water_Area_plotting)) %>%
+  mutate(
+    H = 10^(-pH)
+  )
+  
 
 view(SalmonR_pH)
 ```
@@ -392,7 +396,10 @@ view(SalmonR_pH)
 Tributary data frame
 ```{r}
 SalmonR_trib_pH_area <- SalmonR_filtered_Trib %>%
-  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, pH)
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, pH) %>%
+  mutate(
+    H = 10^(-pH)
+  )
 
 view(SalmonR_trib_pH_area)
 ```
@@ -433,11 +440,12 @@ rel_data <- SalmonR_pH %>%
   relocate(RefID, .after = SamplingEventID) %>%
   left_join(SalmonR_pH %>%
               dplyr::select(RefID = SamplingEventID, 
-                            ref_pH = pH),
+                            ref_H = H),
             by = "RefID") %>%
+  # calculate the concentration relative to the nearest mainstem site (ref)
   mutate(
-    rel_pH = pH / ref_pH
-  )
+    rel_H = H / ref_H
+  ) 
 
 view(rel_data)
 
@@ -446,7 +454,7 @@ view(rel_data)
 ```{r}
 # Join the relative concentrations to the main data
 rel_data_to_join <- rel_data %>%
-  dplyr::select(SamplingEventID, rel_pH)
+  dplyr::select(SamplingEventID, rel_H)
 
 SalmonR_pH_with_rel <- SalmonR_pH %>%
   left_join(rel_data_to_join, by = "SamplingEventID")
@@ -466,12 +474,12 @@ df_expanded <- full_sequence %>%
   left_join(rel_data, by = "Rel_Water_Area_plotting")
 
 rel_data_to_plot <- df_expanded %>%
-  dplyr::select(-c(pH, rel_pH)) %>%
+  dplyr::select(-c(pH, H, ref_H)) %>% # keep only the concentrataion relative to the mainstem (rel_)
   mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
 
 Anaktok_salmon <- rel_data %>%
-  filter(Rel_Water_Area_plotting == 6.35) %>%
-  dplyr::select(-c(u_Zn_mcg_per_l, f_Zn_mcg_per_l, p_Zn_mcg_per_l, ref_u_Zn, ref_f_Zn, ref_p_Zn)) %>%
+  filter(Rel_Water_Area_plotting == 6.35) %>% # select anaktok site
+  dplyr::select(-c(pH, H, ref_H)) %>% # keep only the concentrataion relative to the mainstem (rel_)
   mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
 
 # Replace the existing row with the one from Anaktok_salmon
@@ -487,10 +495,8 @@ Manually add data values to relative data to control more of how the NA values a
 ## Use this if values need to be set manually prior to filling the missing values
 
 mod_data <- data.frame(
-  Rel_Water_Area_plotting = c(4.35, 6.2, 6.3, 7.95, 8.95, 10.75, 10.95, 14),
-  rel_u_Zn = c(2, 0.6, 0.02, 0.15, 0.01, 0.2, 2, 0),
-  rel_f_Zn = c(4, 3, 0.06, 0.3, 0.01, 0.4, 1, 0),
-  rel_p_Zn = c(2, 0.004, 0.004, 0.055, 0.01, 0.1, 6, 0)
+  Rel_Water_Area_plotting = c(4.35, 4.7, 5.6, 6.2, 6.3, 7.95, 8.05, 8.95, 10.75, 10.95, 14),
+  rel_H = c(0.1, 0.1, 0.1, 0.01, 0.01, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
 ) %>%
   mutate(across(everything(), as.numeric))
 
@@ -500,28 +506,29 @@ rel_data_mod <- rel_data_to_plot %>%
 view(rel_data_mod)
 ```
 
-Linear interpolation using na.approx
+Optional - change the highest value
 ```{r}
 ## use this if any values need to be manually changed for the way the plot looks
 
 # Manually change the highest value
 rel_data_mod2 <- rel_data_mod %>%
-  mutate(rel_f_Zn = case_when(
-    Rel_Water_Area_plotting == 4.75 ~ 75,
-    TRUE ~ rel_f_Zn  # keep original value if no match
+  mutate(rel_H = case_when(
+    Rel_Water_Area_plotting == 4.75 ~ 20,
+    TRUE ~ rel_H  # keep original value if no match
   ))
 ```
 
+Linear interpolation using na.approx
 ```{r}
 # Apply linear interpolation to all numeric columns except Rel_Water_Area_plotting
-rel_data_to_plot_interp <- rel_data_mod %>%
+rel_data_to_plot_interp <- rel_data_mod2 %>%
   mutate(across(
     .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
     .fns = ~ na.approx(., x = Rel_Water_Area_plotting, na.rm = FALSE, rule = 2)
   ))
 
 # Make the values before the first tributary 0 (adjust column indices if needed)
-rel_data_to_plot_interp[1:75, 6:8] <- 0
+rel_data_to_plot_interp[1:75, 6] <- 0
 
 view(rel_data_to_plot_interp)
 
@@ -529,12 +536,17 @@ view(rel_data_to_plot_interp)
 
 ### Trib heat plots
 ```{r}
-# Heatmap for filtered Zn
-f_Zn_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Zn)) +
+# Heat plot for pH of tributaries
+pH_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_H)) +
   geom_tile(color = NA, width = 0.05) +
   geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
              linetype = "dashed", color = "black", linewidth = 0.5) +
   scale_fill_gradient(low = "white", high = "darkred") +
+  #scale_fill_gradientn(
+    #colours = c("blue", "red"),
+    #values = scales::rescale(c(0, 1, 20)),  # Normalize to [0,1] scale
+    #limits = c(0, 20)
+  #) + 
   labs(
     title = NULL,
     x = NULL,
@@ -547,40 +559,14 @@ f_Zn_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
   DA_theme +
   theme(
     axis.text.y = element_blank(),
-    legend.position = "none",
+    #legend.position = "none",
+    legend.position = "top",
     axis.ticks.y = element_blank(),
     panel.grid = element_blank(),
     axis.text.x = element_blank()
   )
 
-f_Zn_heat
-
-# Heatmap for particulate Zn
-p_Zn_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_p_Zn)) +
-  geom_tile(color = NA, width = 0.05) +
-  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
-             linetype = "dashed", color = "black", linewidth = 0.5) +
-  scale_fill_gradient(low = "white", high = "#301934") +
-  labs(
-    title = NULL,
-    x = NULL,
-    y = NULL,
-    fill = "Tributary:Mainstem"
-  ) +
-  coord_cartesian(x = c(1, 22.5)) +
-  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
-  theme_minimal() +
-  DA_theme +
-  theme(
-    axis.text.y = element_blank(),
-    axis.ticks.y = element_blank(),
-    legend.position = "none",
-    axis.ticks.x = element_blank(),
-    panel.grid = element_blank(),
-    axis.text.x = element_blank()
-  )
-
-p_Zn_heat
+pH_heat
 ```
 
 ### geom point
@@ -759,6 +745,8 @@ DA_labels
 SO4_breaks <- seq(0,900, by = 50)
 SO4_labels <- c(0,"",100, "", 200, "", 300, "", 400, "", 500, "", 600, "", 700, "", 800, "850", 900)
 ```
+
+
 
 ```{r}
 SalmonR_SO4_top <- ggplot() +

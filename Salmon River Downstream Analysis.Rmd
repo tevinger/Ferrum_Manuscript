@@ -92,7 +92,7 @@ write_xlsx(SalmonR_2023_river_data, "C:/Users/tevinger/Box/Poulin Lab ETOX/Proje
 #classification value for Anaktok to reflect this sample site as a tributary on the Salmon 
 # Updated Site Classification for tributaries
 
-SalmonR_2023_river_data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Salmon River July 2023 Data_updated.xlsx")
+SalmonR_2023_river_data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Salmon River July 2023 Data_v2_updated.xlsx")
 
 ```
 

@@ -337,14 +337,253 @@ boxplot_colors <- c(
 # Downstream Analysis by Relative Watershed Area
 ## pH
 ```{r}
-DA_x_breaks <- c(1,2.5,5,7.5,10,12.5,15,17.5,20,22.5)
-DA_x_labels <- c(1,"",5,"",10,"",15,"",20,"")
-DA_labels
+DA_x_breaks <- c(0,1,2.5,5,7.5,10,12.5,15,17.5,20,22.5)
+DA_x_labels <- c("", 1,"",5,"",10,"",15,"",20,"")
+DA_x_labels
 
 pH_y_breaks <- seq(4.4,8.6, by = 0.2)
-pH_y_labels <- c(4.4, "4.6", "", "5.0", 5.2, "", 5.6, "", 6.0, "", 6.4, "", 6.8 , "", 7.2, "", 7.6, "", "8.0", "", 8.4, "")
+pH_y_labels <- c(4.4, "4.6", "", "5.0", 5.2, "", 5.6, "", 6.0, "", 6.4, "", 6.8 , "", 7.2, 7.4, 7.6, 7.8, "8.0", 8.2, 8.4, "")
 ```
 
+### Area plot
+```{r}
+SalmonR_pH_area <- ggplot() +
+  # area plots
+  geom_area(data = SalmonR_filtered_MS, 
+            aes(x = Rel_Water_Area_plotting, y = pH),
+            #fill = "#28968b"
+            fill = "#2daa9e",
+            #alpha = 0.85
+            ) +
+  
+  geom_line(data = SalmonR_filtered_MS, aes(x = Rel_Water_Area_plotting, y = pH), color = "#1d6e66", linewidth = 0.4) +
+  
+  # lines for locations of sampled tributaries
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11), linetype = "dashed", color = "grey15", linewidth = 0.5) +
+  
+  coord_cartesian(x = c(1,22.5), y = c(7.3,8.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
+  scale_y_continuous(breaks = pH_y_breaks, labels = pH_y_labels) +
+  labs(
+    x = NULL,
+    y = NULL,
+    title = NULL
+    #x = "Relative Water Area",
+    #y = "pH"
+  ) +
+  theme_minimal() +
+  DA_theme
+
+SalmonR_pH_area
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Zn area.png", SalmonR_pH_area, width = 4.8, height = 1.92, dpi = 300)
+```
+
+### Modifications for heat plots
+Data frames
+```{r}
+SalmonR_pH <- SalmonR_2023_river_data %>%
+  dplyr::select(SamplingEventID, New_Grouping, Hyd_Classification,Rel_Water_Area_plotting, pH) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+
+view(SalmonR_pH)
+```
+
+Tributary data frame
+```{r}
+SalmonR_trib_pH_area <- SalmonR_filtered_Trib %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, pH)
+
+view(SalmonR_trib_pH_area)
+```
+
+Modifications for heat plots
+```{r}
+# Calculate tributary metal concentrations relative to the nearest upstream MS sample concentration for heat plot
+
+# Step 1: A reference map for each row that needs normalization
+ref_map <- tibble(
+  SamplingEventID = c(
+    "SalmonR_Trib1_20230722_1745",
+    "SalmonR_Trib2_20230722_1911",
+    "SheepC_1_20230719_0923",
+    "Anaktok_1_20230723_1945",
+    "SalmonR_Trib3_20230724_1140",
+    "SalmonR_Trib4_20230724_1155",
+    "SalmonR_Trib5_20230724_1311",
+    "SalmonR_Trib6_20230724_1428",
+    "SalmonR_Trib7_20230724_1453"
+  ),
+  RefID = c(
+    "SalmonR_MS_above_Trib1_20230722_1753",
+    "SalmonR_MS_above_Trib2_20230722_1915",
+    "SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_above_Trib6_20230724_1439",
+    "SalmonR_MS_above_Trib6_20230724_1439"
+  )
+)
+
+# Step 2: Join main data to get both the value row and its reference row
+rel_data <- SalmonR_pH %>%
+  inner_join(ref_map, by = "SamplingEventID") %>%
+  relocate(RefID, .after = SamplingEventID) %>%
+  left_join(SalmonR_pH %>%
+              dplyr::select(RefID = SamplingEventID, 
+                            ref_pH = pH),
+            by = "RefID") %>%
+  mutate(
+    rel_pH = pH / ref_pH
+  )
+
+view(rel_data)
+
+```
+
+```{r}
+# Join the relative concentrations to the main data
+rel_data_to_join <- rel_data %>%
+  dplyr::select(SamplingEventID, rel_pH)
+
+SalmonR_pH_with_rel <- SalmonR_pH %>%
+  left_join(rel_data_to_join, by = "SamplingEventID")
+
+view(SalmonR_pH_with_rel)
+
+```
+
+```{r}
+# Extend the data to have a fake continuous x axis with fake data
+
+# Create full sequence from 0 to 22.5 by 0.05
+full_sequence <- data.frame(Rel_Water_Area_plotting = seq(0, 22.5, by = 0.05))
+
+# Join original df with the full sequence
+df_expanded <- full_sequence %>%
+  left_join(rel_data, by = "Rel_Water_Area_plotting")
+
+rel_data_to_plot <- df_expanded %>%
+  dplyr::select(-c(pH, rel_pH)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+Anaktok_salmon <- rel_data %>%
+  filter(Rel_Water_Area_plotting == 6.35) %>%
+  dplyr::select(-c(u_Zn_mcg_per_l, f_Zn_mcg_per_l, p_Zn_mcg_per_l, ref_u_Zn, ref_f_Zn, ref_p_Zn)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+# Replace the existing row with the one from Anaktok_salmon
+rel_data_to_plot <- rel_data_to_plot %>%
+  rows_update(Anaktok_salmon, by = "Rel_Water_Area_plotting")
+
+view(rel_data_to_plot)
+
+```
+
+Manually add data values to relative data to control more of how the NA values are interpolated
+```{r}
+## Use this if values need to be set manually prior to filling the missing values
+
+mod_data <- data.frame(
+  Rel_Water_Area_plotting = c(4.35, 6.2, 6.3, 7.95, 8.95, 10.75, 10.95, 14),
+  rel_u_Zn = c(2, 0.6, 0.02, 0.15, 0.01, 0.2, 2, 0),
+  rel_f_Zn = c(4, 3, 0.06, 0.3, 0.01, 0.4, 1, 0),
+  rel_p_Zn = c(2, 0.004, 0.004, 0.055, 0.01, 0.1, 6, 0)
+) %>%
+  mutate(across(everything(), as.numeric))
+
+rel_data_mod <- rel_data_to_plot %>%
+  rows_update(mod_data, by = "Rel_Water_Area_plotting")
+
+view(rel_data_mod)
+```
+
+Linear interpolation using na.approx
+```{r}
+## use this if any values need to be manually changed for the way the plot looks
+
+# Manually change the highest value
+rel_data_mod2 <- rel_data_mod %>%
+  mutate(rel_f_Zn = case_when(
+    Rel_Water_Area_plotting == 4.75 ~ 75,
+    TRUE ~ rel_f_Zn  # keep original value if no match
+  ))
+```
+
+```{r}
+# Apply linear interpolation to all numeric columns except Rel_Water_Area_plotting
+rel_data_to_plot_interp <- rel_data_mod %>%
+  mutate(across(
+    .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
+    .fns = ~ na.approx(., x = Rel_Water_Area_plotting, na.rm = FALSE, rule = 2)
+  ))
+
+# Make the values before the first tributary 0 (adjust column indices if needed)
+rel_data_to_plot_interp[1:75, 6:8] <- 0
+
+view(rel_data_to_plot_interp)
+
+```
+
+### Trib heat plots
+```{r}
+# Heatmap for filtered Zn
+f_Zn_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Zn)) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "white", high = "darkred") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = NULL,
+    fill = "Tributary:Mainstem"
+  ) +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.text.y = element_blank(),
+    legend.position = "none",
+    axis.ticks.y = element_blank(),
+    panel.grid = element_blank(),
+    axis.text.x = element_blank()
+  )
+
+f_Zn_heat
+
+# Heatmap for particulate Zn
+p_Zn_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_p_Zn)) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "white", high = "#301934") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = NULL,
+    fill = "Tributary:Mainstem"
+  ) +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    legend.position = "none",
+    axis.ticks.x = element_blank(),
+    panel.grid = element_blank(),
+    axis.text.x = element_blank()
+  )
+
+p_Zn_heat
+```
+
+### geom point
 ```{r}
 SalmonR_pH_top <- ggplot() +
   # Line plot for SalmonR_filtered_MS

@@ -122,7 +122,7 @@ Salmon_downstream_difference <- SalmonR_filtered_MS %>%
                 Diss_oxy_percent_sat,
                 Spec_Cond_microS_per_cm,
                 DIC_mgC_per_l,
-                Alk_mgCaCO3_L,
+                Alk_mgCaCO3_per_l,
                 DOC_mgC_per_l,
                 f_Cl_mg_per_l,
                 f_NO3_mgN_per_l,
@@ -184,8 +184,8 @@ u_V_mcg_per_l,
 u_Y_mcg_per_l,
 u_Zn_mcg_per_l) %>%
   dplyr::select(-contains("qa")) %>%
-  filter(Distance_km %in% c(0, 103.23)) %>%
-  dplyr::select(-c(Distance_km)) %>%
+  filter(Distance_km %in% c(0, 103.23)) %>% # select the most upstream and most downstream mainstem sites
+  dplyr::select(-c(Distance_km)) %>% # remove distance column
     pivot_longer(
     cols = -c(SiteID),
     names_to = "variable",
@@ -195,14 +195,16 @@ u_Zn_mcg_per_l) %>%
     names_from = SiteID,
     values_from = value
   ) %>%
-  filter(!is.na(SalmonR_MS2)) %>%
+  filter(!is.na(SalmonR_MS2)) %>% # filter out na values for the SalmonR_MS2 site (upstream site) 
+  mutate(SalmonR_MS2 = if_else(SalmonR_MS2 == 0, 0.000001, SalmonR_MS2)) %>% # substitute 0 values for 0.000001 so that a calculation can be done
+  # difference calculations comparing most upstream (MS2) to most downtream (MS6)
   mutate(downstream_diff_conc = SalmonR_MS6 - SalmonR_MS2) %>%
-  mutate(downstream_diff = (SalmonR_MS6/SalmonR_MS2)) %>%
-  mutate(downstream_diff_percent = (SalmonR_MS6/SalmonR_MS2) * 100)
+  mutate(downstream_diff_fold_greater = (SalmonR_MS6/SalmonR_MS2)) %>%
+  mutate(downstream_diff_percent_change = (downstream_diff_conc/SalmonR_MS2) * 100)
 
 view(Salmon_downstream_difference)
 
-#write_xlsx(Salmon_downstream_difference, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Salmon River Downstream Analysis/Salmon River Downstream Differences.xlsx")
+write_xlsx(Salmon_downstream_difference, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Salmon River Downstream Analysis/Salmon River Downstream Differences.xlsx")
 ```
 
 

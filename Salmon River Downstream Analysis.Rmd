@@ -96,81 +96,6 @@ SalmonR_2023_river_data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Pro
 
 ```
 
-# Calculate Alkalinity from DIC
-```{r}
-# the calculate_Alk_from_DIC function was made in R file called "DIC and Alkalinity Conversions" on Box
-SalmonR_2023_alkalinity <- SalmonR_2023_river_data
-
-SalmonR_2023_alkalinity <- calculate_Alk_from_DIC(SalmonR_2023_alkalinity)
-
-SalmonR_2023_alkalinity <- SalmonR_2023_alkalinity %>%
-  relocate(Alk_eq_L, Alk_mEq_L, Alk_mgCaCO3_L, .after = pH) 
-
-view(SalmonR_2023_alkalinity)
-
-SalmonR_MS_alkalinity <- SalmonR_2023_alkalinity %>%
-  filter(SiteID %in% c("SalmonR_MS2", "SalmonR_MS6")) %>%
-  dplyr::select(SiteID, pH, Temp_deg_celsius, DIC_mgC_per_l, Alk_eq_L, Alk_mEq_L, Alk_mgCaCO3_L)
-```
-
-## Manual check of calculation
-```{r}
-# manual check that alkalinity calculation function worked
-SalmonR_MS2 <- SalmonR_2023_river_data %>%
-  filter(SiteID == "SalmonR_MS2") %>%
-  dplyr::select(SiteID, pH, Temp_deg_celsius, DIC_mgC_per_l)
-
-SalmonR_MS2_alkalinity <- SalmonR_2023_alkalinity %>%
-  filter(SiteID == "SalmonR_MS2") %>%
-  dplyr::select(SiteID, pH, Temp_deg_celsius, DIC_mgC_per_l, Alk_eq_L, Alk_mEq_L, Alk_mgCaCO3_L)
-```
-
-```{r}
-# site values
-pH <- 8.33
-Temp_K <- 6.7 + 273.15
-Temp_K
-DIC_mgC_per_l <- 28.39
-  
-  # Equilibrium constant temperature corrections
-  # General temperature correction equation is in the USGS document with coefficients from Stumm and Morgan (1996)
-  # log10(K) = a1 + a2*T + a3/T + a4*log10(T) + a5/(T^2); T = (T in deg C) + 273.15
-  
-logK1 <-  (-356.3094) + (-0.06091964 * Temp_K) + (21834.37 / Temp_K) + (126.8339 * log10(Temp_K)) + (-1684915 / (Temp_K^2))
-K1 <- 10^logK1
-
-K1
-
-logK2 <- (-107.8871) + (-0.03252849 * Temp_K) + (5151.79/ Temp_K) + (38.92561 * log10(Temp_K)) + (-563713.9 / (Temp_K^2))
-K2 <- 10^logK2
-
-K2
-  
-  # Calculate [H+] from pH
-  H <- 10^(-pH)
-  
-H
-  
-  # Alpha fractions
-  alpha_1 <- (K1 * H) / ((H^2) + (K1 * H) + (K1 * K2))
-  alpha_2 <- (K1 * K2) / ((H^2) + (K1 * H) + (K1 * K2))
-  
-alpha_1
-alpha_2
-
-  # Convert DIC (mgC/L) to mol/L
-  DIC_mol_L <- DIC_mgC_per_l / (12.01*1000) # (12.01 g/mol)
-  
-  # Calculate alkalinity
-  Alk_eq_L <- (alpha_1 + 2 * alpha_2) * DIC_mol_L
-  Alk_mEq_L <- Alk_eq_L * 1000
-  Alk_mgCaCO3_L <- Alk_mEq_L * (100.087 / 2)  # CaCO3 MW = 100.087 g/mol, valence = 2
-  
-Alk_eq_L
-Alk_mEq_L
-Alk_mgCaCO3_L
-```
-
 ## Filter Data
 ```{r}
 SalmonR_filtered_MS <- SalmonR_2023_alkalinity %>%
@@ -3571,4 +3496,81 @@ Sulfate_temporal_bp_legend <- g_legend(Sulfate_temporal_bp)
 Sulfate_temporal_bp_legend
 
 ggsave('C:/Users/tayta/Downloads/Aggie Seasons Legend.png', Sulfate_temporal_bp_legend, width = 4, height = 2, bg = "transparent", dpi = 300)
+```
+
+
+# Old - Alkalinity Calculation
+## Calculate Alkalinity from DIC
+```{r}
+# the calculate_Alk_from_DIC function was made in R file called "DIC and Alkalinity Conversions" on Box
+SalmonR_2023_alkalinity <- SalmonR_2023_river_data
+
+SalmonR_2023_alkalinity <- calculate_Alk_from_DIC(SalmonR_2023_alkalinity)
+
+SalmonR_2023_alkalinity <- SalmonR_2023_alkalinity %>%
+  relocate(Alk_eq_L, Alk_mEq_L, Alk_mgCaCO3_L, .after = pH) 
+
+view(SalmonR_2023_alkalinity)
+
+SalmonR_MS_alkalinity <- SalmonR_2023_alkalinity %>%
+  filter(SiteID %in% c("SalmonR_MS2", "SalmonR_MS6")) %>%
+  dplyr::select(SiteID, pH, Temp_deg_celsius, DIC_mgC_per_l, Alk_eq_L, Alk_mEq_L, Alk_mgCaCO3_L)
+```
+
+## Manual check of calculation
+```{r}
+# manual check that alkalinity calculation function worked
+SalmonR_MS2 <- SalmonR_2023_river_data %>%
+  filter(SiteID == "SalmonR_MS2") %>%
+  dplyr::select(SiteID, pH, Temp_deg_celsius, DIC_mgC_per_l)
+
+SalmonR_MS2_alkalinity <- SalmonR_2023_alkalinity %>%
+  filter(SiteID == "SalmonR_MS2") %>%
+  dplyr::select(SiteID, pH, Temp_deg_celsius, DIC_mgC_per_l, Alk_eq_L, Alk_mEq_L, Alk_mgCaCO3_L)
+```
+
+```{r}
+# site values
+pH <- 8.33
+Temp_K <- 6.7 + 273.15
+Temp_K
+DIC_mgC_per_l <- 28.39
+  
+  # Equilibrium constant temperature corrections
+  # General temperature correction equation is in the USGS document with coefficients from Stumm and Morgan (1996)
+  # log10(K) = a1 + a2*T + a3/T + a4*log10(T) + a5/(T^2); T = (T in deg C) + 273.15
+  
+logK1 <-  (-356.3094) + (-0.06091964 * Temp_K) + (21834.37 / Temp_K) + (126.8339 * log10(Temp_K)) + (-1684915 / (Temp_K^2))
+K1 <- 10^logK1
+
+K1
+
+logK2 <- (-107.8871) + (-0.03252849 * Temp_K) + (5151.79/ Temp_K) + (38.92561 * log10(Temp_K)) + (-563713.9 / (Temp_K^2))
+K2 <- 10^logK2
+
+K2
+  
+  # Calculate [H+] from pH
+  H <- 10^(-pH)
+  
+H
+  
+  # Alpha fractions
+  alpha_1 <- (K1 * H) / ((H^2) + (K1 * H) + (K1 * K2))
+  alpha_2 <- (K1 * K2) / ((H^2) + (K1 * H) + (K1 * K2))
+  
+alpha_1
+alpha_2
+
+  # Convert DIC (mgC/L) to mol/L
+  DIC_mol_L <- DIC_mgC_per_l / (12.01*1000) # (12.01 g/mol)
+  
+  # Calculate alkalinity
+  Alk_eq_L <- (alpha_1 + 2 * alpha_2) * DIC_mol_L
+  Alk_mEq_L <- Alk_eq_L * 1000
+  Alk_mgCaCO3_L <- Alk_mEq_L * (100.087 / 2)  # CaCO3 MW = 100.087 g/mol, valence = 2
+  
+Alk_eq_L
+Alk_mEq_L
+Alk_mgCaCO3_L
 ```

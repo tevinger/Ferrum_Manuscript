@@ -513,7 +513,7 @@ Optional - change the highest value
 # Manually change the highest value
 rel_data_mod2 <- rel_data_mod %>%
   mutate(rel_H = case_when(
-    Rel_Water_Area_plotting == 4.75 ~ 20,
+    Rel_Water_Area_plotting == 4.75 ~ 10,
     TRUE ~ rel_H  # keep original value if no match
   ))
 ```
@@ -567,6 +567,30 @@ pH_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y = 
   )
 
 pH_heat
+```
+
+### Final pH composite plot
+```{r}
+SalmonR_pH_area_combo <- (
+  pH_heat / SalmonR_pH_area +
+  plot_layout(ncol = 1, nrow = 2, heights = c(1, 6), guides = "collect")
+) &
+  theme(
+    plot.margin = margin(0, 1, 1, 1),
+    legend.position = "top",
+    legend.text = element_text(size = 8),       # smaller legend labels
+    legend.title = element_text(size = 9),      # smaller legend title
+    legend.key.size = unit(0.4, "cm"),
+    legend.margin = margin(2, 2, 0, 2),
+  legend.spacing = unit(0.1, "cm"), # smaller boxes
+    panel.background = element_rect(fill = NA, color = NA),
+    plot.background = element_rect(fill = NA, color = NA)
+  )
+
+SalmonR_pH_area_combo
+
+# Save final plot
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/pH area plus heat plot_V1.png", SalmonR_pH_area_combo, width = 4.6, height = 2.5, dpi = 300)
 ```
 
 ### geom point
@@ -909,8 +933,13 @@ SalmonR_SO4_area_combo <- (
   plot_layout(ncol = 1, nrow = 2, heights = c(1, 6), guides = "collect")
 ) &
   theme(
-    plot.margin = margin(1, 1, 1, 1),
+    plot.margin = margin(0, 1, 1, 1),
     legend.position = "top",
+    legend.text = element_text(size = 8),       # smaller legend labels
+    legend.title = element_text(size = 9),      # smaller legend title
+    legend.key.size = unit(0.4, "cm"),
+    legend.margin = margin(2, 2, 0, 2),
+  legend.spacing = unit(0.1, "cm"), # smaller boxes
     panel.background = element_rect(fill = NA, color = NA),
     plot.background = element_rect(fill = NA, color = NA)
   )

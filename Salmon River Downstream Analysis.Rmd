@@ -75,15 +75,15 @@ Alaska_DataRelease_2022_2023_Ferrum_V10 <- read_excel("C:/Users/tevinger/Box/Pou
 
 ```{r}
 # Select data for Salmon River July 2023 trip
-SalmonR_2023_river_data <-  Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
-  dplyr::filter(Watershed == "Salmon River" | `Field label` == "Anaktok_1") %>%
+SalmonR_2023_river_data <-  Alaska_DataRelease_2022_2023_Ferrum_V10 %>%
+  dplyr::filter(Watershed == "Salmon River" | Field_label == "Anaktok_1") %>%
   dplyr::filter(sample_collection_year == "2023") %>%
   dplyr::filter(sample_collection_month == "July") %>%
   arrange(Distance_km)
 
 view(SalmonR_2023_river_data)
 
-write_xlsx(SalmonR_2023_river_data, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Salmon River July 2023 Data.xlsx")
+write_xlsx(SalmonR_2023_river_data, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Salmon River July 2023 Data_V2.xlsx")
 ```
 
 ```{r}

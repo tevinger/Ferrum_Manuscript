@@ -251,7 +251,8 @@ Wulik_q.p
 
 # Load Aggie Data
 ```{r}
-Agashashok_River_Data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Agashashok_Temporal_Data.xlsx")
+Agashashok_River_Data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Agashashok_Temporal_Data.xlsx",
+                                    sheet = "all_data")
 View(Agashashok_River_Data)
 ```
 
@@ -272,7 +273,7 @@ mutate(
   ) %>%
   relocate(sample_collection_year, sample_collection_month, sample_collection_season, .after = SamplingEventID)
 
-#View(Agashashok_River_Data)
+View(Agashashok_River_Data)
 ```
 
 ```{r}
@@ -323,8 +324,8 @@ sampling_count
 
 ## Data for plots
 ```{r}
-Agashashok_for_plots <- Agashashok_River_Data_filtered %>%
-  filter(SiteID_mod %in% site_counts_by_year$SiteID_mod) %>%
+Agashashok_for_plots <- Agashashok_River_Data %>%
+  #filter(SiteID_mod %in% site_counts_by_year$SiteID_mod) %>% # this was for when I was selecting only a certain set of sites to plot
   dplyr::select(ParkID,
                 Watershed,
                 #Subcatchment,
@@ -332,7 +333,7 @@ Agashashok_for_plots <- Agashashok_River_Data_filtered %>%
                 #New_Grouping,
                 Field_label,
                 SiteID_mod,
-                SiteID_total_count,
+                #SiteID_total_count,
                 Latitude,
                 Longitude,
                 sample_collection_year,
@@ -390,10 +391,52 @@ f_Zn_mcg_per_l
 )
 
 Agashashok_for_plots <- Agashashok_for_plots %>%
-  mutate(across(12:50, as.numeric))
+  mutate(across(11:49, as.numeric))
 
 view(Agashashok_for_plots)
 ```
+
+# Temporal Analysis with all sites
+
+```{r}
+Sulfate_temporal_bp <- Agashashok_for_plots %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = f_SO4_mg_per_l, fill = sample_collection_season)) +
+  geom_boxplot() +
+  scale_y_log10() +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  # Add means as text
+  #geom_text(data = chloride_season_stats, aes(x = as.factor(Year), y = 0.5, 
+                                     #label = paste0("mean =", mean_value), group = Season),
+           # position = position_dodge(width = 0.75), size = 3) +
+  # Add counts as text
+  #geom_vline(xintercept = 4.5, linetype = "dashed", color = "red", size = 1) +
+  labs(
+    title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    y = "Sulfate Concentration (mg/L)",
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(hjust = 1, size = 24, color = "black", face = "bold", angle = 45),  # Rotate x-axis labels
+    plot.title = element_blank(),  # Center and style title
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(size = 25, color = "black", face = "bold"),
+    legend.position = "none",
+    legend.text = element_text(size = 15),
+    legend.title = element_text(size = 17, face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    panel.background = element_rect(fill = "transparent"), # Panel background
+    plot.background = element_rect(fill = "transparent", color = NA) # Plot background
+  ) 
+
+Sulfate_temporal_bp
+```
+
 
 ## Add Subcatchment Column
 ```{r}
@@ -412,8 +455,6 @@ Agashashok_for_plots <- Agashashok_for_plots %>%
   mutate(Subcatchment_year = paste(Subcatchment, sample_collection_year, sep = "_")) %>%
   relocate(Subcatchment_year, .after = Subcatchment)
 ```
-
-## Calculate Alkalinity from DIC
 
 # Summary Stats by Subcatment_year
 ```{r}
@@ -556,7 +597,7 @@ view(summary_combined)
 ```
 
 
-# Pre vs Post onset comparison
+# Stats - Pre vs Post onset comparison
 ```{r}
 onset_df <- Agashashok_for_plots %>%
   mutate(temporal_status = case_when(
@@ -597,7 +638,7 @@ Aggie_NF_onset_df <- onset_df %>%
   filter(Subcatchment == "North Fork")
 ```
 
-## Sulfate
+## Sulfate Stats
 ```{r}
 # use onset_df with sub_temp column that has pre and post
 library(lme4)
@@ -641,7 +682,7 @@ view(combined_contrasts_SO4)
 write_xlsx(combined_contrasts_SO4, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Aggie temporal sulfate pre vs post.xlsx")
 ```
 
-## Alkalinity
+## Alkalinity Stats
 ```{r}
 # use onset_df with sub_temp column that has pre and post
 library(lme4)
@@ -687,7 +728,7 @@ write_xlsx(combined_contrasts_Alk, "C:/Users/tevinger/Box/Poulin Lab ETOX/Projec
 ```
 
 
-#Temporal Boxplots
+# Subcatchment specific Temporal Boxplots
 ## df
 ```{r}
 temporal_df <- summary_combined %>%

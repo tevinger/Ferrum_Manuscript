@@ -476,18 +476,15 @@ view(temporal_df)
 Sulfate_temporal_bp <- temporal_filled %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
   ggplot(aes(x = as.factor(sample_collection_year), y = f_SO4_mg_per_l, fill = sample_collection_season)) +
-  geom_boxplot() +
-  scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225), labels = c(0, "", 50, "", 100, "", 150, "", 200, "")) +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
+  scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_fill_manual(
     values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
   ) +
-  # Add means as text
-  #geom_text(data = chloride_season_stats, aes(x = as.factor(Year), y = 0.5, 
-                                     #label = paste0("mean =", mean_value), group = Season),
-           # position = position_dodge(width = 0.75), size = 3) +
+  coord_cartesian(ylim = c(0, 250)) +
   # Add counts as text
-  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
   labs(
     title = NULL, 
     #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
@@ -504,6 +501,8 @@ Sulfate_temporal_bp <- temporal_filled %>%
         panel.background = element_rect(fill = "transparent", color = NA))
 
 Sulfate_temporal_bp
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V1.png", Sulfate_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ## Alkalinity
@@ -511,18 +510,15 @@ Sulfate_temporal_bp
 Alkalinity_temporal_bp <- temporal_filled %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
   ggplot(aes(x = as.factor(sample_collection_year), y = Alk_mgCaCO3_per_l, fill = sample_collection_season)) +
-  geom_boxplot() +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
+  coord_cartesian(ylim = c(25,225)) +
   scale_y_continuous(breaks = c(25, 50,75,100,125,150,175,200,225), labels = c("", 50, "", 100, "", 150, "", 200, "")) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_fill_manual(
     values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
   ) +
-  # Add means as text
-  #geom_text(data = chloride_season_stats, aes(x = as.factor(Year), y = 0.5, 
-                                     #label = paste0("mean =", mean_value), group = Season),
-           # position = position_dodge(width = 0.75), size = 3) +
   # Add counts as text
-  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.9, alpha = 0.7) +
   labs(
     title = NULL, 
     #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
@@ -539,6 +535,8 @@ Alkalinity_temporal_bp <- temporal_filled %>%
         panel.background = element_rect(fill = "transparent", color = NA))
 
 Alkalinity_temporal_bp
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Alkalinity seasonal temporal bp_V1.png", Alkalinity_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ## pH
@@ -546,18 +544,15 @@ Alkalinity_temporal_bp
 pH_temporal_bp <- temporal_filled %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
   ggplot(aes(x = as.factor(sample_collection_year), y = pH, fill = sample_collection_season)) +
-  geom_boxplot() +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
+  coord_cartesian(ylim = c(7.6, 8.52)) +
   scale_y_continuous(breaks = c(7.5, 7.75, 8.0, 8.25, 8.5), labels = c("7.50", 7.75, "8.00", 8.25, "8.50")) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_fill_manual(
     values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
   ) +
-  # Add means as text
-  #geom_text(data = chloride_season_stats, aes(x = as.factor(Year), y = 0.5, 
-                                     #label = paste0("mean =", mean_value), group = Season),
-           # position = position_dodge(width = 0.75), size = 3) +
   # Add counts as text
-  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.9, alpha = 0.7) +
   labs(
     title = NULL, 
     #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
@@ -574,6 +569,8 @@ pH_temporal_bp <- temporal_filled %>%
         panel.background = element_rect(fill = "transparent", color = NA))
 
 pH_temporal_bp
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/pH seasonal temporal bp_V1.png", pH_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ## temp
@@ -581,7 +578,7 @@ pH_temporal_bp
 temp_temporal_bp <- temporal_filled %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
   ggplot(aes(x = as.factor(sample_collection_year), y = Temp_deg_celsius, fill = sample_collection_season)) +
-  geom_boxplot() +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
   #scale_y_continuous(breaks = c(7.5, 7.75, 8.0, 8.25, 8.5), labels = c("7.50", 7.75, "8.00", 8.25, "8.50")) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_fill_manual(
@@ -592,7 +589,7 @@ temp_temporal_bp <- temporal_filled %>%
                                      #label = paste0("mean =", mean_value), group = Season),
            # position = position_dodge(width = 0.75), size = 3) +
   # Add counts as text
-  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.9, alpha = 0.7) +
   labs(
     title = NULL, 
     #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
@@ -609,6 +606,8 @@ temp_temporal_bp <- temporal_filled %>%
         panel.background = element_rect(fill = "transparent", color = NA))
 
 temp_temporal_bp
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/temp seasonal temporal bp_V1.png", temp_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ## Add Subcatchment Column

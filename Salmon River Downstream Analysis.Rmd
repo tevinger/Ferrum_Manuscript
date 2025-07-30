@@ -1227,11 +1227,20 @@ rel_data <- SalmonR_Fe %>%
   )
   
 view(rel_data)
+
+# only keep values that are greater than 1 for the heat plots
+rel_data_mod <- rel_data %>%
+  mutate(across(
+    .cols = c(rel_u_Fe, rel_f_Fe, rel_p_Fe),
+    .fns = ~ ifelse(. < 1, 0, .)
+  ))
+
+view(rel_data_mod)
 ```
 
 ```{r}
 #join the relative concentrations to the main data
-rel_data_to_join <- rel_data %>%
+rel_data_to_join <- rel_data_mod %>%
   dplyr::select(SamplingEventID, rel_u_Fe, rel_f_Fe, rel_p_Fe)
 
 SalmonR_Fe_with_rel <- SalmonR_Fe %>%
@@ -1248,14 +1257,14 @@ full_sequence <- data.frame(Rel_Water_Area_plotting = seq(0, 22.5, by = 0.05))
 
 # Join original df with the full sequence
 df_expanded <- full_sequence %>%
-  left_join(rel_data, by = "Rel_Water_Area_plotting")
+  left_join(rel_data_mod, by = "Rel_Water_Area_plotting")
 
 rel_data_to_plot <- df_expanded %>%
   dplyr::select(-c(u_Fe_mcg_per_l, f_Fe_mcg_per_l, p_Fe_mcg_per_l, ref_u_Fe, ref_f_Fe, ref_p_Fe)) %>%
    mutate(Rel_Water_Area_plotting = as.numeric(Rel_Water_Area_plotting)) %>%
   mutate(Rel_Water_Area_plotting = round(Rel_Water_Area_plotting, 2))
 
-Anaktok_salmon <- rel_data %>%
+Anaktok_salmon <- rel_data_mod %>%
   filter(Rel_Water_Area_plotting == 6.35) %>%
   dplyr::select(-c(u_Fe_mcg_per_l, f_Fe_mcg_per_l, p_Fe_mcg_per_l, ref_u_Fe, ref_f_Fe, ref_p_Fe)) %>%
    mutate(Rel_Water_Area_plotting = as.numeric(Rel_Water_Area_plotting)) %>%
@@ -1271,10 +1280,10 @@ view(rel_data_to_plot)
 Manually add data values to relative data to control more of how the NA values are interpolated
 ```{r}
 mod_data <- data.frame(
-  Rel_Water_Area_plotting = c(4.7, 5.6, 6.2, 7.95, 8.05, 8.95, 10.85, 10.90, 10.95, 14),
-  rel_u_Fe = c(1, 0.2, 0.02, 0.03, 0.02, 0.7, 0.6, 0.5, 0, 0),
-  rel_f_Fe = c(8, 15, 0.2, 0.3, 0.1, 0.1, 0.09, 0.05, 0, 0),
-  rel_p_Fe = c(1, 0.2, 0.02, 0.02, 0.01, 1.15, 1.05, 1, 0, 0)
+  Rel_Water_Area_plotting = c(4.7, 5.6, 6.2, 7.95, 8.05, 8.95, 10.75, 10.90, 10.95, 14),
+  rel_u_Fe = c(1, 0.2, 0, 0, 0, 0, 0, 0, 0, 0),
+  rel_f_Fe = c(8, 15, 0, 0, 0, 0, 0, 0, 0, 0),
+  rel_p_Fe = c(0.5, 0.2, 0, 0, 0, 0, 0, 0, 0.5, 0)
 ) %>%
   mutate(across(everything(), as.numeric))
 
@@ -1289,7 +1298,7 @@ Linear interpolation using na.approx
 # manually change the highest value
 rel_data_mod2 <- rel_data_mod %>%
   mutate(rel_f_Fe = case_when(
-    Rel_Water_Area_plotting == 4.75  ~ 30,
+    Rel_Water_Area_plotting == 4.75  ~ 25,
     TRUE ~ rel_f_Fe  # keep original value if no match
   ))
 
@@ -1438,7 +1447,7 @@ SalmonR_Fe_area_no_tribs <- ggplot() +
   geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11), linetype = "dashed", color = "grey15", linewidth = 0.5) +
   
   coord_cartesian(x = c(1,22.5), y = c(1,10000)) +
-  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0.02))) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.035, 0.025))) +
   scale_y_log10(breaks = c(0.01,0.1,1,10,100,1000,10000, 100000), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02)), sec.axis = dup_axis()) +
   annotation_logticks(sides = "lr") +
   labs(
@@ -1478,7 +1487,7 @@ f_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
     fill = "Tributary:Mainstem"
   ) +
   coord_cartesian(x = c(1,22.5)) +
-  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.035, 0.025))) +
   theme_minimal() +
   DA_theme +
   theme(
@@ -1505,7 +1514,7 @@ p_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
     fill = "Tributary:Mainstem"
   ) +
   coord_cartesian(x = c(1,22.5)) +
-  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.035, 0.025))) +
   theme_minimal() +
   DA_theme +
   theme(
@@ -1546,7 +1555,7 @@ SalmonR_Fe_area_combo <- (
 
 SalmonR_Fe_area_combo
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Fe area plus heat plot_V2.png", SalmonR_Fe_area_combo, width = 5, height = 2.7, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Fe area plus heat plot_V2.png", SalmonR_Fe_area_combo, width = 5, height = 2.8, dpi = 300)
 ```
 
 na_interpolation - spline

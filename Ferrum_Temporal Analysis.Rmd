@@ -863,6 +863,157 @@ view(pre_shapiro_results)
 ## Alkalinity and Magnesium are normally distributed and need to be compared with an ANOVA
 ```
 
+```{r}
+library(dplyr)
+library(rstatix)
+
+# List of columns to analyze - alkalinity removed from the list because shapiro showed normality
+nonparametric_columns <- c("pH", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Na_mg_l", "f_K_mg_l")
+
+# Initialize a results list
+kruskal_results_list <- list()
+
+# Loop through each variable in your list
+for (col in nonparametric_columns) {
+  
+  # Filter out NAs for the current variable
+  df_filtered <- pre_temporal_stats %>%
+    filter(!is.na(.data[[col]]))
+  
+  # Perform Kruskal-Wallis test comparing sample_collection_season values
+  test_result <- tryCatch(
+    {
+      kruskal_test(as.formula(paste(col, "~ sample_collection_season")), data = df_filtered)
+    },
+    error = function(e) {
+      # Return a default result if test fails
+      data.frame(
+        variable = col,
+        statistic = NA,
+        p = NA,
+        df = NA
+      )
+    }
+  )
+  
+  # Create interpretation
+  interpretation <- if (!is.null(test_result$p) && test_result$p < 0.05) {
+    "Significant difference among groups (reject H0)."
+  } else if (!is.null(merged_result$p)) {
+    "No significant difference among groups (fail to reject H0)."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  test_result$Interpretation <- interpretation
+  
+  # Store the result
+  kruskal_results_list[[col]] <- test_result
+}
+
+# Combine all results into a single dataframe
+pre_kruskal_results_df <- bind_rows(kruskal_results_list)
+
+# Print the results
+view(pre_kruskal_results_df)
+
+## no difference in groups for pH and DOC
+
+#write_xlsx(kruskal_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Kruskal Wallis results.xlsx")
+```
+
+### post hoc Dunn test 
+```{r}
+# List of columns to do the dunn post hoc test for 
+# I removed analytes that did not have any differences identified by the kruskal wallis 
+columns_for_dunn <- c("f_Cl_mg_per_l", "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Na_mg_l", "f_K_mg_l")
+
+library(dplyr)
+library(rstatix)
+library(multcompView)
+
+# Initialize a results list
+dunn_results_list <- list()
+
+# Loop through each variable in columns_for_dunn
+for (col in columns_for_dunn) {
+  
+  # Filter out NAs for the current variable
+  df_filtered <- pre_temporal_stats %>%
+    filter(!is.na(.data[[col]]))
+  
+  # Try performing Dunn's test with Bonferroni adjustment
+  test_result <- tryCatch(
+    {
+      df_filtered %>%
+        dunn_test(as.formula(paste(col, "~ sample_collection_season")), p.adjust.method = "bonferroni")
+    },
+    error = function(e) {
+      # Return a default result if test fails
+      data.frame(
+        Variable = col,
+        group1 = NA,
+        group2 = NA,
+        Z = NA,
+        p = NA,
+        p.adj = NA
+      )
+    }
+  )
+  
+  # Add the variable name to each row
+  test_result$Variable <- col
+  
+  # Store the result
+  dunn_results_list[[col]] <- test_result
+  
+  # If there is at least one valid pairwise comparison, generate the CLD
+  if (!all(is.na(test_result$p.adj))) {
+     # Build a matrix of p-values manually
+    groups <- unique(c(test_result$group1, test_result$group2))
+    pval_matrix <- matrix(1, nrow = length(groups), ncol = length(groups),
+                          dimnames = list(groups, groups))
+    
+    for (i in seq_len(nrow(test_result))) {
+      g1 <- as.character(test_result$group1[i])
+      g2 <- as.character(test_result$group2[i])
+      pval <- test_result$p.adj[i]
+      
+      pval_matrix[g1, g2] <- pval
+      pval_matrix[g2, g1] <- pval  # symmetric
+    }
+    
+    # Generate CLD using multcompView
+    cld <- multcompLetters(pval_matrix)
+    
+    # Convert to a tidy data frame
+    cld_df <- data.frame(
+      Variable = col,
+      Group = names(cld$Letters),
+      Letters = cld$Letters
+    )
+    
+    # Store the CLD result
+    cld_results_list[[col]] <- cld_df
+  }
+}
+
+# Combine all Dunn's test results into a single dataframe
+pre_dunn_results_df <- bind_rows(dunn_results_list)
+
+# Combine all CLD results into a single dataframe
+pre_cld_results_df <- bind_rows(cld_results_list)
+
+# Print the results
+view(pre_dunn_results_df)
+view(pre_cld_results_df)
+
+#write_xlsx(dunn_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Dunns Test results.xlsx")
+
+#write_xlsx(cld_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/CLD results.xlsx")
+```
+
 ### post
 ```{r}
 library(dplyr)
@@ -929,6 +1080,9 @@ view(post_shapiro_results)
 
 ## Alkalinity and Magnesium are normally distributed and need to be compared with an ANOVA
 ```
+
+
+
 
 # Add Subcatchment Column
 ```{r}

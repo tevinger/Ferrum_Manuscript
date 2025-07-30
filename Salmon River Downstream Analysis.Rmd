@@ -1271,10 +1271,10 @@ view(rel_data_to_plot)
 Manually add data values to relative data to control more of how the NA values are interpolated
 ```{r}
 mod_data <- data.frame(
-  Rel_Water_Area_plotting = c(0, 4.7, 6.2, 7.95, 8.05, 8.95, 10.85, 10.90, 10.95, 15, 22.5),
-  rel_u_Fe = c(0, 1, 0.2, 0.02, 0.03, 0.02, 0.7, 0.6, 0.5, 0, 0),
-  rel_f_Fe = c(0, 8, 15, 0.2, 0.3, 0.1, 0.1, 0.09, 0.05, 0, 0),
-  rel_p_Fe = c(0, 1, 0.2, 0.02, 0.02, 0.01, 1.15, 1.05, 1, 0, 0)
+  Rel_Water_Area_plotting = c(4.7, 5.6, 6.2, 7.95, 8.05, 8.95, 10.85, 10.90, 10.95, 14),
+  rel_u_Fe = c(1, 0.2, 0.02, 0.03, 0.02, 0.7, 0.6, 0.5, 0, 0),
+  rel_f_Fe = c(8, 15, 0.2, 0.3, 0.1, 0.1, 0.09, 0.05, 0, 0),
+  rel_p_Fe = c(1, 0.2, 0.02, 0.02, 0.01, 1.15, 1.05, 1, 0, 0)
 ) %>%
   mutate(across(everything(), as.numeric))
 
@@ -1289,7 +1289,7 @@ Linear interpolation using na.approx
 # manually change the highest value
 rel_data_mod2 <- rel_data_mod %>%
   mutate(rel_f_Fe = case_when(
-    Rel_Water_Area_plotting == 4.75  ~ 75,
+    Rel_Water_Area_plotting == 4.75  ~ 30,
     TRUE ~ rel_f_Fe  # keep original value if no match
   ))
 
@@ -1484,7 +1484,7 @@ f_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
     #axis.ticks.x = element_blank(),
     panel.grid = element_blank(),
     axis.text.x = element_blank(),
-    legend.position = "none"
+    legend.position = "top"
   )
 
 f_Fe_heat
@@ -1511,7 +1511,9 @@ p_Fe_heat <- ggplot(rel_data_to_plot_interp, aes(x = Rel_Water_Area_plotting, y 
     axis.ticks.x = element_blank(),
     panel.grid = element_blank(),
     axis.text.x = element_blank(),
-    legend.position = "none"
+    legend.position = "top",
+    legend.margin = margin(2, 2, 0, 2),
+    plot.margin = margin(0, 1, 1, 1)
   )
 
 p_Fe_heat
@@ -1528,14 +1530,20 @@ SalmonR_Fe_area_combo <- (
   plot_layout(ncol = 1, nrow = 3, heights = c(1, 1, 6), guides = "collect")
 ) &
   theme(
-    plot.margin = margin(1, 1, 1, 1),
+    plot.margin = margin(0.2, 1, 1, 1),
     panel.background = element_rect(fill = NA, color = NA),
-    plot.background = element_rect(fill = NA, color = NA)
+    plot.background = element_rect(fill = NA, color = NA),
+    legend.position = "top",
+    legend.text = element_text(size = 8),       # smaller legend labels
+    legend.title = element_text(size = 9),      # smaller legend title
+    legend.key.size = unit(0.4, "cm"),
+    legend.margin = margin(2, 2, 0, 2),
+    legend.spacing = unit(0.1, "cm") # smaller boxes
   )
 
 SalmonR_Fe_area_combo
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Fe area plus heat plot.png", SalmonR_Fe_area_combo, width = 5, height = 2.5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Fe area plus heat plot_V2.png", SalmonR_Fe_area_combo, width = 5, height = 2.7, dpi = 300)
 ```
 
 na_interpolation - spline

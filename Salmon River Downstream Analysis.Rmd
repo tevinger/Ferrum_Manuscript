@@ -1179,7 +1179,7 @@ SalmonR_Fe <- SalmonR_2023_river_data %>%
 view(SalmonR_Fe)
 ```
 
-### area plot
+### modifications
 ```{r}
 
 # Calculate tributary metal concentrations relative to the nearest upstream MS sample concentration for heat plot
@@ -1404,7 +1404,7 @@ trib_u_Fe_area <- SalmonR_trib_Fe_area %>%
   filter(Metal_type == "u")
 ```
 
-Plotting the actual tributary concentrations
+### area plot
 ```{r}
 SalmonR_Fe_area_no_tribs <- ggplot() +
 
@@ -1438,9 +1438,9 @@ SalmonR_Fe_area_no_tribs <- ggplot() +
   geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11), linetype = "dashed", color = "grey15", linewidth = 0.5) +
   
   coord_cartesian(x = c(1,22.5), y = c(1,10000)) +
-  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0))) +
-  scale_y_log10(breaks = c(0.01,0.1,1,10,100,1000,10000, 100000), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02))) +
-  annotation_logticks(sides = "l") +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, expand = expansion(mult = c(0.03, 0.02))) +
+  scale_y_log10(breaks = c(0.01,0.1,1,10,100,1000,10000, 100000), labels = scales::comma, expand = expansion(mult = c(0.02, 0.02)), sec.axis = dup_axis()) +
+  annotation_logticks(sides = "lr") +
   labs(
     #x = "Relative Watershed Area",
     #y = "Metal Concentration",
@@ -1450,7 +1450,10 @@ SalmonR_Fe_area_no_tribs <- ggplot() +
     #title = "Fe Area Plot - Unfiltered and Filtered"
   ) +
   theme_minimal() +
-  DA_theme
+  DA_theme +
+  theme(
+    axis.text.y.right = element_blank()
+  )
 
 #SalmonR_Fe_area_tribs
 

@@ -660,6 +660,81 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Na seasonal temporal bp_V2.png", Sodium_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
 ```
 
+## Calcium
+```{r}
+## Calcium
+Calcium_temporal_bp <- temporal_filled %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = f_Ca_mg_l, fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
+  scale_y_continuous(breaks = c(0,25,50,75,100,125), labels = c(0,"",50,"",100,"")) +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  labs(
+    title = NULL,
+    x = "Year",
+    y = "Calcium Concentration (mg/L)",
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.background = element_rect(fill = "transparent", color = NA),
+    panel.background = element_rect(fill = "transparent", color = NA)
+  )
+
+Calcium_temporal_bp
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Ca seasonal temporal bp_V1.png",
+       Calcium_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Ca seasonal temporal bp_V2.png",
+       Calcium_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
+
+```
+
+
+## Magnesium
+```{r}
+## Magnesium
+Magnesium_temporal_bp <- temporal_filled %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = f_Mg_mg_l, fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
+  coord_cartesian(ylim = c(5, 41)) +
+  scale_y_continuous(breaks = c(5,10,15,20,25,30,35,40), labels = c("",10,"",20,"",30,"",40,"",10,"")) +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  labs(
+    title = NULL,
+    x = "Year",
+    y = "Magnesium Concentration (mg/L)",
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.background = element_rect(fill = "transparent", color = NA),
+    panel.background = element_rect(fill = "transparent", color = NA)
+  )
+
+Magnesium_temporal_bp
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Mg seasonal temporal bp_V1.png",
+       Magnesium_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Mg seasonal temporal bp_V2.png",
+       Magnesium_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
+
+```
 
 ## temp
 ```{r}
@@ -698,7 +773,164 @@ temp_temporal_bp
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/temp seasonal temporal bp_V1.png", temp_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 ```
 
-## Add Subcatchment Column
+# All Sites Stats - pre vs post
+
+## Add temporal_status to df
+```{r}
+temporal_stats <- Agashashok_for_plots %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+   mutate(
+    Temporal_status = ifelse(sample_collection_year %in% c(2015, 2016, 2017, 2018), 'pre',
+                      ifelse(sample_collection_year %in% c(2019, 2022, 2023, 2024), 'post', NA))
+  ) %>%
+  mutate(
+    temporal_status_season = paste(Temporal_status, sample_collection_season, sep = "_")
+  ) %>%
+  relocate(temporal_status_season, .after = SamplingEventID) 
+
+pre_temporal_stats <- temporal_stats %>%
+  filter(Temporal_status == "pre")
+
+post_temporal_stats <- temporal_stats %>%
+  filter(Temporal_status == "post")
+```
+
+## Shapiro
+### pre
+```{r}
+library(dplyr)
+library(purrr)
+library(broom)
+library(rstatix)
+
+# List of columns to analyze
+columns_to_model <- c("pH", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l")
+
+pdf("residuals_plots.pdf")  # Start a new PDF file
+
+# Initialize a results list
+model_results <- list()
+
+# Loop through each variable
+for (col in columns_to_model) {
+  
+  # Fit the model (example: linear model with sample_collection_season as predictor)
+  model <- lm(pre_temporal_stats[[col]] ~ pre_temporal_stats$sample_collection_season, data = pre_temporal_stats)
+  
+  # Extract residuals
+  residuals <- resid(model)
+  
+  # Plot histogram
+  hist(residuals, main = paste("Residuals Histogram:", col), xlab = "Residuals")
+  
+  # Plot QQ plot
+  qqnorm(residuals, main = paste("QQ Plot of Residuals:", col))
+  qqline(residuals)
+  
+  # Perform Shapiro-Wilk test on residuals
+  test_result <- tryCatch(
+    shapiro.test(residuals),
+    error = function(e) NULL
+  )
+  
+  # Create the interpretation
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The residuals are likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store the results in a data frame
+  model_results[[col]] <- data.frame(
+    Variable = col,
+    W = if (!is.null(test_result)) test_result$statistic else NA,
+    p_value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+}
+
+dev.off()  # Close the PDF device
+
+# Combine all results into a single data frame
+pre_shapiro_results <- bind_rows(model_results)
+
+# Print results
+view(pre_shapiro_results)
+
+## Alkalinity and Magnesium are normally distributed and need to be compared with an ANOVA
+```
+
+### post
+```{r}
+library(dplyr)
+library(purrr)
+library(broom)
+library(rstatix)
+
+# List of columns to analyze
+columns_to_model <- c("pH", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l")
+
+pdf("residuals_plots.pdf")  # Start a new PDF file
+
+# Initialize a results list
+model_results <- list()
+
+# Loop through each variable
+for (col in columns_to_model) {
+  
+  # Fit the model (example: linear model with sample_collection_season as predictor)
+  model <- lm(post_temporal_stats[[col]] ~ post_temporal_stats$sample_collection_season, data = post_temporal_stats)
+  
+  # Extract residuals
+  residuals <- resid(model)
+  
+  # Plot histogram
+  hist(residuals, main = paste("Residuals Histogram:", col), xlab = "Residuals")
+  
+  # Plot QQ plot
+  qqnorm(residuals, main = paste("QQ Plot of Residuals:", col))
+  qqline(residuals)
+  
+  # Perform Shapiro-Wilk test on residuals
+  test_result <- tryCatch(
+    shapiro.test(residuals),
+    error = function(e) NULL
+  )
+  
+  # Create the interpretation
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The residuals are likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store the results in a data frame
+  model_results[[col]] <- data.frame(
+    Variable = col,
+    W = if (!is.null(test_result)) test_result$statistic else NA,
+    p_value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+}
+
+dev.off()  # Close the PDF device
+
+# Combine all results into a single data frame
+post_shapiro_results <- bind_rows(model_results)
+
+# Print results
+view(post_shapiro_results)
+
+## Alkalinity and Magnesium are normally distributed and need to be compared with an ANOVA
+```
+
+# Add Subcatchment Column
 ```{r}
 Agashashok_for_plots <- Agashashok_for_plots %>%
   mutate(

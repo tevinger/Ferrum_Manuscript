@@ -390,20 +390,95 @@ f_Y_mcg_per_l,
 f_Zn_mcg_per_l
 )
 
+# convert data columns to numeric
 Agashashok_for_plots <- Agashashok_for_plots %>%
   mutate(across(11:49, as.numeric))
+
+# remove sampled seeps from the dataframe
+Agashashok_for_plots <- Agashashok_for_plots %>%
+  filter(!grepl("seep", SamplingEventID, ignore.case = TRUE))
 
 view(Agashashok_for_plots)
 ```
 
-# Temporal Analysis with all sites
+# All Sites Temporal Analysis 
+## data frame modifications
+```{r}
+# Purpose of this chunk: Add years the are missing data to have a continuous x-axis on the plots
+
+# complete() expands the data so that all combinations of season, watershed, year is present in the dataframe
+temporal_filled <- Agashashok_for_plots %>%
+  complete(
+    sample_collection_season,
+    Watershed,
+    sample_collection_year = 2015:2024
+  )
+  
+view(temporal_filled)
+```
 
 ```{r}
-Sulfate_temporal_bp <- Agashashok_for_plots %>%
+temporal_filled$sample_collection_year <- factor(
+  temporal_filled$sample_collection_year,
+  levels = c(
+    "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024"
+  )
+)
+
+view(temporal_filled)
+```
+
+```{r}
+temporal_df <- temporal_df %>%
+  mutate(year = as.integer(year)) %>%
+  complete(
+    Subcatchment,
+    variable,
+    year = seq(2015, 2024, by = 0.5)  # Adds 2015, 2015.5, 2016, ..., 2024
+  ) %>%
+  mutate(
+    Subcatchment = factor(Subcatchment, levels = c("South Fork", "North Fork", "Main")),
+    year = as.character(year),  # Optional: only if treating year as a discrete axis
+    year_sub = interaction(year, Subcatchment, sep = "_")
+  )
+
+
+temporal_df$year_sub <- factor(
+  temporal_df$year_sub,
+  levels = c(
+  "2015_South Fork", "2015_North Fork", "2015_Main",
+  "2015.5_South Fork", "2015.5_North Fork", "2015.5_Main",
+  "2016_South Fork", "2016_North Fork", "2016_Main",
+  "2016.5_South Fork", "2016.5_North Fork", "2016.5_Main",
+  "2017_South Fork", "2017_North Fork", "2017_Main",
+  "2017.5_South Fork", "2017.5_North Fork", "2017.5_Main",
+  "2018_South Fork", "2018_North Fork", "2018_Main",
+  "2018.5_South Fork", "2018.5_North Fork", "2018.5_Main",
+  "2019_South Fork", "2019_North Fork", "2019_Main",
+  "2019.5_South Fork", "2019.5_North Fork", "2019.5_Main",
+  "2020_South Fork", "2020_North Fork", "2020_Main",
+  "2020.5_South Fork", "2020.5_North Fork", "2020.5_Main",
+  "2021_South Fork", "2021_North Fork", "2021_Main",
+  "2021.5_South Fork", "2021.5_North Fork", "2021.5_Main",
+  "2022_South Fork", "2022_North Fork", "2022_Main",
+  "2022.5_South Fork", "2022.5_North Fork", "2022.5_Main",
+  "2023_South Fork", "2023_North Fork", "2023_Main",
+  "2023.5_South Fork", "2023.5_North Fork", "2023.5_Main",
+  "2024_South Fork", "2024_North Fork", "2024_Main"
+)
+)
+
+view(temporal_df)
+```
+
+## Sulfate
+```{r}
+Sulfate_temporal_bp <- temporal_filled %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
   ggplot(aes(x = as.factor(sample_collection_year), y = f_SO4_mg_per_l, fill = sample_collection_season)) +
   geom_boxplot() +
-  scale_y_log10() +
+  scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225), labels = c(0, "", 50, "", 100, "", 150, "", 200, "")) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_fill_manual(
     values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
   ) +
@@ -412,31 +487,129 @@ Sulfate_temporal_bp <- Agashashok_for_plots %>%
                                      #label = paste0("mean =", mean_value), group = Season),
            # position = position_dodge(width = 0.75), size = 3) +
   # Add counts as text
-  #geom_vline(xintercept = 4.5, linetype = "dashed", color = "red", size = 1) +
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
   labs(
-    title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    title = NULL, 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
     x = "Year",
     y = "Sulfate Concentration (mg/L)",
     fill = "Season"
   ) +
   theme_minimal() +
-  theme(
-    axis.text.x = element_text(hjust = 1, size = 24, color = "black", face = "bold", angle = 45),  # Rotate x-axis labels
-    plot.title = element_blank(),  # Center and style title
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank(),
-    axis.text.y = element_text(size = 25, color = "black", face = "bold"),
-    legend.position = "none",
-    legend.text = element_text(size = 15),
-    legend.title = element_text(size = 17, face = "bold"),
-    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
-    panel.background = element_rect(fill = "transparent"), # Panel background
-    plot.background = element_rect(fill = "transparent", color = NA) # Plot background
-  ) 
+  temporal_theme +
+  theme(legend.position = "none",
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
 
 Sulfate_temporal_bp
 ```
 
+## Alkalinity
+```{r}
+Alkalinity_temporal_bp <- temporal_filled %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = Alk_mgCaCO3_per_l, fill = sample_collection_season)) +
+  geom_boxplot() +
+  scale_y_continuous(breaks = c(25, 50,75,100,125,150,175,200,225), labels = c("", 50, "", 100, "", 150, "", 200, "")) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  # Add means as text
+  #geom_text(data = chloride_season_stats, aes(x = as.factor(Year), y = 0.5, 
+                                     #label = paste0("mean =", mean_value), group = Season),
+           # position = position_dodge(width = 0.75), size = 3) +
+  # Add counts as text
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
+  labs(
+    title = NULL, 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    y = ylab_Alk,
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+Alkalinity_temporal_bp
+```
+
+## pH
+```{r}
+pH_temporal_bp <- temporal_filled %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = pH, fill = sample_collection_season)) +
+  geom_boxplot() +
+  scale_y_continuous(breaks = c(7.5, 7.75, 8.0, 8.25, 8.5), labels = c("7.50", 7.75, "8.00", 8.25, "8.50")) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  # Add means as text
+  #geom_text(data = chloride_season_stats, aes(x = as.factor(Year), y = 0.5, 
+                                     #label = paste0("mean =", mean_value), group = Season),
+           # position = position_dodge(width = 0.75), size = 3) +
+  # Add counts as text
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
+  labs(
+    title = NULL, 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    y = ylab_Alk,
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+pH_temporal_bp
+```
+
+## temp
+```{r}
+temp_temporal_bp <- temporal_filled %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = Temp_deg_celsius, fill = sample_collection_season)) +
+  geom_boxplot() +
+  #scale_y_continuous(breaks = c(7.5, 7.75, 8.0, 8.25, 8.5), labels = c("7.50", 7.75, "8.00", 8.25, "8.50")) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  # Add means as text
+  #geom_text(data = chloride_season_stats, aes(x = as.factor(Year), y = 0.5, 
+                                     #label = paste0("mean =", mean_value), group = Season),
+           # position = position_dodge(width = 0.75), size = 3) +
+  # Add counts as text
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 1, alpha = 0.6) +
+  labs(
+    title = NULL, 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    y = ylab_Alk,
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+temp_temporal_bp
+```
 
 ## Add Subcatchment Column
 ```{r}

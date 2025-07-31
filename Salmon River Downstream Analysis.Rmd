@@ -4301,8 +4301,6 @@ Agashashok_River_Data_filtered_no_early_2022 <- Agashashok_River_Data_filtered_n
 ```
 
 ```{r}
-
-
 Sulfate_temporal_bp <- ggplot(Agashashok_River_Data_filtered, aes(x = as.factor(Year), y = f_SO4_mg_per_l, fill = Season)) +
   geom_boxplot() +
   #scale_y_log10() +

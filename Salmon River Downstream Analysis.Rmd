@@ -1820,7 +1820,7 @@ SalmonR_Fe_bottom <- ggplot() +
   geom_area(data = MS_u_Fe_area, 
             aes(x = Rel_Water_Area_plotting, y = Metal_conc),
             #fill = "#28968b"
-            fill = "grey30"
+            fill = "grey50"
             #alpha = 0.85
             ) +
   geom_line(data = MS_u_Fe_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc), color = "grey28", linewidth = 0.5) +
@@ -1855,7 +1855,7 @@ geom_point(data = MS_u_Fe_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc)
   
   # Points for impaired tribs
   geom_point(data = impaired_f_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 8, 
-             color = "indianred2", 
+             color = "indianred3", 
              #fill = "indianred2", 
              size = 2, stroke = 1.2) +
   
@@ -1864,7 +1864,7 @@ geom_point(data = MS_u_Fe_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc)
   # Points for SalmonR_filtered_Trib
   geom_point(data = trib_p_Fe_long, aes(x = Rel_Water_Area_plotting, y = Metal_conc_plot), pch = 24, color = "black", 
              #fill = "#c0eeea",
-             fill = "grey",
+             fill = "grey28",
              #fill = "#92e2c6",
              #fill = "#b1ead6",
              size = 2, stroke = 1.2) +
@@ -1896,7 +1896,7 @@ geom_point(data = MS_u_Fe_area, aes(x = Rel_Water_Area_plotting, y = Metal_conc)
 
 SalmonR_Fe_bottom
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR Fe_V4.png", SalmonR_Fe_bottom, width = 3.8, height = 2, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SalmonR Fe_V5.png", SalmonR_Fe_bottom, width = 3.8, height = 2, dpi = 300)
 ```
 
 ```{r}

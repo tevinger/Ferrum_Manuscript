@@ -1937,7 +1937,7 @@ SO4_aggie <- temporal_df %>%
   filter(variable == "f_SO4_mg_per_l") %>%
   ggplot(aes(x = year_sub, y = mean, fill = Subcatchment, shape = Subcatchment)) +
   
-  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, aes(group = Subcatchment, color = Subcatchment)) +
+  #geom_smooth(method = "lm", se = FALSE, formula = y ~ x, aes(group = Subcatchment, color = Subcatchment)) +
   
   labs(
     x = "Year",
@@ -1983,7 +1983,7 @@ SO4_aggie <- temporal_df %>%
 
 SO4_aggie
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4_V6 angled labels darker yellow labels.png", SO4_aggie, width = 4, height = 5, dpi = 300, bg = "transparent")
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4_V7 no regressions.png", SO4_aggie, width = 4, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ```{r}
@@ -2322,7 +2322,7 @@ Alk_aggie <- temporal_df %>%
   filter(variable == "Alk_mgCaCO3_per_l") %>%
   ggplot(aes(x = year_sub, y = mean, fill = Subcatchment, shape = Subcatchment)) +
   
-  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, aes(group = Subcatchment, color = Subcatchment)) +
+  #geom_smooth(method = "lm", se = FALSE, formula = y ~ x, aes(group = Subcatchment, color = Subcatchment)) +
   
   labs(
     x = "Year",
@@ -2368,7 +2368,7 @@ Alk_aggie <- temporal_df %>%
 
 Alk_aggie
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Alk_V6 angled labels darker yellow with labels.png",Alk_aggie, width = 4, height = 5, dpi = 300, bg = "transparent")
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Alk_V7 no regression.png",Alk_aggie, width = 4, height = 5, dpi = 300, bg = "transparent")
 ```
 
 

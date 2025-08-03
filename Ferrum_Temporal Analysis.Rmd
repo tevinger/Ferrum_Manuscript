@@ -1079,7 +1079,7 @@ write.csv(temporal_pairwise_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project F
 # No differences from the tukey adjusted pairwise comparison
 ```
 
-## post group
+## Late season
 ### Shapiro
 ```{r}
 library(dplyr)
@@ -1100,7 +1100,7 @@ model_results <- list()
 for (col in columns_to_model) {
   
   # Fit the model (example: linear model with sample_collection_season as predictor)
-  model <- lm(post_temporal_stats[[col]] ~ post_temporal_stats$sample_collection_season, data = post_temporal_stats)
+  model <- lm(late_temporal_stats[[col]] ~ late_temporal_stats$Temporal_status, data = late_temporal_stats)
   
   # Extract residuals
   residuals <- resid(model)
@@ -1139,12 +1139,12 @@ for (col in columns_to_model) {
 dev.off()  # Close the PDF device
 
 # Combine all results into a single data frame
-post_shapiro_results <- bind_rows(model_results)
+late_shapiro_results <- bind_rows(model_results)
 
 # Print results
-view(post_shapiro_results)
+view(late_shapiro_results)
 
-## Alkalinity and Magnesium are normally distributed and need to be compared with an ANOVA
+## pH, Alkalinity and magnesium are normally distributed and need to be compared with an ANOVA
 ```
 
 ### Kruskal
@@ -1153,7 +1153,7 @@ library(dplyr)
 library(rstatix)
 
 # List of columns to analyze - alkalinity removed from the list because shapiro showed normality
-nonparametric_columns <- c("pH", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
+nonparametric_columns <- c("DOC_mgC_per_l", "f_Cl_mg_per_l", 
   "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Na_mg_l", "f_K_mg_l")
 
 # Initialize a results list
@@ -1163,13 +1163,13 @@ kruskal_results_list <- list()
 for (col in nonparametric_columns) {
   
   # Filter out NAs for the current variable
-  df_filtered <- pre_temporal_stats %>%
+  df_filtered <- late_temporal_stats %>%
     filter(!is.na(.data[[col]]))
   
   # Perform Kruskal-Wallis test comparing sample_collection_season values
   test_result <- tryCatch(
     {
-      result <- kruskal_test(as.formula(paste(col, "~ sample_collection_season")), data = df_filtered)
+      result <- kruskal_test(as.formula(paste(col, "~ Temporal_status")), data = df_filtered)
       result$variable <- col  # Add variable name to the result
       result
     },
@@ -1200,22 +1200,22 @@ for (col in nonparametric_columns) {
 }
 
 # Combine all results into a single dataframe
-pre_kruskal_results_df <- bind_rows(kruskal_results_list)
+late_kruskal_results_df <- bind_rows(kruskal_results_list)
 
 
 # Print the results
-view(pre_kruskal_results_df)
+view(late_kruskal_results_df)
 
-## no difference in groups for pH and DOC
+## only a difference in sulfate, sodium and potassium
 
-write_xlsx(pre_kruskal_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/pre_kruskal_results.xlsx")
+write_xlsx(late_kruskal_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/late_kruskal_results.xlsx")
 ```
 
-### post hoc Dunn test 
+### Dunn test 
 ```{r}
 # List of columns to do the dunn post hoc test for 
 # I removed analytes that did not have any differences identified by the kruskal wallis 
-columns_for_dunn <- c("f_Cl_mg_per_l", "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Na_mg_l", "f_K_mg_l")
+columns_for_dunn <- c("f_SO4_mg_per_l", "f_Na_mg_l", "f_K_mg_l")
 
 library(dplyr)
 library(rstatix)
@@ -1229,14 +1229,14 @@ cld_results_list <- list()
 for (col in columns_for_dunn) {
   
   # Filter out NAs for the current variable
-  df_filtered <- pre_temporal_stats %>%
+  df_filtered <- late_temporal_stats %>%
     filter(!is.na(.data[[col]]))
   
   # Try performing Dunn's test with Bonferroni adjustment
   test_result <- tryCatch(
     {
       df_filtered %>%
-        dunn_test(as.formula(paste(col, "~ sample_collection_season")), p.adjust.method = "bonferroni")
+        dunn_test(as.formula(paste(col, "~ Temporal_status")), p.adjust.method = "bonferroni")
     },
     error = function(e) {
       # Return a default result if test fails
@@ -1289,20 +1289,84 @@ for (col in columns_for_dunn) {
 }
 
 # Combine all Dunn's test results into a single dataframe
-pre_dunn_results_df <- bind_rows(dunn_results_list)
+late_dunn_results_df <- bind_rows(dunn_results_list)
 
 # Combine all CLD results into a single dataframe
-pre_cld_results_df <- bind_rows(cld_results_list)
+late_cld_results_df <- bind_rows(cld_results_list)
 
 # Print the results
-view(pre_dunn_results_df)
-view(pre_cld_results_df)
+view(late_dunn_results_df)
+view(late_cld_results_df)
 
-write_xlsx(pre_dunn_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/pre_dunn_results.xlsx")
+write_xlsx(late_dunn_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/late_dunn_results.xlsx")
 
-write_xlsx(pre_cld_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/pre_cld_results.xlsx")
+write_xlsx(late_cld_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/late_cld_results.xlsx")
 ```
 
+### ANOVA
+```{r}
+# make model for Alkalinity
+# using lmer because alkalinity was measured multiple times per site in this dataset across 2022 and 2023 making them not entirely independent 
+temporal_alk_model <- lm(Alk_mgCaCO3_per_l ~ Temporal_status, data = late_temporal_stats)
+
+# run a one-way ANOVA on Alkalinity
+temporal_alk_anova <- anova(temporal_alk_model) # Gives Type III ANOVA table with p-values
+temporal_alk_anova
+write.csv(as.data.frame(temporal_alk_anova), "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/late_temporal_alk_anova_results.csv", row.names = TRUE) # save ANOVA table
+
+# Estimated marginal means (group means adjusted for random effects)
+late_temporal_alk_means <- emmeans(temporal_alk_model, ~ Temporal_status)
+late_temporal_alk_means
+
+temporal_pairwise_df <- as.data.frame(summary(late_temporal_alk_means))
+write.csv(temporal_pairwise_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/late_temporal_alk_means.csv", row.names = FALSE)
+
+# No differences from the tukey adjusted pairwise comparison
+```
+
+```{r}
+# make model for pH
+# using lm because alkalinity was measured multiple times per site in this dataset across 2022 and 2023 making them not entirely independent 
+temporal_Mg_model <- lm(f_Mg_mg_l ~ Temporal_status, data = late_temporal_stats)
+
+# run a one-way ANOVA on Alkalinity
+temporal_Mg_anova <- anova(temporal_Mg_model) # Gives Type III ANOVA table with p-values
+temporal_Mg_anova
+write.csv(as.data.frame(temporal_Mg_anova), "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/late_temporal_magnesium_anova_results.csv", row.names = TRUE) # save ANOVA table
+
+# Estimated marginal means (group means adjusted for random effects)
+late_temporal_Mg_means <- emmeans(temporal_Mg_model, ~ Temporal_status)
+late_temporal_Mg_means
+
+temporal_pairwise_df <- as.data.frame(summary(late_temporal_Mg_means))
+write.csv(temporal_pairwise_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/late_temporal_Magnesium_means.csv", row.names = FALSE)
+
+# No differences from the tukey adjusted pairwise comparison
+```
+
+```{r}
+## pH
+temporal_pH_model <- lm(pH ~ Temporal_status, data = late_temporal_stats)
+
+# Run a one-way ANOVA on pH
+temporal_pH_anova <- anova(temporal_pH_model) # Gives ANOVA table with p-values
+temporal_pH_anova
+
+# Save ANOVA table
+write.csv(as.data.frame(temporal_pH_anova),
+          "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/late_temporal_pH_anova_results.csv",
+          row.names = TRUE)
+
+# Estimated marginal means for pH by Temporal_status
+late_temporal_pH_means <- emmeans(temporal_pH_model, ~ Temporal_status)
+late_temporal_pH_means
+
+# Save estimated marginal means
+temporal_pairwise_df <- as.data.frame(summary(late_temporal_pH_means))
+write.csv(temporal_pairwise_df,
+          "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/late_temporal_pH_means.csv",
+          row.names = FALSE)
+```
 
 # Add Subcatchment Column
 ```{r}

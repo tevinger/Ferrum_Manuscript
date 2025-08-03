@@ -787,16 +787,16 @@ temporal_stats <- Agashashok_for_plots %>%
   ) %>%
   relocate(temporal_status_season, .after = SamplingEventID) 
 
-pre_temporal_stats <- temporal_stats %>%
-  filter(Temporal_status == "pre") %>%
-  mutate(sample_collection_season = factor(sample_collection_season, levels = c("early", "late")))
+early_temporal_stats <- temporal_stats %>%
+  filter(sample_collection_season == "early") %>%
+  mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
 
-post_temporal_stats <- temporal_stats %>%
-  filter(Temporal_status == "post") %>%
-  mutate(sample_collection_season = factor(sample_collection_season, levels = c("early", "late")))
+late_temporal_stats <- temporal_stats %>%
+  filter(sample_collection_season == "late") %>%
+  mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
 ```
 
-## Pre group
+## Early season
 ### Shapiro
 ```{r}
 library(dplyr)
@@ -817,7 +817,7 @@ model_results <- list()
 for (col in columns_to_model) {
   
   # Fit the model (example: linear model with sample_collection_season as predictor)
-  model <- lm(pre_temporal_stats[[col]] ~ pre_temporal_stats$sample_collection_season, data = pre_temporal_stats)
+  model <- lm(early_temporal_stats[[col]] ~ early_temporal_stats$Temporal_status, data = early_temporal_stats)
   
   # Extract residuals
   residuals <- resid(model)
@@ -856,12 +856,12 @@ for (col in columns_to_model) {
 dev.off()  # Close the PDF device
 
 # Combine all results into a single data frame
-pre_shapiro_results <- bind_rows(model_results)
+early_shapiro_results <- bind_rows(model_results)
 
 # Print results
-view(pre_shapiro_results)
+view(early_shapiro_results)
 
-## Alkalinity and Magnesium are normally distributed and need to be compared with an ANOVA
+## Alkalinity and Chloride are normally distributed and need to be compared with an ANOVA
 ```
 
 ### Kruskal
@@ -870,7 +870,7 @@ library(dplyr)
 library(rstatix)
 
 # List of columns to analyze - alkalinity removed from the list because shapiro showed normality
-nonparametric_columns <- c("pH", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
+nonparametric_columns <- c("pH", "DOC_mgC_per_l", "f_Mg_mg_l", 
   "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Na_mg_l", "f_K_mg_l")
 
 # Initialize a results list
@@ -880,13 +880,13 @@ kruskal_results_list <- list()
 for (col in nonparametric_columns) {
   
   # Filter out NAs for the current variable
-  df_filtered <- pre_temporal_stats %>%
+  df_filtered <- early_temporal_stats %>%
     filter(!is.na(.data[[col]]))
   
   # Perform Kruskal-Wallis test comparing sample_collection_season values
   test_result <- tryCatch(
     {
-      result <- kruskal_test(as.formula(paste(col, "~ sample_collection_season")), data = df_filtered)
+      result <- kruskal_test(as.formula(paste(col, "~ Temporal_status")), data = df_filtered)
       result$variable <- col  # Add variable name to the result
       result
     },
@@ -917,22 +917,22 @@ for (col in nonparametric_columns) {
 }
 
 # Combine all results into a single dataframe
-pre_kruskal_results_df <- bind_rows(kruskal_results_list)
+early_kruskal_results_df <- bind_rows(kruskal_results_list)
 
 
 # Print the results
-view(pre_kruskal_results_df)
+view(early_kruskal_results_df)
 
-## no difference in groups for pH and DOC
+## only a difference in sulfate
 
-write_xlsx(pre_kruskal_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/pre_kruskal_results.xlsx")
+write_xlsx(early_kruskal_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/early_kruskal_results.xlsx")
 ```
 
-### post hoc Dunn test 
+### Dunn test 
 ```{r}
 # List of columns to do the dunn post hoc test for 
 # I removed analytes that did not have any differences identified by the kruskal wallis 
-columns_for_dunn <- c("f_Cl_mg_per_l", "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Na_mg_l", "f_K_mg_l")
+columns_for_dunn <- c("f_SO4_mg_per_l")
 
 library(dplyr)
 library(rstatix)
@@ -946,14 +946,14 @@ cld_results_list <- list()
 for (col in columns_for_dunn) {
   
   # Filter out NAs for the current variable
-  df_filtered <- pre_temporal_stats %>%
+  df_filtered <- early_temporal_stats %>%
     filter(!is.na(.data[[col]]))
   
   # Try performing Dunn's test with Bonferroni adjustment
   test_result <- tryCatch(
     {
       df_filtered %>%
-        dunn_test(as.formula(paste(col, "~ sample_collection_season")), p.adjust.method = "bonferroni")
+        dunn_test(as.formula(paste(col, "~ Temporal_status")), p.adjust.method = "bonferroni")
     },
     error = function(e) {
       # Return a default result if test fails
@@ -1006,22 +1006,78 @@ for (col in columns_for_dunn) {
 }
 
 # Combine all Dunn's test results into a single dataframe
-pre_dunn_results_df <- bind_rows(dunn_results_list)
+early_dunn_results_df <- bind_rows(dunn_results_list)
 
 # Combine all CLD results into a single dataframe
-pre_cld_results_df <- bind_rows(cld_results_list)
+early_cld_results_df <- bind_rows(cld_results_list)
 
 # Print the results
-view(pre_dunn_results_df)
-view(pre_cld_results_df)
+view(early_dunn_results_df)
+view(early_cld_results_df)
 
-write_xlsx(pre_dunn_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/pre_dunn_results.xlsx")
+write_xlsx(early_dunn_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/early_dunn_results.xlsx")
 
-write_xlsx(pre_cld_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/pre_cld_results.xlsx")
+write_xlsx(early_cld_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/early_cld_results.xlsx")
 ```
 
 ### ANOVA
+```{r}
+# make model for Alkalinity
+# using lmer because alkalinity was measured multiple times per site in this dataset across 2022 and 2023 making them not entirely independent 
+temporal_alk_model <- lm(Alk_mgCaCO3_per_l ~ Temporal_status, data = early_temporal_stats)
 
+# run a one-way ANOVA on Alkalinity
+temporal_alk_anova <- anova(temporal_alk_model) # Gives Type III ANOVA table with p-values
+temporal_alk_anova
+write.csv(as.data.frame(temporal_alk_anova), "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/temporal_alk_anova_results.csv", row.names = TRUE) # save ANOVA table
+
+#ANOVA Results explanation
+  # Sum Sq (5214.7): The variation in alkalinity explained by New_Grouping
+  # Mean Sq (1303.7): The average variation per degree of freedom
+  # NumDF (4): Degrees of freedom for New_Grouping (number of levels - 1)
+  # DenDF (20.201): Denominator DF, estimated using Satterthwaite's method (accounts for random effect structure)
+  # F value (2.9566): The F-statistic — a ratio of explained to unexplained variance
+  # Pr(>F) (0.045): The p-value — the probability that this effect is due to random chance
+    # Due to the p-value of 0.045 (< 0.05), there is moderate evidence that New_Grouping has a statistically significant effect on Alk_mgCaCO3_per_l, even after accounting for random variation across Field_label
+
+# Estimated marginal means (group means adjusted for random effects)
+temporal_alk_means <- emmeans(temporal_alk_model, ~ Temporal_status)
+temporal_alk_means
+
+temporal_pairwise_df <- as.data.frame(summary(temporal_alk_means))
+write.csv(temporal_pairwise_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/temporal_alk_means.csv", row.names = FALSE)
+
+# No differences from the tukey adjusted pairwise comparison
+```
+
+```{r}
+# make model for Alkalinity
+# using lmer because alkalinity was measured multiple times per site in this dataset across 2022 and 2023 making them not entirely independent 
+temporal_Cl_model <- lm(f_Cl_mg_per_l ~ Temporal_status, data = early_temporal_stats)
+
+# run a one-way ANOVA on Alkalinity
+temporal_Cl_anova <- anova(temporal_Cl_model) # Gives Type III ANOVA table with p-values
+temporal_Cl_anova
+write.csv(as.data.frame(temporal_Cl_anova), "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/temporal_Chloride_anova_results.csv", row.names = TRUE) # save ANOVA table
+
+#ANOVA Results explanation
+  # Sum Sq (5214.7): The variation in alkalinity explained by New_Grouping
+  # Mean Sq (1303.7): The average variation per degree of freedom
+  # NumDF (4): Degrees of freedom for New_Grouping (number of levels - 1)
+  # DenDF (20.201): Denominator DF, estimated using Satterthwaite's method (accounts for random effect structure)
+  # F value (2.9566): The F-statistic — a ratio of explained to unexplained variance
+  # Pr(>F) (0.045): The p-value — the probability that this effect is due to random chance
+    # Due to the p-value of 0.045 (< 0.05), there is moderate evidence that New_Grouping has a statistically significant effect on Alk_mgCaCO3_per_l, even after accounting for random variation across Field_label
+
+# Estimated marginal means (group means adjusted for random effects)
+temporal_Cl_means <- emmeans(temporal_Cl_model, ~ Temporal_status)
+temporal_Cl_means
+
+temporal_pairwise_df <- as.data.frame(summary(temporal_Cl_means))
+write.csv(temporal_pairwise_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/temporal_Chloride_means.csv", row.names = FALSE)
+
+# No differences from the tukey adjusted pairwise comparison
+```
 
 ## post group
 ### Shapiro

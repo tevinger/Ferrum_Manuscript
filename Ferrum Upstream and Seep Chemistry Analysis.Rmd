@@ -1199,13 +1199,14 @@ anions_cations_upstream <- upstream_data %>%
   theme(
     axis.title.y.right = element_text(color = "black"),
     axis.title.y.left = element_text(color = "black"),
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none"
   ) +
   scale_y_continuous(expand = expansion(mult = c(0,0.05)))
 
 anions_cations_upstream
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry by watershed/dual axis cations and anions.png", anions_cations_seep, width = 6, height = 6, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/dual axis cations and anions_V2.png", anions_cations_upstream, width = 4.5, height = 5, dpi = 300)
 ```
 
 ###2.4.6 Upstream SpC, Temp, DOC
@@ -1284,22 +1285,25 @@ upstream_DIC <- df_upstream_buffering %>%
     width = 0.3
   ) +
   labs(
-    title = "DIC by Watershed",
+    title = NULL,
+    #title = "DIC by Watershed",
     x = "Watershed",
     y = ylab_DIC
   ) +
   #coord_cartesian(ylim = c(0, 6)) +
   #scale_fill_manual(values = metal_colors) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
   theme_minimal() +
   barplot_theme + 
   theme(
     legend.position = "none",
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title.y = element_text(margin = margin(r = 2)) 
   )
 
 upstream_DIC
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/DIC.png", upstream_DIC, width = 4, height = 7, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/DIC_V2.png", upstream_DIC, width = 2.8, height = 5, dpi = 300)
 
 ```
 
@@ -1314,22 +1318,25 @@ upstream_Alk <- df_upstream_buffering %>%
     width = 0.3
   ) +
   labs(
-    title = "Alk by Watershed",
+    title = NULL,
+    #title = "Alk by Watershed",
     x = "Watershed",
     y = ylab_Alk
   ) +
   #coord_cartesian(ylim = c(0, 6)) +
   #scale_fill_manual(values = metal_colors) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
   theme_minimal() +
   barplot_theme + 
   theme(
     legend.position = "none",
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title.y = element_text(margin = margin(r = 2))
   )
 
 upstream_Alk
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/Alk.png", upstream_Alk, width = 4, height = 7, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/Alk_V2.png", upstream_Alk, width = 2.8, height = 5, dpi = 300)
 ```
 
 ```{r}
@@ -1343,23 +1350,25 @@ upstream_DOC <- df_upstream_buffering %>%
     width = 0.3
   ) +
   labs(
-    title = "DOC by Watershed",
+    title = NULL,
+    #title = "DOC by Watershed",
     x = "Watershed",
     y = "DOC (mgC/L)"
   ) +
   #coord_cartesian(ylim = c(0, 6)) +
-  #scale_fill_manual(values = metal_colors) +
+  #scale_fill_manual(values = metal_colors) 
   theme_minimal() +
   barplot_theme + 
   theme(
     legend.position = "none",
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title.y = element_text(margin = margin(r = 2))
   ) +
   scale_y_continuous(breaks = c(0,2,4,6,8,10), labels = c(0,2,4,6,8,10), expand = expansion(mult = c(0, 0.1)))
 
 upstream_DOC
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/DOC.png", upstream_DOC, width = 4, height = 7, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S02_Upstream Chemistry by watershed/DOC_V2.png", upstream_DOC, width = 2.8, height = 5, dpi = 300)
 ```
 
 # 4. Seep Chemistry

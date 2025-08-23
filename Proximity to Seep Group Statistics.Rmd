@@ -798,6 +798,275 @@ write.csv(cld_df,
 # No differences from the tukey adjusted pairwise comparison
 ```
 
+# Updated Aluminum Stats
+## Summary stats
+```{r}
+elements <- c("f_Al")
+columns <- c("f_Al_mcg_per_l")
+
+# Initialize an empty list to store results
+summary_stats_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform the summary operation for the current element
+  summary_stats <- 
+    #stats_working_Ferrum_data %>% # use for all data, watershed, year and month summary stats
+    Grouped_Ferrum_2022_2023_data %>% # to group by New Grouping (seeps included)
+    #dplyr::select(9:70) %>% # all data
+    #dplyr::select(2,9:70) %>% # Watershed
+    #dplyr::select(4,9:70) %>% # Year
+    #dplyr::select(5,9:70) %>% # Month
+    #dplyr::select(6,9:70) %>% # Season
+    dplyr::select(2,4,19:82) %>% # New Grouping
+    filter(!is.na(.data[[column]])) %>%
+    group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
+    summarise(
+    Variable = element,
+    Mean = round(mean(.data[[column]], na.rm = TRUE), 2),
+    SD = round(sd(.data[[column]], na.rm = TRUE), 2),
+    SE = round(sd(.data[[column]], na.rm = TRUE) / sqrt(n()), 2),
+    Median = round(median(.data[[column]], na.rm = TRUE), 2),
+    Min = round(min(.data[[column]], na.rm = TRUE), 2),
+    Max = round(max(.data[[column]], na.rm = TRUE), 2),
+    Q1 = round(quantile(.data[[column]], probs = 0.25, na.rm = TRUE), 2),
+    Q3 = round(quantile(.data[[column]], probs = 0.75, na.rm = TRUE), 2),
+    IQR = round(IQR(.data[[column]], na.rm = TRUE), 2),
+    Count = n()
+    #.groups = "drop"  # Ensure ungrouped result after summarization
+  )
+  
+  # Store the result in the list with the element name as key
+  summary_stats_list[[element]] <- summary_stats
+}
+
+# Combine all individual data frames into one
+summary_stats_results <- do.call(rbind, summary_stats_list)
+
+#summary_stats_results <- summary_stats_results %>% arrange(Watershed)
+
+view(summary_stats_results)
+
+write_xlsx(summary_stats_results, "C:/Users/tevinger/Downloads/Summ.Stats.by Group_updated Al.xlsx")
+```
+
+## Shapiro Test for normality
+```{r}
+library(dplyr)
+library(purrr)
+library(broom)
+library(rstatix)
+
+# List of columns to analyze
+columns_to_model <- c("f_Al_mcg_per_l")
+
+pdf("residuals_plots.pdf")  # Start a new PDF file
+
+# Initialize a results list
+model_results <- list()
+
+# Loop through each variable
+for (col in columns_to_model) {
+  
+  # Fit the model (example: linear model with New_Grouping as predictor)
+  model <- lm(Grouped_Ferrum_2022_2023_data[[col]] ~ Grouped_Ferrum_2022_2023_data$New_Grouping, data = Grouped_Ferrum_2022_2023_data)
+  
+  # Extract residuals
+  residuals <- resid(model)
+  
+  # Plot histogram
+  hist(residuals, main = paste("Residuals Histogram:", col), xlab = "Residuals")
+  
+  # Plot QQ plot
+  qqnorm(residuals, main = paste("QQ Plot of Residuals:", col))
+  qqline(residuals)
+  
+  # Perform Shapiro-Wilk test on residuals
+  test_result <- tryCatch(
+    shapiro.test(residuals),
+    error = function(e) NULL
+  )
+  
+  # Create the interpretation
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The residuals are likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store the results in a data frame
+  model_results[[col]] <- data.frame(
+    Variable = col,
+    W = if (!is.null(test_result)) test_result$statistic else NA,
+    p_value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+}
+
+dev.off()  # Close the PDF device
+
+# Combine all results into a single data frame
+shapiro_results <- bind_rows(model_results)
+
+# Print results
+view(shapiro_results)
+
+# alkalinity data is still normally distributed
+```
+
+## Kruskal
+```{r}
+library(dplyr)
+library(rstatix)
+
+# List of columns to analyze - alkalinity removed from the list because shapiro showed normality
+nonparametric_columns <- c("f_Al_mcg_per_l")
+
+# Initialize a results list
+kruskal_results_list <- list()
+
+# Loop through each variable in your list
+for (col in nonparametric_columns) {
+  
+  # Filter out NAs for the current variable
+  df_filtered <- Grouped_Ferrum_2022_2023_data %>%
+    filter(!is.na(.data[[col]]))
+  
+  # Perform Kruskal-Wallis test
+  test_result <- tryCatch(
+    {
+      kruskal_test(as.formula(paste(col, "~ New_Grouping")), data = df_filtered)
+    },
+    error = function(e) {
+      # Return a default result if test fails
+      data.frame(
+        variable = col,
+        statistic = NA,
+        p = NA,
+        df = NA
+      )
+    }
+  )
+  
+  # Create interpretation
+  interpretation <- if (!is.null(test_result$p) && test_result$p < 0.05) {
+    "Significant difference among groups (reject H0)."
+  } else if (!is.null(merged_result$p)) {
+    "No significant difference among groups (fail to reject H0)."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  test_result$Interpretation <- interpretation
+  
+  # Store the result
+  kruskal_results_list[[col]] <- test_result
+}
+
+# Combine all results into a single dataframe
+kruskal_results_df <- bind_rows(kruskal_results_list)
+
+# Print the results
+view(kruskal_results_df)
+
+write_xlsx(kruskal_results_df, "C:/Users/tevinger/Downloads/Kruskal Wallis results_f_Al.xlsx")
+```
+
+## Dunn
+```{r}
+# List of columns to do the dunn post hoc test for 
+# I removed analytes that did not have any differences identified by the kruskal wallis 
+columns_for_dunn <- c("f_Al_mcg_per_l")
+
+library(dplyr)
+library(rstatix)
+library(multcompView)
+
+# Initialize a results list
+dunn_results_list <- list()
+
+# Loop through each variable in columns_for_dunn
+for (col in columns_for_dunn) {
+  
+  # Filter out NAs for the current variable
+  df_filtered <- Grouped_Ferrum_2022_2023_data %>%
+    filter(!is.na(.data[[col]]))
+  
+  # Try performing Dunn's test with Bonferroni adjustment
+  test_result <- tryCatch(
+    {
+      df_filtered %>%
+        dunn_test(as.formula(paste(col, "~ New_Grouping")), p.adjust.method = "bonferroni")
+    },
+    error = function(e) {
+      # Return a default result if test fails
+      data.frame(
+        Variable = col,
+        group1 = NA,
+        group2 = NA,
+        Z = NA,
+        p = NA,
+        p.adj = NA
+      )
+    }
+  )
+  
+  # Add the variable name to each row
+  test_result$Variable <- col
+  
+  # Store the result
+  dunn_results_list[[col]] <- test_result
+  
+  # If there is at least one valid pairwise comparison, generate the CLD
+  if (!all(is.na(test_result$p.adj))) {
+     # Build a matrix of p-values manually
+    groups <- unique(c(test_result$group1, test_result$group2))
+    pval_matrix <- matrix(1, nrow = length(groups), ncol = length(groups),
+                          dimnames = list(groups, groups))
+    
+    for (i in seq_len(nrow(test_result))) {
+      g1 <- as.character(test_result$group1[i])
+      g2 <- as.character(test_result$group2[i])
+      pval <- test_result$p.adj[i]
+      
+      pval_matrix[g1, g2] <- pval
+      pval_matrix[g2, g1] <- pval  # symmetric
+    }
+    
+    # Generate CLD using multcompView
+    cld <- multcompLetters(pval_matrix)
+    
+    # Convert to a tidy data frame
+    cld_df <- data.frame(
+      Variable = col,
+      Group = names(cld$Letters),
+      Letters = cld$Letters
+    )
+    
+    # Store the CLD result
+    cld_results_list[[col]] <- cld_df
+  }
+}
+
+# Combine all Dunn's test results into a single dataframe
+dunn_results_df <- bind_rows(dunn_results_list)
+
+# Combine all CLD results into a single dataframe
+cld_results_df <- bind_rows(cld_results_list)
+
+# Print the results
+view(dunn_results_df)
+view(cld_results_df)
+
+write_xlsx(dunn_results_df, "C:/Users/tevinger/Downloads/Dunns Test results_updated f_Al.xlsx")
+
+write_xlsx(cld_results_df, "C:/Users/tevinger/Downloads/CLD results_updated f_Al.xlsx")
+```
 
 # Site Classification Group Comparison Statistics
 ## set elements and columns for group comparison stats loop

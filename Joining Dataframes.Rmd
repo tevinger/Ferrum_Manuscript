@@ -874,48 +874,83 @@ write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V9, "C:/Users/tevinger/Box/Poulin
 
 ```
 
-# Conversion to molar and equivalents units
+# Molar 
+
 ```{r}
-Alaska_DataRelease_2022_2023_Ferrum_V8 <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V8.xlsx")
+Alaska_DataRelease_2022_2023_Ferrum_V11 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V11_molar_excel.xlsx")
+```
 
-Alaska_DataRelease_2022_2023_Ferrum_V8_molar_prep <- Alaska_DataRelease_2022_2023_Ferrum_V8 %>%
-  dplyr::select(DIC_mgC_per_l,
-                Alk_mgCaCO3_per_l,
-                DOC_mgC_per_l,
-                f_Cl_mg_per_l,
-                f_NO3_mgN_per_l,
-                f_SO4_mg_per_l,
-                f_Ca_mg_l,
-                f_Mg_mg_l,
-                f_Na_mg_l,
-                f_K_mg_l,
-                f_SiO2_mg_per_l,
-                f_Pb_mcg_per_l, p_Pb_mcg_per_l,
-                f_Ag_mcg_per_l, p_Ag_mcg_per_l,
-f_Al_mcg_per_l, p_Al_mcg_per_l,
-f_As_mcg_per_l, p_As_mcg_per_l,
-f_Ba_mcg_per_l, p_Ba_mcg_per_l,
-#f_Be_mcg_per_l, p_Be_mcg_per_l,
-f_Cd_mcg_per_l, p_Cd_mcg_per_l,
-f_Ce_mcg_per_l, p_Ce_mcg_per_l,
-f_Co_mcg_per_l, p_Co_mcg_per_l,
-f_Cr_mcg_per_l, p_Cr_mcg_per_l,
-f_Cu_mcg_per_l, p_Cu_mcg_per_l,
-f_Dy_mcg_per_l, p_Dy_mcg_per_l,
-f_Fe_mcg_per_l, p_Fe_mcg_per_l,
-f_La_mcg_per_l, p_La_mcg_per_l,
-f_Mn_mcg_per_l, p_Mn_mcg_per_l,
-f_Nd_mcg_per_l, p_Nd_mcg_per_l,
-f_Ni_mcg_per_l, p_Ni_mcg_per_l,
-f_Pr_mcg_per_l, p_Pr_mcg_per_l,
-f_Se_mcg_per_l, p_Se_mcg_per_l,
-#f_Th_mcg_per_l, p_Th_mcg_per_l,
-f_Tl_mcg_per_l, p_Tl_mcg_per_l,
-f_U_mcg_per_l, p_U_mcg_per_l,
-f_V_mcg_per_l, p_V_mcg_per_l,
-f_Y_mcg_per_l, p_Y_mcg_per_l,
-f_Zn_mcg_per_l, p_Zn_mcg_per_l)
+```{r}
+# remove 0 values in the columns I converted to mol/L
 
-Alaska_DataRelease_2022_2023_Ferrum_V9_molar
+special_cols <- c(41,45,59,63,67,69,75,89,132,134,136,140,142,144,146,158)
+even_cols    <- seq(160, 296, by = 2)
+cols_target  <- c(special_cols, even_cols)
+print(cols_target)
 
+# keep only indices that exist in df
+cols_target <- cols_target[cols_target <= ncol(Alaska_DataRelease_2022_2023_Ferrum_V11)]
+
+# --- replace 0 with NA across those columns ---
+Alaska_DataRelease_2022_2023_Ferrum_V11_V2 <- Alaska_DataRelease_2022_2023_Ferrum_V11 %>%
+  mutate(
+    across(
+      all_of(names(Alaska_DataRelease_2022_2023_Ferrum_V11)[cols_target]),
+      ~ {
+        x <- suppressWarnings(as.numeric(.x))  # force numeric
+        na_if(x, 0)                            # replace 0 with NA
+      }
+    )
+  )
+```
+
+```{r}
+# Add REE sum back to the df
+Alaska_DataRelease_2022_2023_Ferrum_V11_V3 <- Alaska_DataRelease_2022_2023_Ferrum_V11_V2 %>%
+  mutate(
+    f_REE = ifelse(
+      rowSums(is.na(dplyr::select(., 
+                           f_Ce_mol_L, 
+                           f_Dy_mol_L, 
+                           f_La_mol_L, 
+                           f_Nd_mol_L, 
+                           f_Pr_mol_L, 
+                           f_Y_mol_L))) > 0,
+      NA,
+      rowSums(dplyr::select(., 
+                           f_Ce_mol_L, 
+                           f_Dy_mol_L, 
+                           f_La_mol_L, 
+                           f_Nd_mol_L, 
+                           f_Pr_mol_L, 
+                           f_Y_mol_L), 
+              na.rm = TRUE)
+    )
+  ) %>%
+  mutate(
+    p_REE = ifelse(
+      rowSums(is.na(dplyr::select(., 
+                           p_Ce_mol_L, 
+                           p_Dy_mol_L, 
+                           p_La_mol_L, 
+                           p_Nd_mol_L, 
+                           p_Pr_mol_L, 
+                           p_Y_mol_L))) > 0,
+      NA,
+      rowSums(dplyr::select(., 
+                           p_Ce_mol_L, 
+                           p_Dy_mol_L, 
+                           p_La_mol_L, 
+                           p_Nd_mol_L, 
+                           p_Pr_mol_L, 
+                           p_Y_mol_L), 
+              na.rm = TRUE)
+    )
+  ) %>%
+  relocate(f_REE, .after = p_Pb_mol_L_qa) %>%
+  relocate(p_REE, .after = f_REE_qa)
+
+view(Alaska_DataRelease_2022_2023_Ferrum_V11_V3)
+
+write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V11_V3, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V11_molar.xlsx")
 ```

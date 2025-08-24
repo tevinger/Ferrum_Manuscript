@@ -954,3 +954,13 @@ view(Alaska_DataRelease_2022_2023_Ferrum_V11_V3)
 
 write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V11_V3, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V11_molar.xlsx")
 ```
+
+# Seep Dataframe
+```{r}
+Alaska_DataRelease_2022_2023_Ferrum_V11 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V11_molar.xlsx")
+
+All_Seep_Data <- Alaska_DataRelease_2022_2023_Ferrum_V11 %>%
+  filter(site_classification == "seep")
+
+write_xlsx(All_Seep_Data, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/All_seep_Data.xlsx")
+```

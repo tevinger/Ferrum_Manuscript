@@ -70,6 +70,8 @@ library(dunn.test)
 library(multcompView)
 library(patchwork)
 library(ggpattern)
+library(plotly)
+library(htmlwidgets)
 ```
 
 ## Load Data
@@ -1775,6 +1777,9 @@ Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc_plot)) +
 
 Zn_plot
 
+ggplotly(Zn_plot)
+Zn_plotly
+
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Zn_V2 no labels.png", Zn_plot, width = 2.75, height = 3.25, dpi = 300)
 ```
 
@@ -2088,7 +2093,6 @@ Al_long <- Al_long %>%
       levels = c("4_f", "4_p", "1_f", "1_p", "2_f", "2_p", "3_f", "3_p", "6_f", "6_p")
     )
   )
-
 
 ```
 
@@ -3168,6 +3172,69 @@ Cr_plot
 
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Cr_V2 no labels.png", Cr_plot, width = 2.75, height = 3.25, dpi = 300)
 ```
+
+# practice plotly
+```{r}
+library(plotly)
+library(dplyr)
+# Make sure data > 0 for log axis
+#df <- Al_long %>% filter(Metal_conc_plot > 0)
+
+fig <- plot_ly()
+
+# filtered (f)
+fig <- fig %>%
+  add_boxplot(data = filter(df, Metal_type == "f"),
+              line = list(color = "black", width = 1.5),
+              x = ~x_group, y = ~Metal_conc_plot,
+              color = ~New_Groups,
+              name = ~paste(New_Groups, "(f)"),
+              boxmean = TRUE,
+              line = list(width = 1),
+              opacity = 0.9)
+
+# particulate (p)
+fig <- fig %>%
+  add_boxplot(data = filter(df, Metal_type == "p"),
+              line = list(color = "black", width = 1.5),
+              x = ~x_group, y = ~Metal_conc_plot,
+              color = ~New_Groups,
+              name = ~paste(New_Groups, "(p)"),
+              boxmean = TRUE,
+              line = list(width = 2, dash = "dash"),
+              opacity = 0.6,
+              showlegend = FALSE)   # avoid duplicate legends
+
+# Layout options to mimic ggplot
+fig <- fig %>%
+  layout(
+    yaxis = list(
+      type = "log",
+      title = ylab_Al,
+      range = log10(c(0.07, 5e6)),
+      tickvals = c(0.1, 1, 10, 100, 1000, 10000, 100000, 1e6, 1e7),
+      ticktext = c("0.1","1","10","100","1,000","10,000","100,000","1,000,000","10,000,000")
+    ),
+    xaxis = list(title = ""),
+    legend = list(orientation = "h", x = 0.5, y = 1.1, xanchor = "center"),
+    margin = list(l = 60, r = 20, t = 30, b = 40)
+  )
+
+fig <- fig %>%
+  layout(
+    title = list(
+      text = "Aluminum Concentrations Across Groups",
+      x = 0.5,                  # center the title
+      xanchor = "center",
+      font = list(size = 18)
+    ),
+    xaxis = list(title = "Group"),
+    yaxis = list(title = "Concentration (µg/L)", type = "log")
+  )
+
+fig
+```
+
 
 # Old code
 ### Filtered Se

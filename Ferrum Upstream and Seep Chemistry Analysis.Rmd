@@ -65,7 +65,7 @@ library(dunn.test)
 library(multcompView)
 library(patchwork)
 library(ggbreak)
-library(ggpattern) #need to install rlang package I think for ggpattern to be able to load
+library(ggpattern) 
 ```
 
 # Load Data
@@ -2057,4 +2057,79 @@ seep_DIC <- df_seep_buffering %>%
 seep_DIC
 
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry by watershed/DIC_V2.png", seep_DIC, width = 2, height = 5, dpi = 300)
+```
+
+# Seep Ficklin Diagram
+```{r}
+# load data if necessary from 
+All_Seep_Data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/All_seep_Data.xlsx")
+
+# remove control seeps from All_Seep_Data to plot separately in the Ficklin Diagram
+Seep_control_df <- All_Seep_Data %>%
+  filter(grepl("con", Field_label))
+
+All_Seep_Data <- All_Seep_Data %>%
+  filter(!grepl("con", Field_label))
+```
+
+```{r}
+Seep_metals_plot <- 
+  ggplot(All_Seep_Data, aes(x = pH, y = all_sum_of_metals_mg_L, color = Watershed)) +
+  geom_point(size = 3, alpha = 0.8) +           # scatter points
+  geom_smooth(method = "lm", se = FALSE,        # optional trend line
+              color = "black", linetype = "dashed") +
+  labs(
+    title = NULL,
+    x = "pH",
+    y = "Sum of Metals (mg/L)",                 # adjust units if needed
+    color = "Watershed"
+  ) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    legend.position = "top",
+    plot.title = element_text(hjust = 0.5)      # center title
+  )
+
+Seep_metals_plot
+
+
+Seep_ficklin_plot <- 
+  ggplot(All_Seep_Data, aes(x = pH, y = Ficklin_sum_of_metals_ug_L, color = Watershed)) +
+  
+  # horizontal lines
+  #geom_hline(yintercept = c(1, 10), linetype = "solid", color = "grey", linewidth = 0.8) + # use for mg/L scale
+
+  geom_hline(yintercept = c(1000, 100000), linetype = "solid", color = "grey", linewidth = 0.5) + # use for ug/L scale
+  
+  geom_vline(xintercept = c(1, 3, 5.5), 
+             linetype = "solid", color = "grey", linewidth = 0.5) +
+  
+  geom_point(size = 3, alpha = 0.8) +           # scatter points
+  geom_smooth(method = "lm", se = FALSE,        # optional trend line
+              color = "black", linetype = "dashed") +
+  labs(
+    title = NULL,
+    x = "pH",
+    #y = "Sum of Zn+Cu+Cd+Pb+Co+Ni (mg/L)",   
+    y = "Sum of Zn+Cu+Cd+Pb+Co+Ni (µg/L)", 
+    color = "Watershed"
+  ) +
+  # Labels
+  annotate("text", x = 6.25,    y = 85000, label = "Near-neutral,", size = 3.5, hjust = 0.5) +
+  annotate("text", x = 6.25,    y = 65000, label = "Low-metal",    size = 3.5, hjust = 0.5) +
+  annotate("text", x = 4.75, y = 35000, label = "Acid,",        size = 3.5, hjust = 0.5) +
+  annotate("text", x = 4.75, y = 15000, label = "Low-metal",    size = 3.5, hjust = 0.5) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(hjust = 0.5)      # center title
+  )
+
+Seep_ficklin_plot
+
+Seep_ficklin_plotly <- ggplotly(Seep_ficklin_plot)
+Seep_ficklin_plotly
+
 ```

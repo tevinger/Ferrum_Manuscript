@@ -793,6 +793,83 @@ SalmonR_DIC_top
 ggsave("C:/Users/tevinger/Downloads/SalmonR DIC.png", SalmonR_DIC_top, width = 5, height = 2.5, dpi = 300)
 ```
 
+## SpC
+```{r}
+Cl_MS <- SalmonR_filtered_MS %>%
+  filter(!is.na(f_Cl_mg_per_l))
+
+Cl_breaks <- seq(0,900, by = 50)
+Cl_labels <- c(0,"",100, "", 200, "", 300, "", 400, "", 500, "", 600, "", 700, "", 800, "850", 900)
+```
+
+### Area Plot
+```{r}
+SalmonR_SpC_area <- ggplot() +
+  geom_area(data = SalmonR_filtered_MS, 
+            aes(x = Rel_Water_Area_plotting, y = Spec_Cond_microS_per_cm),
+            fill = "#2daa9e") +
+  geom_line(data = SalmonR_filtered_MS, 
+            aes(x = Rel_Water_Area_plotting, y = Spec_Cond_microS_per_cm), 
+            color = "#1d6e66", linewidth = 0.4) +
+  geom_point(data = SalmonR_filtered_MS, aes(x = Rel_Water_Area_plotting, y = Spec_Cond_microS_per_cm, 
+      #fill = New_Grouping
+      ), pch = 19, color = "black", 
+           size = 2) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11), 
+             linetype = "dashed", color = "grey15", linewidth = 0.5) +
+  coord_cartesian(x = c(1,22.5), y = c(0, 750)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, 
+                     expand = expansion(mult = c(0.03, 0))) +
+  #scale_y_continuous(breaks = Cl_breaks, labels = Cl_labels, sec.axis = dup_axis(name = NULL, labels = NULL)) +
+  labs(x = NULL, y = NULL, title = NULL) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.ticks.length.y.right = unit(-0.1, "cm")  # negative to extend into plot
+  )
+
+SalmonR_SpC_area
+```
+
+## Cl
+```{r}
+Cl_MS <- SalmonR_filtered_MS %>%
+  filter(!is.na(f_Cl_mg_per_l))
+
+Cl_breaks <- seq(0,900, by = 50)
+Cl_labels <- c(0,"",100, "", 200, "", 300, "", 400, "", 500, "", 600, "", 700, "", 800, "850", 900)
+```
+
+### Area Plot
+```{r}
+SalmonR_Cl_area <- ggplot() +
+  geom_area(data = SalmonR_filtered_MS, 
+            aes(x = Rel_Water_Area_plotting, y = f_Cl_mg_per_l),
+            fill = "#2daa9e") +
+  geom_line(data = SalmonR_filtered_MS, 
+            aes(x = Rel_Water_Area_plotting, y = f_Cl_mg_per_l), 
+            color = "#1d6e66", linewidth = 0.4) +
+  geom_point(data = SalmonR_filtered_MS, aes(x = Rel_Water_Area_plotting, y = f_Cl_mg_per_l, 
+      #fill = New_Grouping
+      ), pch = 19, color = "black", 
+           size = 2) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11), 
+             linetype = "dashed", color = "grey15", linewidth = 0.5) +
+  coord_cartesian(x = c(1,22.5), y = c(0, 2.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels, 
+                     expand = expansion(mult = c(0.03, 0))) +
+  #scale_y_continuous(breaks = Cl_breaks, labels = Cl_labels, sec.axis = dup_axis(name = NULL, labels = NULL)) +
+  labs(x = NULL, y = NULL, title = NULL) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    axis.ticks.length.y.right = unit(-0.1, "cm")  # negative to extend into plot
+  )
+
+SalmonR_Cl_area
+```
+
+
 ## SO4
 ```{r}
 SO4_MS <- SalmonR_filtered_MS %>%

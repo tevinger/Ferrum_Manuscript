@@ -76,6 +76,8 @@ library(ggpattern)
 #view(working_Ferrum_data)
 
 Alaska_DataRelease_2022_2023_Ferrum_V10 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V10.xlsx")
+
+Alaska_DataRelease_2022_2023_Ferrum_V11_molar <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V11_molar.xlsx")
 ```
 
 ```{r}
@@ -170,8 +172,111 @@ u_Zn_mcg_per_l)
 unique(working_Ferrum_data$Watershed)
 ```
 
+```{r}
+working_Ferrum_data_molar <- Alaska_DataRelease_2022_2023_Ferrum_V11_molar %>%
+  dplyr::select(ParkID,
+                Watershed,
+                #Subcatchment,
+                New_Groups,
+                New_Grouping,
+                Field_label,
+                Latitude,
+                Longitude,
+                sample_collection_year,
+                sample_collection_month,
+                sample_collection_season,
+                Watershed_Area,
+                Relative_MS_Watershed_Area,
+                SamplingEventID,
+                VisualDescription,
+                Site_Classification,
+                Hyd_Classification,
+                Distance_km,
+                Elevation_ft,
+                pH,
+                Temp_deg_celsius,
+                Diss_oxy_mg_per_l,
+                Diss_oxy_percent_sat,
+                Spec_Cond_microS_per_cm,
+                DIC_mgC_per_l,
+                Alk_mgCaCO3_per_l,
+                DOC_mgC_per_l,
+                f_Cl_mg_per_l,
+                f_NO3_mgN_per_l,
+                f_SO4_mg_per_l,
+                f_Ca_mg_l,
+                f_Mg_mg_l,
+                f_Na_mg_l,
+                f_K_mg_l,
+                f_SiO2_mg_per_l,
+                f_Pb_mcg_per_l, p_Pb_mcg_per_l,
+                f_Ag_mcg_per_l, p_Ag_mcg_per_l,
+f_Al_mcg_per_l, p_Al_mcg_per_l,
+f_As_mcg_per_l, p_As_mcg_per_l,
+f_Ba_mcg_per_l, p_Ba_mcg_per_l,
+#f_Be_mcg_per_l, p_Be_mcg_per_l,
+f_Cd_mcg_per_l, p_Cd_mcg_per_l,
+f_Ce_mcg_per_l, p_Ce_mcg_per_l,
+f_Co_mcg_per_l, p_Co_mcg_per_l,
+f_Cr_mcg_per_l, p_Cr_mcg_per_l,
+f_Cu_mcg_per_l, p_Cu_mcg_per_l,
+f_Dy_mcg_per_l, p_Dy_mcg_per_l,
+f_Fe_mcg_per_l, p_Fe_mcg_per_l,
+f_La_mcg_per_l, p_La_mcg_per_l,
+f_Mn_mcg_per_l, p_Mn_mcg_per_l,
+f_Nd_mcg_per_l, p_Nd_mcg_per_l,
+f_Ni_mcg_per_l, p_Ni_mcg_per_l,
+f_Pr_mcg_per_l, p_Pr_mcg_per_l,
+f_Se_mcg_per_l, p_Se_mcg_per_l,
+#f_Th_mcg_per_l, p_Th_mcg_per_l,
+f_Tl_mcg_per_l, p_Tl_mcg_per_l,
+f_U_mcg_per_l, p_U_mcg_per_l,
+f_V_mcg_per_l, p_V_mcg_per_l,
+f_Y_mcg_per_l, p_Y_mcg_per_l,
+f_Zn_mcg_per_l, p_Zn_mcg_per_l,
+f_REE, p_REE,
+u_Pb_mcg_per_l,
+u_Ag_mcg_per_l,
+u_Al_mcg_per_l,
+u_As_mcg_per_l,
+u_Ba_mcg_per_l,
+# u_Be_mcg_per_l,
+u_Cd_mcg_per_l,
+u_Ce_mcg_per_l,
+u_Co_mcg_per_l,
+u_Cr_mcg_per_l,
+u_Cu_mcg_per_l,
+u_Dy_mcg_per_l,
+u_Fe_mcg_per_l,
+u_La_mcg_per_l,
+u_Mn_mcg_per_l,
+u_Nd_mcg_per_l,
+u_Ni_mcg_per_l,
+u_Pr_mcg_per_l,
+u_Se_mcg_per_l,
+# u_Th_mcg_per_l,
+u_Tl_mcg_per_l,
+u_U_mcg_per_l,
+u_V_mcg_per_l,
+u_Y_mcg_per_l,
+u_Zn_mcg_per_l)
+
+unique(working_Ferrum_data$Watershed)
+```
+
+```{r}
+working_Ferrum_data_molar <- Alaska_DataRelease_2022_2023_Ferrum_V11_molar %>%
+  mutate(Ca_Mg_ratio = f_Ca_mol_L / f_Mg_mol_L)
+```
+
 ## Individual Dataframes
 ```{r}
+no_seep_df <- working_Ferrum_data %>%
+  filter(New_Grouping != "Seep")
+
+no_seep_df_molar <- working_Ferrum_data_molar %>%
+  filter(New_Grouping != "Seep")
+
 Upstream_df <- working_Ferrum_data %>%
   filter(New_Grouping == "Upstream")
 
@@ -2059,7 +2164,7 @@ seep_DIC
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/S01_Seep Chemistry by watershed/DIC_V2.png", seep_DIC, width = 2, height = 5, dpi = 300)
 ```
 
-# Seep Ficklin Diagram
+# 5. Seep Ficklin Diagram
 ```{r}
 # load data if necessary from 
 All_Seep_Data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/All_seep_Data.xlsx")
@@ -2132,4 +2237,67 @@ Seep_ficklin_plot
 Seep_ficklin_plotly <- ggplotly(Seep_ficklin_plot)
 Seep_ficklin_plotly
 
+```
+
+# 6. Upstream Piper Diagram
+
+
+# 7. Exploratory Analyses
+## Ca/Mg
+carbonates ratio is about 1, silicates is greater than 2
+```{r}
+library(ggplot2)
+
+Ca_Mg_ratio <- working_Ferrum_data_molar %>%
+  ggplot(aes(x = Watershed, y = Ca_Mg_ratio, color = New_Grouping)) +
+  # --- background shading bands (y: 0–1, 1–2, 2–5) ---
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0, ymax = 1),
+            fill = "grey95", color = NA, alpha = 1/2, inherit.aes = FALSE) +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 1, ymax = 2),
+            fill = "white", color = NA, alpha = 1/2, inherit.aes = FALSE) +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 2, ymax = 5),
+            fill = "grey85", color = NA, alpha = 1/3, inherit.aes = FALSE) +
+
+  # points + reference lines
+  geom_point(size = 2, alpha = 0.9) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "blue") +  # carbonate weathering
+  geom_hline(yintercept = 2, linetype = "dashed", color = "red") +   # silicate weathering
+
+  # manual colors for New_Grouping
+  scale_color_manual(values = boxplot_colors, name = "New Grouping") +
+
+  # axes/labels
+  coord_flip() +  # optional, for vertical samples
+  scale_y_continuous(limits = c(0, 5), expand = expansion(mult = c(0, 0))) +
+  labs(x = "Watershed", y = "Ca/Mg molar ratio") +
+  theme_minimal() +
+  theme(
+  panel.grid.minor = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.background = element_rect(fill = "white"),
+  panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+  #axis.text.x = element_text(color = "white", size = 1),
+  #axis.title.x = element_blank(),
+  #axis.ticks.x = element_blank(),
+  axis.text.x = element_text(size = 10, color = "black", face = "bold"),
+  axis.text.y = element_text(size = 10, color = "black", face = "bold"),
+  axis.title.y = element_text(size = 12, color = "black", face = "bold", vjust = 1.25, margin = margin(r = 10)),
+  axis.title.x = element_text(size = 12, color = "black", face = "bold", vjust = 1.25, margin = margin(t = 10)),
+  legend.position = "top",
+  legend.box = "horizontal",
+  legend.justification = "center",
+  legend.title = element_blank(),
+  legend.background = element_rect(fill = NA),
+  legend.text = element_text(size = 10, color = "black", face = "bold"),
+  legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+  axis.ticks.y = element_line(size = 0.9, color = "black"),  # Thicker y-axis ticks
+    axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
+  plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold")
+) +
+  guides(
+    color = guide_legend(nrow = 2, ncol = 3, byrow = TRUE)
+  )
+
+
+Ca_Mg_ratio
 ```

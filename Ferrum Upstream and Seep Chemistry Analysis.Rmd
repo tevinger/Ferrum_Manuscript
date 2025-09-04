@@ -66,6 +66,8 @@ library(multcompView)
 library(patchwork)
 library(ggbreak)
 library(ggpattern) 
+library(plotly)
+library(htmlwidgets)
 ```
 
 # Load Data
@@ -268,9 +270,11 @@ unique(working_Ferrum_data$Watershed)
 ```{r}
 working_Ferrum_data_molar <- Alaska_DataRelease_2022_2023_Ferrum_V11_molar %>%
   mutate(Ca_Mg_ratio = f_Ca_mol_L / f_Mg_mol_L,
-         Na_Cl_ratio = ) 
+         Na_Cl_ratio = f_Na_mol_L / f_Cl_mol_L) 
 
-working_Ferrum_data_molar <- working_Ferrum_data_molar %>%
+view(working_Ferrum_data_molar)
+
+working_Ferrum_data <- working_Ferrum_data %>%
   mutate(
     Ca_meq_L = f_Ca_mg_L / 20.04,      # Ca²⁺: 2 eq/mol, 40.08 g/mol
     Mg_meq_L = f_Mg_mg_L / 12.155,     # Mg²⁺: 2 eq/mol, 24.31 g/mol
@@ -2304,9 +2308,9 @@ annotate("rect", xmin = -Inf, xmax = Inf, ymin = 2, ymax = 5,
   legend.title = element_blank(),
   legend.background = element_rect(fill = NA),
   legend.text = element_text(size = 10, color = "black", face = "bold"),
-  legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
-  axis.ticks.y = element_line(size = 0.9, color = "black"),  # Thicker y-axis ticks
-    axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
+  legend.box.background = element_rect(fill = NA, color = "black", linewidth = 0.75),
+  axis.ticks.y = element_line(linewidth = 0.9, color = "black"),  # Thicker y-axis ticks
+  axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
   plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold")
 ) +
   guides(
@@ -2316,35 +2320,36 @@ annotate("rect", xmin = -Inf, xmax = Inf, ymin = 2, ymax = 5,
 
 Ca_Mg_ratio
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Chemical Weathering Analysis/Ca Mg molar ratio by watershed.png", Ca_Mg_ratio, width = 5, height = 2, dpi = 300)
+Ca_Mg_interactive <- ggplotly(Ca_Mg_ratio)
+Ca_Mg_interactive
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Chemical Weathering Analysis/Ca Mg molar ratio by watershed_large.png", Ca_Mg_ratio, width = 5, height = 2, dpi = 300, scale = 2)
 ```
 
+## Na/Cl
 ```{r}
 library(ggplot2)
 
-Ca_Mg_ratio <- working_Ferrum_data_molar %>%
-  filter(!is.na(Ca_Mg_ratio)) %>% 
-  ggplot(aes(x = Watershed, y = Ca_Mg_ratio, color = New_Grouping)) +
+Na_Cl_ratio <- working_Ferrum_data_molar %>%
+  filter(!is.na(Na_Cl_ratio)) %>% 
+  ggplot(aes(x = Watershed, y = Na_Cl_ratio, color = New_Grouping)) +
   # --- background shading bands (y: 0–1, 1–2, 2–5) ---
-annotate("rect", xmin = -Inf, xmax = Inf, ymin = 0, ymax = 1,
-         fill = "grey95", color = NA, alpha = 1/2) +
-annotate("rect", xmin = -Inf, xmax = Inf, ymin = 1, ymax = 2,
-         fill = "white", color = NA, alpha = 1/2) +
-annotate("rect", xmin = -Inf, xmax = Inf, ymin = 2, ymax = 5,
-         fill = "grey85", color = NA, alpha = 1/3) +
+annotate("rect", xmin = -Inf, xmax = Inf, ymin = 0, ymax = 1, fill = "grey95", color = NA, alpha = 1/2) +
+#annotate("rect", xmin = -Inf, xmax = Inf, ymin = 1, ymax = 5, fill = "white", color = NA, alpha = 1/2) +
+#annotate("rect", xmin = -Inf, xmax = Inf, ymin = 2, ymax = 5,fill = "grey85", color = NA, alpha = 1/3) +
 
   # points + reference lines
   geom_jitter(width = 0.15, size = 2, alpha = 0.9) +
   geom_hline(yintercept = 1, linetype = "dashed", color = "blue") +  # carbonate weathering
-  geom_hline(yintercept = 2, linetype = "dashed", color = "red") +   # silicate weathering
+  #geom_hline(yintercept = 2, linetype = "dashed", color = "red") +   # silicate weathering
 
   # manual colors for New_Grouping
   scale_color_manual(values = boxplot_colors, name = "New Grouping") +
 
   # axes/labels
   coord_flip() +  # optional, for vertical samples
-  scale_y_continuous(limits = c(0, 5), expand = expansion(mult = c(0, 0))) +
-  labs(x = "Watershed", y = "Ca/Mg molar ratio") +
+  scale_y_continuous(limits = c(0, 25), expand = expansion(mult = c(0, 0))) +
+  labs(x = "Watershed", y = "Na/Cl molar ratio") +
   theme_minimal() +
   theme(
   panel.grid.minor = element_blank(),
@@ -2364,8 +2369,8 @@ annotate("rect", xmin = -Inf, xmax = Inf, ymin = 2, ymax = 5,
   legend.title = element_blank(),
   legend.background = element_rect(fill = NA),
   legend.text = element_text(size = 10, color = "black", face = "bold"),
-  legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
-  axis.ticks.y = element_line(size = 0.9, color = "black"),  # Thicker y-axis ticks
+  legend.box.background = element_rect(fill = NA, color = "black", linewidth = 0.75),
+  axis.ticks.y = element_line(linewidth = 0.9, color = "black"),  # Thicker y-axis ticks
     axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
   plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold")
 ) +
@@ -2376,5 +2381,8 @@ annotate("rect", xmin = -Inf, xmax = Inf, ymin = 2, ymax = 5,
 
 Na_Cl_ratio
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Chemical Weathering Analysis/Ca Mg molar ratio by watershed.png", Ca_Mg_ratio, width = 5, height = 2, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Chemical Weathering Analysis/Na Cl molar ratio by watershed.png", Na_Cl_ratio, width = 5, height = 2, dpi = 300)
+
+Na_Cl_interactive <- ggplotly(Na_Cl_ratio)
+Na_Cl_interactive
 ```

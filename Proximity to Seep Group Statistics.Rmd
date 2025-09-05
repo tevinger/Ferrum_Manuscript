@@ -7,6 +7,68 @@ editor_options:
   chunk_output_type: console
 ---
 
+#Load packages
+```{r}
+library(dataRetrieval)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(emmeans)
+library(lme4)
+library(ggeasy)
+library(lattice)
+library(rstatix)
+library(ggsignif)
+library(outliers)
+library(ggpmisc)
+library(ggpubr)
+library(r2symbols)
+library(stargazer)
+library(ggbreak)
+library(writexl)
+library(ggrepel)
+library(stringr)
+library(ggthemes)
+library(reshape)
+library(RColorBrewer)
+library(readxl)
+library(dplyr)
+library(gridExtra)
+library(scales)
+library(dbscan)
+library(mclust)
+library(devtools)
+library(factoextra)
+library(corrplot)
+library(ggbiplot)
+library(ggcorrplot)
+library(GGally)
+library(Hmisc)
+library(ggbiplot)
+library(ggfortify)
+library(emmeans)
+library(lme4)
+library(lmerTest)
+library(multcomp)
+library(readxl)
+library(learnr)
+library(scatterplot3d)
+library(vegan)
+library(ggtern)
+library(plotrix)
+library(smwrBase)
+library(smwrData)
+library(smwrGraphs)
+library(colorBlindness)
+library(flextable)
+library(officer)
+library(dunn.test)
+library(multcompView)
+library(patchwork)
+library(ggpattern)
+```
+
 ```{r}
 library(ggplot2)
 
@@ -88,6 +150,7 @@ Grouped_Ferrum_2022_2023_data <- Alaska_DataRelease_2022_2023_Ferrum_V10 %>%
                 Diss_oxy_percent_sat,
                 Spec_Cond_microS_per_cm,
                 DIC_mgC_per_l,
+                HCO3_mg_per_l,
                 Alk_mgCaCO3_per_l,
                 DOC_mgC_per_l,
                 f_Cl_mg_per_l,
@@ -127,7 +190,7 @@ f_REE, p_REE) %>%
   filter(!(is.na(New_Grouping)))
 
 Grouped_Ferrum_2022_2023_data <- Grouped_Ferrum_2022_2023_data %>%
-  mutate(across(17:82, as.numeric))
+  mutate(across(17:83, as.numeric))
 
 view(Grouped_Ferrum_2022_2023_data)
 ```
@@ -138,18 +201,30 @@ view(Grouped_Ferrum_2022_2023_data)
 stats_working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V10 %>%
   dplyr::select(ParkID,
                 Watershed,
+                #Subcatchment,
+                New_Groups,
                 New_Grouping,
+                Field_label,
+                Latitude,
+                Longitude,
                 sample_collection_year,
                 sample_collection_month,
                 sample_collection_season,
                 Watershed_Area,
                 Relative_MS_Watershed_Area,
+                SamplingEventID,
+                VisualDescription,
+                Site_Classification,
+                Hyd_Classification,
+                Distance_km,
+                Elevation_ft,
                 pH,
                 Temp_deg_celsius,
                 Diss_oxy_mg_per_l,
                 Diss_oxy_percent_sat,
                 Spec_Cond_microS_per_cm,
                 DIC_mgC_per_l,
+                HCO3_mg_per_l,
                 Alk_mgCaCO3_per_l,
                 DOC_mgC_per_l,
                 f_Cl_mg_per_l,
@@ -184,9 +259,12 @@ f_Tl_mcg_per_l, p_Tl_mcg_per_l,
 f_U_mcg_per_l, p_U_mcg_per_l,
 f_V_mcg_per_l, p_V_mcg_per_l,
 f_Y_mcg_per_l, p_Y_mcg_per_l,
-f_Zn_mcg_per_l, p_Zn_mcg_per_l
+f_Zn_mcg_per_l, p_Zn_mcg_per_l,
+f_REE, p_REE
 ) %>%
-  filter(New_Grouping != "Seep" | is.na(New_Grouping))
+  filter(New_Grouping != "Seep") %>%
+  filter(!(is.na(New_Grouping))) %>%
+  mutate(across(17:83, as.numeric))
 
 view(stats_working_Ferrum_data)
 ```
@@ -277,7 +355,7 @@ library(dplyr)
 #columns <- c("pH", "Spec_Cond_microS_per_cm", "f_SO4_mg_per_l", "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l", "f_Cl_mg_per_l", "f_NO3_mg_per_l", "Diss_oxy_mg_per_l")
 
 elements <- c(
-  "pH", "Temp", "Diss_oxy", "Diss_oxy_percent_sat", "Spec_Cond", "DIC", 
+  "pH", "Temp", "Diss_oxy", "Diss_oxy_percent_sat", "Spec_Cond", "DIC", "HCO3",
   "Alk", "DOC", "f_Cl", "f_NO3", "f_SO4", "f_Ca", "f_Mg", "f_Na", "f_K",
   "f_SiO2",
  "f_Pb", "p_Pb", 
@@ -310,7 +388,7 @@ elements <- c(
 
 columns <- c(
   "pH", "Temp_deg_celsius", "Diss_oxy_mg_per_l", "Diss_oxy_percent_sat", "Spec_Cond_microS_per_cm", 
-  "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mgN_per_l", 
+  "DIC_mgC_per_l", "HCO3_mg_per_l",  "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mgN_per_l", 
   "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l",
   "f_SiO2_mg_per_l",
   "f_Pb_mcg_per_l", "p_Pb_mcg_per_l", 

@@ -2301,49 +2301,104 @@ meq_L_df <- working_Ferrum_data %>%
     SO4 = mgL_to_meqL(f_SO4_mg_per_l, 96.06, 2),   # as SO4^2-
     HCO3 = mgL_to_meqL(HCO3_mg_per_l, 61.016, 1)  # as HCO3^-
   ) %>%
-  dplyr::select(Watershed,
+  dplyr::select(Field_label,
+                Watershed,
                 New_Grouping,
                 Field_label,
                 Latitude,
                 Longitude,
                 sample_collection_year,
                 sample_collection_month,
-                sample_collection_season, Ca, Mg, Na, K, Cl, SO4, HCO3)
+                sample_collection_season, Ca, Mg, Na, K, Cl, SO4, HCO3) %>%
+  # filter out rows with any NA in the major ion columns
+  filter(if_all(c(Ca, Mg, Na, K, Cl, SO4, HCO3), ~ !is.na(.))) %>%
+  # add CO3 column with all zeros
+  mutate(CO3 = 0)
+
+# converts to percent by normalizing each row of data by the total cations and total anions
+# each cation is divided by the total sum of cations for that site and multiplied by 100
+df_for_piper <- meq_L_df %>% # this currently doesn't include CO3 but can be added
+  mutate(
+    NaK = Na + K,
+    cat_sum = Ca + Mg + NaK,
+    an_sum  = Cl + SO4 + HCO3,
+    Ca   = 100 * Ca   / cat_sum,
+    Mg   = 100 * Mg   / cat_sum,
+    NaK  = 100 * NaK  / cat_sum,
+    Cl   = 100 * Cl   / an_sum,
+    SO4  = 100 * SO4  / an_sum,
+    HCO3 = 100 * HCO3 / an_sum
+  )
+
+rownames(df_for_piper) <- make.unique(as.character(meq_L_df$Watershed))
+
+# Make a Piper object
+# color by Group
+pal <- c(
+   "Unimpaired Tributary" = "#00589b",
+  "Upstream" = "#72D9FF",
+  "Seep" = "#c81600",
+  "Impaired Tributary" = "indianred2",
+  "Downstream MS" = "#f5a678"
+)
+
+df_for_piper$pt.col <- pal[ meq_L_df$New_Grouping ]
+df_for_piper$pt.bg <- pal[ meq_L_df$New_Grouping ]
+
+df_for_piper$pt.col[is.na(df_for_piper$pt.col)] <- "grey50"  # fallback
+df_for_piper$pt.pch <- 21
+p_obj <- piper(df_for_piper)
+
+# 5. Plot it
+plot(p_obj, main = "Piper Diagram (hydrogeo)")
 ```
 
 ```{r}
-library(hydrogeo)
+library(ggtern)
+library(patchwork) 
 
-piper.diagram(
-  x         = ex_meq,
-  cations   = c("Ca", "Mg", "Na", "K"),
-  anions    = c("Cl", "SO4", "HCO3"),
-  sample_id = "sample_id",
-  title     = "Piper Diagram (hydrogeo)",
-  cex       = 1.2,                 # point size
-  pch       = 21,                  # filled circles
-  col       = "black",
-  bg        = c("#1f77b4", "#2ca02c", "#d62728")  # fill per sample
-)
+cat_tri <- ggtern(df_for_piper, aes(x = NaK, y = Ca, z = Mg, fill = New_Grouping)) +
+  geom_point(shape = 21, size = 3) +
+  Tlab("Na+K") + Llab("Ca") + Rlab("Mg") +
+  scale_fill_manual(values = boxplot_colors) +
+  theme_bw() + 
+  #theme_showarrows() +
+  ggtitle("Cations") +
+  theme(legend.position = "none")
+
+an_tri <- ggtern(df_for_piper, aes(x = Cl, y = HCO3, z = SO4, fill = New_Grouping)) +
+  geom_point(shape = 21, size = 3) +
+   Tlab("Cl") + Llab(expression(HCO[3])) + Rlab("SO"[4]) +
+  scale_fill_manual(values = boxplot_colors) +
+  theme_bw() + 
+  #theme_showarrows() +
+  ggtitle("Anions")
+
+cat_tri + an_tri
 ```
 
 
 ```{r}
-# --- Classic Piper diagram (center diamond included) ---
-png("piper_hydrogeo.png", width = 1100, height = 800, res = 120)
-piper.diagram(
-  x         = ex_meq,
-  cations   = c("Ca", "Mg", "Na", "K"),
-  anions    = c("Cl", "SO4", "HCO3"),
-  sample_id = "sample_id",
-  title     = "Piper Diagram (hydrogeo)\n(example data)",
-  cex       = 1.2,         # point size
-  pch       = 21,          # filled circle
-  col       = "black",
-  bg        = c("#1f77b4", "#2ca02c", "#d62728")  # fill by sample (3 colors)
-)
-dev.off()
-cat("Saved: piper_hydrogeo.png\n")
+# Diamond coordinates (simple, widely-used mapping)
+diamond <- df_for_piper %>%
+  mutate(
+    X = 0.5 * (NaK + Cl + SO4),
+    Y = 0.5 * (Ca  + HCO3)
+  )
+
+p_diamond <- ggplot(diamond, aes(x = X, y = Y, fill = New_Grouping)) +
+  geom_point(shape = 21, size = 3, color = "black") +
+  scale_fill_manual(values = boxplot_colors) +
+  coord_equal() + theme_bw() +
+  xlab(NULL) + ylab(NULL) +
+  ggtitle("Diamond")
+
+# 5) Arrange with a single legend
+(cat_tri | p_diamond | an_tri) +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+
 ```
 
 # 7. Exploratory Analyses

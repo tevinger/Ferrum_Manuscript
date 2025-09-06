@@ -2354,6 +2354,31 @@ plot(p_obj, main = "Piper Diagram (hydrogeo)")
 ```
 
 ```{r}
+library(smwrBase)
+library(smwrGraphs)
+
+setPNG("piperplot_practice.png", 8,8)
+
+pipr <- with(meq_L_df, piperPlot(Ca, Mg, Na, Cl, HCO3, SO4, Plot = list(name= rownames(meq_L_df), color = setColor(New_Grouping))))
+
+graphics.off()
+
+meq_L_df$SS <- meq_L_df$New_Grouping
+
+setSweave("piperplot01", 7, 7)
+# For this example, a separate graph area for an explanation is not needed
+#  because there are only 4 groups (individuals).
+AA.pl <- with(meq_L_df, piperPlot(Ca, Mg, Na, Cl, HCO3, SO4,
+  Plot=list(name=SS, color=setColor(SS)),
+  zCat.title = "Sodium",
+  xAn.title = "Chloride",
+  yAn.title = "Bicarbonate"))
+addExplanation(AA.pl, where="ul", title="")
+# Required call to close PDF output graphics
+graphics.off()
+```
+
+```{r}
 library(ggtern)
 library(patchwork) 
 
@@ -2377,7 +2402,6 @@ an_tri <- ggtern(df_for_piper, aes(x = Cl, y = HCO3, z = SO4, fill = New_Groupin
 cat_tri + an_tri
 ```
 
-
 ```{r}
 # Diamond coordinates (simple, widely-used mapping)
 diamond <- df_for_piper %>%
@@ -2397,8 +2421,6 @@ p_diamond <- ggplot(diamond, aes(x = X, y = Y, fill = New_Grouping)) +
 (cat_tri | p_diamond | an_tri) +
   plot_layout(guides = "collect") &
   theme(legend.position = "bottom")
-
-
 ```
 
 # 7. Exploratory Analyses

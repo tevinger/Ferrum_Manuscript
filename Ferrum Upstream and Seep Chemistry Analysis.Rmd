@@ -68,6 +68,7 @@ library(ggbreak)
 library(ggpattern) 
 library(plotly)
 library(htmlwidgets)
+library(hydrogeo)
 ```
 
 # Load Data
@@ -109,6 +110,7 @@ working_Ferrum_data <- Alaska_DataRelease_2022_2023_Ferrum_V10 %>%
                 Diss_oxy_percent_sat,
                 Spec_Cond_microS_per_cm,
                 DIC_mgC_per_l,
+                HCO3_mg_per_l,
                 Alk_mgCaCO3_per_l,
                 DOC_mgC_per_l,
                 f_Cl_mg_per_l,
@@ -292,12 +294,14 @@ unique(working_Ferrum_data_molar$Watershed)
 
 ## Individual Dataframes
 ```{r}
+# add molar ratio calculations to df
 working_Ferrum_data_molar <- Alaska_DataRelease_2022_2023_Ferrum_V11_molar %>%
   mutate(Ca_Mg_ratio = f_Ca_mol_L / f_Mg_mol_L,
          Na_Cl_ratio = f_Na_mol_L / f_Cl_mol_L) 
 
 view(working_Ferrum_data_molar)
 
+# add columns for meq/L units for cations and anions
 working_Ferrum_data <- working_Ferrum_data %>%
   mutate(
     Ca_meq_L = f_Ca_mg_L / 20.04,      # Ca²⁺: 2 eq/mol, 40.08 g/mol
@@ -2281,8 +2285,66 @@ Seep_ficklin_plotly
 
 ```
 
-# 6. Upstream Piper Diagram
+# 6. Piper Diagram
+```{r}
+mgL_to_meqL <- function(mgL, molar_mass, charge){
+  (mgL / molar_mass) * charge
+}
 
+meq_L_df <- working_Ferrum_data %>%
+  mutate(
+    Ca = mgL_to_meqL(f_Ca_mg_l, 40.078, 2),
+    Mg = mgL_to_meqL(f_Mg_mg_l, 24.305, 2),
+    Na = mgL_to_meqL(f_Na_mg_l, 22.989, 1),
+    K  = mgL_to_meqL(f_K_mg_l, 39.098, 1),
+    Cl  = mgL_to_meqL(f_Cl_mg_per_l, 35.453, 1),
+    SO4 = mgL_to_meqL(f_SO4_mg_per_l, 96.06, 2),   # as SO4^2-
+    HCO3 = mgL_to_meqL(HCO3_mg_per_l, 61.016, 1)  # as HCO3^-
+  ) %>%
+  dplyr::select(Watershed,
+                New_Grouping,
+                Field_label,
+                Latitude,
+                Longitude,
+                sample_collection_year,
+                sample_collection_month,
+                sample_collection_season, Ca, Mg, Na, K, Cl, SO4, HCO3)
+```
+
+```{r}
+library(hydrogeo)
+
+piper.diagram(
+  x         = ex_meq,
+  cations   = c("Ca", "Mg", "Na", "K"),
+  anions    = c("Cl", "SO4", "HCO3"),
+  sample_id = "sample_id",
+  title     = "Piper Diagram (hydrogeo)",
+  cex       = 1.2,                 # point size
+  pch       = 21,                  # filled circles
+  col       = "black",
+  bg        = c("#1f77b4", "#2ca02c", "#d62728")  # fill per sample
+)
+```
+
+
+```{r}
+# --- Classic Piper diagram (center diamond included) ---
+png("piper_hydrogeo.png", width = 1100, height = 800, res = 120)
+piper.diagram(
+  x         = ex_meq,
+  cations   = c("Ca", "Mg", "Na", "K"),
+  anions    = c("Cl", "SO4", "HCO3"),
+  sample_id = "sample_id",
+  title     = "Piper Diagram (hydrogeo)\n(example data)",
+  cex       = 1.2,         # point size
+  pch       = 21,          # filled circle
+  col       = "black",
+  bg        = c("#1f77b4", "#2ca02c", "#d62728")  # fill by sample (3 colors)
+)
+dev.off()
+cat("Saved: piper_hydrogeo.png\n")
+```
 
 # 7. Exploratory Analyses
 ## Ca/Mg

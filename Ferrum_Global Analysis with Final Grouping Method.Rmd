@@ -787,9 +787,9 @@ pH_plot_no_jitter <- ggplot(pH_long, aes(x = New_Groups, y = Conc)) +
   boxplot_theme +
   theme(
     legend.position = "none",
-    axis.text.y = element_blank(),
+    #axis.text.y.left  = element_blank(),
     axis.title.y = element_blank(),
-    axis.title.y = element_text(margin = margin(r = 10)),
+    #axis.title.y = element_text(margin = margin(r = 10)),
     #axis.ticks.length = unit(1, "cm"),
     legend.title = element_blank(),   # legend title size
     legend.text = element_text(size = 14),    # legend item labels
@@ -802,7 +802,7 @@ pH_plot_no_jitter
 
 # saved size: 150x325
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/pH_V3 no labels.png", pH_plot_no_jitter, width = 2.25, height = 3.25, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/pH_with labels.png", pH_plot_no_jitter, width = 1.5, height = 3.5, dpi = 300)
 ```
 
 ```{r}
@@ -951,7 +951,7 @@ f_SO4_mg_per_l_plot <- ggplot(SO4_long, aes(x = New_Groups, y = Conc)) +
     y = ylab_Sulfate
     #y = "Sulfate Concentration (mg/L)"
   ) +
-  scale_x_discrete(expand = expansion(mult = c(0.25, 0.15))) +
+  scale_x_discrete(expand = expansion(mult = c(0.28, 0.15))) +
   theme_minimal() +
   boxplot_theme +
   theme(
@@ -964,7 +964,7 @@ f_SO4_mg_per_l_plot <- ggplot(SO4_long, aes(x = New_Groups, y = Conc)) +
 f_SO4_mg_per_l_plot
 
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/SO4_V3 no labels.png", f_SO4_mg_per_l_plot, width = 1.75, height = 3.25, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/SO4_no labels.png", f_SO4_mg_per_l_plot, width = 1.5, height = 3.5, dpi = 300)
 
 ```
 
@@ -1189,18 +1189,18 @@ Alk_plot <- ggplot(Alk_long, aes(x = New_Groups, y = Conc)) +
   theme(
     legend.position = "none",
     axis.title.y = element_blank(),
-    #axis.text.y = element_blank(),
+    axis.text.y = element_blank(),
     #axis.title.y = element_text(margin = margin(r = 6)),
     #axis.ticks.length = unit(1, "cm"),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels
     legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
   ) +
-  scale_x_discrete(expand = expansion(mult = c(0.2, 0.15)))
+  scale_x_discrete(expand = expansion(mult = c(0.28, 0.15)))
 
 Alk_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Alk_V4 labels.png", Alk_plot, width = 1.75, height = 3.25, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Alk_no labels.png", Alk_plot, width = 1.5, height = 3.5, dpi = 300)
 
 ```
 
@@ -1316,11 +1316,11 @@ DOC_plot <- ggplot(DOC_long, aes(x = New_Groups, y = Conc)) +
     legend.text = element_text(size = 12),    # legend item labels
     legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
   ) +
-  scale_x_discrete(expand = expansion(mult = c(0.2, 0.15)))
+  scale_x_discrete(expand = expansion(mult = c(0.28, 0.15)))
 
 DOC_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/DOC_V3 no labels.png", DOC_plot, width = 1.75, height = 3.25, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/DOC_no labels.png", DOC_plot, width = 1.5, height = 3.5, dpi = 300)
 
 ```
 
@@ -1375,11 +1375,11 @@ Ca_plot <- ggplot(Ca_long, aes(x = New_Groups, y = Conc)) +
     legend.text = element_text(size = 12),
     legend.key.size = unit(3, "lines")
   ) +
-  scale_x_discrete(expand = expansion(mult = c(0.2, 0.15)))
+  scale_x_discrete(expand = expansion(mult = c(0.28, 0.15)))
 
 Ca_plot
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Ca_V2 no labels.png", Ca_plot, width = 1.75, height = 3.25, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Ca_no labels.png", Ca_plot, width = 1.5, height = 3.5, dpi = 300)
 
 ```
 
@@ -1429,18 +1429,18 @@ Mg_plot <- ggplot(Mg_long, aes(x = New_Groups, y = Conc)) +
   theme(
     legend.position = "none",
     axis.title.y = element_blank(),
-    #axis.text.y = element_blank(),
+    axis.text.y = element_blank(),
     #axis.title.y = element_text(margin = margin(r = 6)),
     #axis.ticks.length = unit(1, "cm"),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels
     legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
   ) +
-  scale_x_discrete(expand = expansion(mult = c(0.2, 0.15)))
+  scale_x_discrete(expand = expansion(mult = c(0.28, 0.15)))
 
 Mg_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Mg_V1 labels.png", Mg_plot, width = 1.75, height = 3.25, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Mg_no labels.png", Mg_plot, width = 1.5, height = 3.5, dpi = 300)
 ```
 
 ## Other variables all together for now

@@ -628,6 +628,9 @@ view(summary_stats_wide)
 library(dplyr)
 library(rstatix)
 
+elements <- c("sum of filtered metals", "sum of particulate metals")
+columns <- c("f_sum_all_metals", "p_sum_all_metals")
+
 # Initialize an empty list to store results
 summary_stats_list <- list()
 quartiles_list <- list()

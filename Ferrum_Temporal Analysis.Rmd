@@ -426,6 +426,8 @@ temporal_filled$sample_collection_year <- factor(
   )
 )
 
+temporal_filled[1, 17] <- NA
+
 view(temporal_filled)
 ```
 
@@ -503,14 +505,26 @@ Sulfate_temporal_bp <- temporal_filled %>%
 
 Sulfate_temporal_bp
 
+library(plotly)
+Sulfate_temporal_bp_interactive <- ggplotly(Sulfate_temporal_bp)
+Sulfate_temporal_bp_interactive
+
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V1.png", Sulfate_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V2.png", Sulfate_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ## Alkalinity
+
 ```{r}
-Alkalinity_temporal_bp <- temporal_filled %>%
+# add a negative value to early season 2015 so that the boxplots plot correctly
+Alk_plot_df <- temporal_filled
+
+Alk_plot_df[1, 17] <- 0
+```
+
+```{r}
+Alkalinity_temporal_bp <- Alk_plot_df %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
   ggplot(aes(x = as.factor(sample_collection_year), y = Alk_mgCaCO3_per_l, fill = sample_collection_season)) +
   geom_boxplot(position = position_dodge(width = 0.95)) +
@@ -531,7 +545,7 @@ Alkalinity_temporal_bp <- temporal_filled %>%
   ) +
   theme_minimal() +
   temporal_theme +
-  theme(legend.position = "top",
+  theme(legend.position = "none",
         legend.text = element_text(size = 8),       # smaller legend labels
     legend.title = element_text(size = 8),      # smaller legend title
     legend.key.size = unit(2, "cm"),
@@ -542,11 +556,15 @@ Alkalinity_temporal_bp <- temporal_filled %>%
 
 Alkalinity_temporal_bp
 
+library(plotly)
+Alkalinity_temporal_bp_interactive <- ggplotly(Alkalinity_temporal_bp)
+Alkalinity_temporal_bp_interactive
+
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Alkalinity seasonal temporal bp_V1.png", Alkalinity_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Alkalinity seasonal temporal bp_V2.png", Alkalinity_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/seasonal temporal bp LEGEND.png", Alkalinity_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/seasonal temporal bp LEGEND.png", Alkalinity_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ## pH
@@ -1544,7 +1562,7 @@ view(onset_df)
 
 ```{r}
 onset_means <- onset_df %>%
-  group_by(Subcatchment, temporal_status) %>%
+  group_by(sample_collection_season, temporal_status) %>%
   summarise(across(
     .cols = where(is.numeric) & !any_of(c("sample_collection_year")),  # exclude non-data numeric columns if needed
     .fns = \(x) mean(x, na.rm = TRUE)
@@ -1553,7 +1571,7 @@ onset_means <- onset_df %>%
   
 view(onset_means)
 
-write_xlsx(onset_means, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Aggie temporal sulfate pre vs post means.xlsx")
+write_xlsx(onset_means, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Aggie temporal sulfate pre vs post means_V3.xlsx")
 ```
 
 ```{r}

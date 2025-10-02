@@ -1526,10 +1526,23 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 ## DF modifications
 Everything other than metals
 ```{r}
+# load data if necessary from 
+All_Seep_Data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/All_seep_Data.xlsx")
+
+# remove control seeps from All_Seep_Data to plot separately in the Ficklin Diagram
+Seep_control_df <- All_Seep_Data %>%
+  filter(grepl("con", Field_label))
+
+All_Seep_Data <- All_Seep_Data %>%
+  filter(!grepl("con", Field_label))
+
+All_Seep_Data <- All_Seep_Data %>%
+  filter(!grepl("TukC_above_Seep2", Field_label))
+
 #view(Seep_df) # check the column numbers
 
 # make a data frame for all variables other than metals
-Seep_long <- Seep_df %>%
+Seep_long <- All_Seep_Data %>%
   dplyr::select(2,19:26) %>% # select watershed and data columns
   pivot_longer(
     cols = 2:9,
@@ -2221,11 +2234,15 @@ Seep_control_df <- All_Seep_Data %>%
 
 All_Seep_Data <- All_Seep_Data %>%
   filter(!grepl("con", Field_label))
+
+All_Seep_Data <- All_Seep_Data %>%
+  filter(!grepl("TukC_above_Seep2", Field_label))
 ```
 
 ```{r}
 Seep_metals_plot <- 
   ggplot(All_Seep_Data, aes(x = pH, y = all_sum_of_metals_mg_L, color = Watershed)) +
+  geom_hline(yintercept = c(1, 10), linetype = "solid", color = "grey", linewidth = 0.8) + # use for mg/L scale
   geom_point(size = 3, alpha = 0.8) +           # scatter points
   geom_smooth(method = "lm", se = FALSE,        # optional trend line
               color = "black", linetype = "dashed") +
@@ -2255,22 +2272,22 @@ Seep_ficklin_plot <-
   
   geom_vline(xintercept = c(1, 3, 5.5), 
              linetype = "solid", color = "grey", linewidth = 0.5) +
-  
-  geom_point(size = 3, alpha = 0.8) +           # scatter points
-  geom_smooth(method = "lm", se = FALSE,        # optional trend line
-              color = "black", linetype = "dashed") +
+  coord_cartesian(xlim = c(2,8)) +
+  scale_color_manual(values = boxplot_colors) +
+  geom_point(size = 3, alpha = 3) +           # scatter points
+  #geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed") + # optional trend line
   labs(
     title = NULL,
     x = "pH",
-    #y = "Sum of Zn+Cu+Cd+Pb+Co+Ni (mg/L)",   
-    y = "Sum of Zn+Cu+Cd+Pb+Co+Ni (µg/L)", 
+    y = NULL,   
+    #y = "Sum of Zn+Cu+Cd+Pb+Co+Ni (µg/L)", 
     color = "Watershed"
   ) +
   # Labels
-  annotate("text", x = 6.25,    y = 85000, label = "Near-neutral,", size = 3.5, hjust = 0.5) +
-  annotate("text", x = 6.25,    y = 65000, label = "Low-metal",    size = 3.5, hjust = 0.5) +
-  annotate("text", x = 4.75, y = 35000, label = "Acid,",        size = 3.5, hjust = 0.5) +
-  annotate("text", x = 4.75, y = 15000, label = "Low-metal",    size = 3.5, hjust = 0.5) +
+  #annotate("text", x = 6.25,    y = 85000, label = "Near-neutral,", size = 3.5, hjust = 0.5) +
+  #annotate("text", x = 6.25,    y = 65000, label = "Low-metal",    size = 3.5, hjust = 0.5) +
+  #annotate("text", x = 4.75, y = 35000, label = "Acid,",        size = 3.5, hjust = 0.5) +
+  #annotate("text", x = 4.75, y = 15000, label = "Low-metal",    size = 3.5, hjust = 0.5) +
   theme_minimal() +
   DA_theme +
   theme(
@@ -2279,6 +2296,8 @@ Seep_ficklin_plot <-
   )
 
 Seep_ficklin_plot
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Seeps Ficklin Diagram.png", Seep_ficklin_plot, width = 5, height = 5, dpi = 300, bg = "transparent")
 
 Seep_ficklin_plotly <- ggplotly(Seep_ficklin_plot)
 Seep_ficklin_plotly
@@ -2339,7 +2358,8 @@ pal <- c(
   "Upstream" = "#72D9FF",
   "Seep" = "#c81600",
   "Impaired Tributary" = "indianred2",
-  "Downstream MS" = "#f5a678"
+  "Downstream MS" = "#f5a678",
+  "NA" = "grey50"
 )
 
 df_for_piper$pt.col <- pal[ meq_L_df$New_Grouping ]
@@ -2362,14 +2382,16 @@ setPNG("piperplot_practice.png", 8,8)
 pipr <- with(meq_L_df, piperPlot(Ca, Mg, Na, Cl, HCO3, SO4, Plot = list(name= rownames(meq_L_df), color = setColor(New_Grouping))))
 
 graphics.off()
+```
 
+```{r}
 meq_L_df$SS <- meq_L_df$New_Grouping
 
 setSweave("piperplot01", 7, 7)
 # For this example, a separate graph area for an explanation is not needed
 #  because there are only 4 groups (individuals).
 AA.pl <- with(meq_L_df, piperPlot(Ca, Mg, Na, Cl, HCO3, SO4,
-  Plot=list(name=SS, color=setColor(SS)),
+  Plot=list(name=SS),
   zCat.title = "Sodium",
   xAn.title = "Chloride",
   yAn.title = "Bicarbonate"))

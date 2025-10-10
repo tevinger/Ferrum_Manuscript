@@ -787,7 +787,7 @@ pH_plot_no_jitter <- ggplot(pH_long, aes(x = New_Groups, y = Conc)) +
   boxplot_theme +
   theme(
     legend.position = "none",
-    #axis.text.y.left  = element_blank(),
+    axis.text.y.left  = element_blank(),
     axis.title.y = element_blank(),
     #axis.title.y = element_text(margin = margin(r = 10)),
     #axis.ticks.length = unit(1, "cm"),
@@ -802,7 +802,7 @@ pH_plot_no_jitter
 
 # saved size: 150x325
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/pH_with labels.png", pH_plot_no_jitter, width = 1.5, height = 3.5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/pH_with labels_presentation.png", pH_plot_no_jitter, width = 2.5, height = 4.2, dpi = 300)
 ```
 
 ```{r}
@@ -964,7 +964,7 @@ f_SO4_mg_per_l_plot <- ggplot(SO4_long, aes(x = New_Groups, y = Conc)) +
 f_SO4_mg_per_l_plot
 
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/SO4_no labels.png", f_SO4_mg_per_l_plot, width = 1.5, height = 3.5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/SO4_no labels_presentation.png", f_SO4_mg_per_l_plot, width = 2.5, height = 4.2, dpi = 300)
 
 ```
 

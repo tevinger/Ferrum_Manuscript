@@ -304,10 +304,12 @@ view(working_Ferrum_data_molar)
 # add columns for meq/L units for cations and anions
 working_Ferrum_data <- working_Ferrum_data %>%
   mutate(
-    Ca_meq_L = f_Ca_mg_L / 20.04,      # Ca²⁺: 2 eq/mol, 40.08 g/mol
-    Mg_meq_L = f_Mg_mg_L / 12.155,     # Mg²⁺: 2 eq/mol, 24.31 g/mol
-    HCO3_meq_L = f_HCO3_mg_L / 61.02,  # HCO₃⁻: 1 eq/mol, 61.02 g/mol
-    SO4_meq_L = f_SO4_mg_per_L / 48.03,    # SO₄²⁻: 2 eq/mol, 96.06 g/mol
+    Ca_meq_L = f_Ca_mg_l / 20.04,      # Ca²⁺: 2 eq/mol, 40.08 g/mol
+    Mg_meq_L = f_Mg_mg_l / 12.155,     # Mg²⁺: 2 eq/mol, 24.31 g/mol
+    Na_meq_L = f_Na_mg_l / 23,     # Na1+: 1 eq/mol, 23 g/mol
+    K_meq_L = f_K_mg_l / 39.1,     # K1+: 1 eq/mol, 39.1 g/mol
+    HCO3_meq_L = HCO3_mg_per_l / 61.02,  # HCO₃⁻: 1 eq/mol, 61.02 g/mol
+    SO4_meq_L = f_SO4_mg_per_l / 48.03,    # SO₄²⁻: 2 eq/mol, 96.06 g/mol
 
     cation_sum = Ca_meq_L + Mg_meq_L,
     anion_sum = HCO3_meq_L + SO4_meq_L,
@@ -2240,30 +2242,67 @@ All_Seep_Data <- All_Seep_Data %>%
 ```
 
 ```{r}
-Seep_metals_plot <- 
-  ggplot(All_Seep_Data, aes(x = pH, y = all_sum_of_metals_mg_L, color = Watershed)) +
-  geom_hline(yintercept = c(1, 10), linetype = "solid", color = "grey", linewidth = 0.8) + # use for mg/L scale
-  geom_point(size = 3, alpha = 0.8) +           # scatter points
-  geom_smooth(method = "lm", se = FALSE,        # optional trend line
-              color = "black", linetype = "dashed") +
+Seep_metals_plot_2 <- 
+  ggplot(All_Seep_Data, aes(x = pH, y = Ficklin_more_metals_mg_L, fill = Watershed)) +
+  #geom_hline(yintercept = c(1, 10), linetype = "solid", color = "grey", linewidth = 0.8) + # use for mg/L scale
+  geom_point(size = 3.5, shape = 21, color = "black", stroke = 1.5) +         # scatter points
+  scale_fill_manual(values = boxplot_colors) +
+  # geom_smooth(method = "lm", se = FALSE,        # optional trend line
+  #             color = "black", linetype = "dashed") +
   labs(
     title = NULL,
-    x = "pH",
-    y = "Sum of Metals (mg/L)",                 # adjust units if needed
-    color = "Watershed"
+    x = NULL,
+    y = NULL
+    # x = "pH",
+    # y = "Sum of Metals (mg/L)",                 # adjust units if needed
+    # color = "Watershed"
   ) +
   theme_minimal() +
   DA_theme +
   theme(
-    legend.position = "top",
+    legend.position = "none",
+    plot.title = element_text(hjust = 0.5)      # center title
+  )
+
+Seep_metals_plot_2
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Seeps Ficklin Diagram_all metals.png", Seep_metals_plot, width = 5, height = 5, dpi = 300, bg = "transparent")
+
+```
+
+
+```{r}
+Seep_metals_plot <- 
+  ggplot(All_Seep_Data, aes(x = pH, y = sum_of_metals_mg_L, fill = Watershed)) +
+  #geom_hline(yintercept = c(1, 10), linetype = "solid", color = "grey", linewidth = 0.8) + # use for mg/L scale
+  geom_point(size = 3.5, shape = 21, color = "black", stroke = 1.5) +         # scatter points
+  scale_fill_manual(values = boxplot_colors) +
+  # geom_smooth(method = "lm", se = FALSE,        # optional trend line
+  #             color = "black", linetype = "dashed") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = NULL
+    # x = "pH",
+    # y = "Sum of Metals (mg/L)",                 # adjust units if needed
+    # color = "Watershed"
+  ) +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    legend.position = "none",
     plot.title = element_text(hjust = 0.5)      # center title
   )
 
 Seep_metals_plot
 
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Seeps Ficklin Diagram_V1.png", Seep_metals_plot, width = 5, height = 5, dpi = 300, bg = "transparent")
 
+```
+
+```{r}
 Seep_ficklin_plot <- 
-  ggplot(All_Seep_Data, aes(x = pH, y = Ficklin_sum_of_metals_ug_L, color = Watershed)) +
+  ggplot(All_Seep_Data, aes(x = pH, y = Ficklin_sum_of_metals_ug_L, fill = Watershed)) +
   
   # horizontal lines
   #geom_hline(yintercept = c(1, 10), linetype = "solid", color = "grey", linewidth = 0.8) + # use for mg/L scale
@@ -2273,12 +2312,13 @@ Seep_ficklin_plot <-
   geom_vline(xintercept = c(1, 3, 5.5), 
              linetype = "solid", color = "grey", linewidth = 0.5) +
   coord_cartesian(xlim = c(2,8)) +
-  scale_color_manual(values = boxplot_colors) +
-  geom_point(size = 3, alpha = 3) +           # scatter points
+  scale_fill_manual(values = boxplot_colors) +
+  geom_point(size = 4, shape = 21, color = "black", stroke = 1.5) +           # scatter points
   #geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed") + # optional trend line
   labs(
     title = NULL,
-    x = "pH",
+    #x = "pH",
+    x = NULL,
     y = NULL,   
     #y = "Sum of Zn+Cu+Cd+Pb+Co+Ni (µg/L)", 
     color = "Watershed"
@@ -2288,19 +2328,27 @@ Seep_ficklin_plot <-
   #annotate("text", x = 6.25,    y = 65000, label = "Low-metal",    size = 3.5, hjust = 0.5) +
   #annotate("text", x = 4.75, y = 35000, label = "Acid,",        size = 3.5, hjust = 0.5) +
   #annotate("text", x = 4.75, y = 15000, label = "Low-metal",    size = 3.5, hjust = 0.5) +
+  scale_y_log10(
+    limits = c(10, 450000),
+    labels = scales::comma,
+    breaks = c(1, 10, 100, 1000, 10000, 100000, 1000000),
+    minor_breaks = NULL
+  ) +
   theme_minimal() +
   DA_theme +
   theme(
     legend.position = "none",
+    axis.text.y = element_blank(),
+    axis.text.x = element_blank(),
     plot.title = element_text(hjust = 0.5)      # center title
   )
 
 Seep_ficklin_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Seeps Ficklin Diagram.png", Seep_ficklin_plot, width = 5, height = 5, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Seeps Ficklin Diagram_log scale_V2_no labels.png", Seep_ficklin_plot, width = 4, height = 4, dpi = 300, bg = "transparent")
 
-Seep_ficklin_plotly <- ggplotly(Seep_ficklin_plot)
-Seep_ficklin_plotly
+#Seep_ficklin_plotly <- ggplotly(Seep_ficklin_plot)
+#Seep_ficklin_plotly
 
 ```
 

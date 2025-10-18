@@ -695,6 +695,27 @@ write_xlsx(Anaktok_summary_stats, "C:/Users/tayta/Downloads/Anaktok Summary Stat
 ##2.1  
 
 ##2.2 Colors
+```{r}
+watershed_colors <- c(  
+    "Agashashok River" = "#A1E3F9",   
+    "Anaktok River" = "#9F8383",
+    "Salmon River Watershed" = "#9F8383",
+    "Salmon River" = "#2DAA9E",   
+    "Kugururok River" = "#2D3D85",  
+    "Nakolikurok Creek" = "#F87FC7",
+    "Nakolikurok" = "#F87FC7",
+    "Tukpahlearik Creek" = "#FDDE74",
+    "Tukpahlearik" = "#FDDE74"
+    )
+
+group_colors <- c(
+   "Unimpaired Tributary" = "#00589b",
+  "Upstream" = "#72D9FF",
+  "Seep" = "#c81600",
+  "Impaired Tributary" = "indianred2",
+  "Downstream MS" = "#f5a678")
+```
+
 ``` {r}
 cb_palette_20 <- c(
   "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
@@ -2353,6 +2374,128 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 ```
 
 # 6. Piper Diagram
+Upstream
+```{r}
+piper_df <- working_Ferrum_data %>%
+  dplyr::select(Field_label,
+                Watershed,
+                New_Grouping,
+                Field_label,
+                Latitude,
+                Longitude,
+                sample_collection_year,
+                sample_collection_month,
+                sample_collection_season, 
+                f_Ca_mg_l, f_Mg_mg_l, f_Na_mg_l, f_Cl_mg_per_l, f_SO4_mg_per_l, HCO3_mg_per_l)
+
+piper_upstream <- piper_df %>%
+  filter(New_Grouping == "Upstream")
+
+# Transform data to milli-equivalents per liter
+PD <- transform(piper_upstream,
+Ca.meq = conc2meq(f_Ca_mg_l, "calcium"),
+Mg.meq = conc2meq(f_Mg_mg_l, "magnesium"),
+Na.meq = conc2meq(f_Na_mg_l, "sodium"),
+Cl.meq = conc2meq(f_Cl_mg_per_l, "chloride"),
+SO4.meq = conc2meq(f_SO4_mg_per_l, "sulfate"),
+HCO3.meq = conc2meq(HCO3_mg_per_l, "bicarb"))
+
+
+# set the SS value based on the Watershed
+PD$SS <- as.numeric(factor(PD$Watershed))
+
+# assign colors to each row based on the watershed
+PD$color <- watershed_colors[PD$Watershed]
+
+# but the axis title spacings require a graph area of at least 6 inches.
+#setSweave("piperplot01", 7, 7)
+
+# For this example, a separate graph area for an explanation is not needed
+# because there are only 4 groups (individuals).
+AA.pl <- with(PD, piperPlot(Ca.meq, Mg.meq, Na.meq,
+                            Cl.meq, HCO3.meq, SO4.meq,
+                            Plot=list(name=SS, color=setColor(color)),
+                            #ticks = TRUE,
+                            zCat.title = "Sodium",
+                            xAn.title = "Chloride",
+                            yAn.title = "Bicarbonate"))
+
+# Manually add a legend using the same color mapping
+unique_sites <- unique(PD$SS)
+site_colors <- setColor(unique_sites)  # same color function as above
+
+legend("topright",
+       legend = names(watershed_colors),
+       col = watershed_colors,
+       pch = 16,            # same point shape as Piper plot
+       bty = "n",           # no border
+       title = "Site")
+
+
+# converts to percent by normalizing each row of data by the total cations and total anions
+# each cation is divided by the total sum of cations for that site and multiplied by 100
+ion_percentage_in_piper <- PD %>% # this currently doesn't include CO3 but can be added
+  mutate(
+    #NaK = Na + K,
+    cat_sum = Ca.meq + Mg.meq + Na.meq,
+    an_sum  = Cl.meq + SO4.meq + HCO3.meq,
+    Ca_percent   = 100 * Ca.meq   / cat_sum,
+    Mg_percent   = 100 * Mg.meq   / cat_sum,
+    Na_percent  = 100 * Na.meq  / cat_sum,
+    Cl_percent   = 100 * Cl.meq   / an_sum,
+    SO4_percent  = 100 * SO4.meq  / an_sum,
+    HCO3_percent = 100 * HCO3.meq / an_sum
+  ) %>%
+  dplyr::select(Watershed, New_Grouping, sample_collection_year, Ca_percent, Mg_percent, Na_percent, Cl_percent, SO4_percent, HCO3_percent)
+```
+
+Everything by Group
+```{r}
+piper_df_mod <- piper_df %>%
+  filter(!is.na(New_Grouping))
+
+# Transform data to milli-equivalents per liter
+PD_all <- transform(piper_df_mod,
+Ca.meq = conc2meq(f_Ca_mg_l, "calcium"),
+Mg.meq = conc2meq(f_Mg_mg_l, "magnesium"),
+Na.meq = conc2meq(f_Na_mg_l, "sodium"),
+Cl.meq = conc2meq(f_Cl_mg_per_l, "chloride"),
+SO4.meq = conc2meq(f_SO4_mg_per_l, "sulfate"),
+HCO3.meq = conc2meq(HCO3_mg_per_l, "bicarb"))
+
+
+# set the SS value based on the Watershed
+PD_all$SS <- as.numeric(factor(PD_all$New_Grouping))
+
+# assign colors to each row based on the watershed
+PD_all$color <- group_colors[PD_all$New_Grouping]
+
+# but the axis title spacings require a graph area of at least 6 inches.
+#setSweave("piperplot01", 7, 7)
+
+# For this example, a separate graph area for an explanation is not needed
+# because there are only 4 groups (individuals).
+AA.pl_2 <- with(PD_all, piperPlot(Ca.meq, Mg.meq, Na.meq,
+                            Cl.meq, HCO3.meq, SO4.meq,
+                            Plot=list(name = New_Grouping, color = color),
+                            #ticks = TRUE,
+                            zCat.title = "Sodium",
+                            xAn.title = "Chloride",
+                            yAn.title = "Bicarbonate"))
+
+# Manually add a legend using the same color mapping
+unique_sites <- unique(PD$SS)
+site_colors <- setColor(unique_sites)  # same color function as above
+
+legend("topright",
+       legend = names(group_colors),
+       col = group_colors,
+       pch = 16,            # same point shape as Piper plot
+       bty = "n",           # no border
+       title = "Site")
+
+```
+
 ```{r}
 mgL_to_meqL <- function(mgL, molar_mass, charge){
   (mgL / molar_mass) * charge
@@ -2419,33 +2562,6 @@ p_obj <- piper(df_for_piper)
 
 # 5. Plot it
 plot(p_obj, main = "Piper Diagram (hydrogeo)")
-```
-
-```{r}
-library(smwrBase)
-library(smwrGraphs)
-
-setPNG("piperplot_practice.png", 8,8)
-
-pipr <- with(meq_L_df, piperPlot(Ca, Mg, Na, Cl, HCO3, SO4, Plot = list(name= rownames(meq_L_df), color = setColor(New_Grouping))))
-
-graphics.off()
-```
-
-```{r}
-meq_L_df$SS <- meq_L_df$New_Grouping
-
-setSweave("piperplot01", 7, 7)
-# For this example, a separate graph area for an explanation is not needed
-#  because there are only 4 groups (individuals).
-AA.pl <- with(meq_L_df, piperPlot(Ca, Mg, Na, Cl, HCO3, SO4,
-  Plot=list(name=SS),
-  zCat.title = "Sodium",
-  xAn.title = "Chloride",
-  yAn.title = "Bicarbonate"))
-addExplanation(AA.pl, where="ul", title="")
-# Required call to close PDF output graphics
-graphics.off()
 ```
 
 ```{r}

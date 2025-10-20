@@ -287,17 +287,19 @@ working_Ferrum_data_molar <- Alaska_DataRelease_2022_2023_Ferrum_V11_molar %>%
 working_Ferrum_data_molar <- working_Ferrum_data_molar %>%
   mutate(across(17:104, as.numeric))
 
-view(working_Ferrum_data_molar)
+#view(working_Ferrum_data_molar)
 
 unique(working_Ferrum_data_molar$Watershed)
 ```
 
-## Individual Dataframes
+## Molar and equivalence calculations
 ```{r}
 # add molar ratio calculations to df
-working_Ferrum_data_molar <- Alaska_DataRelease_2022_2023_Ferrum_V11_molar %>%
+working_Ferrum_data_molar <- working_Ferrum_data_molar %>%
   mutate(Ca_Mg_ratio = f_Ca_mol_L / f_Mg_mol_L,
-         Na_Cl_ratio = f_Na_mol_L / f_Cl_mol_L) 
+         Na_Cl_ratio = f_Na_mol_L / f_Cl_mol_L,
+         Ca_SO4_ratio = f_Ca_mol_L / f_SO4_mol_L,
+         Ca_SO4_percent = Ca_SO4_ratio * 100) 
 
 view(working_Ferrum_data_molar)
 
@@ -318,6 +320,7 @@ working_Ferrum_data <- working_Ferrum_data %>%
   )
 ```
 
+## Individual dataframes
 ```{r}
 no_seep_df <- working_Ferrum_data %>%
   filter(New_Grouping != "Seep")
@@ -2712,6 +2715,83 @@ p_diamond <- ggplot(diamond, aes(x = X, y = Y, fill = New_Grouping)) +
 ```
 
 # 7. Exploratory Analyses
+## Ca/SO4
+```{r}
+Ca_SO4_molar_ratio <- working_Ferrum_data_molar %>%
+  filter(!is.na(f_Ca_mol_L) & !is.na(f_SO4_mol_L)) %>% 
+ggplot(aes(x = f_SO4_mol_L, y = f_Ca_mol_L, fill = Watershed)) +
+  geom_point(size = 3, shape = 21, color = "black", stroke = 1) +
+  scale_fill_manual(values = boxplot_colors) +
+  # labs(
+  #   x = expression(SO[4]^2- ~ "(mol/L)"),
+  #   y = expression(Ca^{2+} ~ "(mol/L)")
+  # ) +
+  theme_minimal()
+
+Ca_SO4_molar_ratio
+```
+
+```{r}
+Ca_SO4_ratio <- working_Ferrum_data_molar %>%
+  filter(!is.na(Ca_SO4_ratio)) %>% 
+  ggplot(aes(x = Watershed, y = Ca_SO4_ratio, color = New_Grouping)) +
+  # --- background shading bands (y: 0–1, 1–2, 2–5) ---
+ annotate("rect", xmin = -Inf, xmax = Inf, ymin = 0, ymax = 0.6,
+          fill = "grey85", color = NA, alpha = 1/2) +
+# annotate("rect", xmin = -Inf, xmax = Inf, ymin = 1, ymax = 2,
+#          fill = "white", color = NA, alpha = 1/2) +
+# annotate("rect", xmin = -Inf, xmax = Inf, ymin = 2, ymax = 5,
+#          fill = "grey85", color = NA, alpha = 1/3) +
+
+  # points + reference lines
+   geom_jitter(width = 0.15, size = 2, alpha = 0.9) +
+   geom_hline(yintercept = 0.6, linetype = "dashed", color = "blue") +  # carbonate weathering
+  # geom_hline(yintercept = 2, linetype = "dashed", color = "red") +   # silicate weathering
+
+  # manual colors for New_Grouping
+  scale_color_manual(values = boxplot_colors, name = "New Grouping") +
+
+  # axes/labels
+  coord_flip() +  # optional, for vertical samples
+   scale_y_continuous(limits = c(0, 5), expand = expansion(mult = c(0, 0))) +
+  labs(x = "Watershed", y = "Ca/SO4 molar ratio") +
+  theme_minimal() +
+  theme(
+  panel.grid.minor = element_blank(),
+  panel.grid.major = element_blank(),
+  #panel.background = element_rect(fill = "white"),
+  panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+  #axis.text.x = element_text(color = "white", size = 1),
+  #axis.title.x = element_blank(),
+  #axis.ticks.x = element_blank(),
+  axis.text.x = element_text(size = 10, color = "black", face = "bold"),
+  axis.text.y = element_text(size = 10, color = "black", face = "bold"),
+  axis.title.y = element_text(size = 12, color = "black", face = "bold", vjust = 1.25, margin = margin(r = 10)),
+  axis.title.x = element_text(size = 12, color = "black", face = "bold", vjust = 1.25, margin = margin(t = 10)),
+  legend.position = "none",
+  legend.box = "horizontal",
+  legend.justification = "center",
+  legend.title = element_blank(),
+  legend.background = element_rect(fill = NA),
+  legend.text = element_text(size = 10, color = "black", face = "bold"),
+  legend.box.background = element_rect(fill = NA, color = "black", linewidth = 0.75),
+  axis.ticks.y = element_line(linewidth = 0.9, color = "black"),  # Thicker y-axis ticks
+  axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
+  plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold")
+) +
+  guides(
+    color = guide_legend(nrow = 2, ncol = 3, byrow = TRUE)
+  )
+
+
+Ca_SO4_ratio
+
+# Ca_SO4_interactive <- ggplotly(Ca_SO4_ratio)
+# Ca_SO4_interactive
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Chemical Weathering Analysis/Ca SO4 molar ratio by watershed_small.png", Ca_SO4_ratio, width = 6, height = 2.5, dpi = 300, scale = 1)
+```
+
 ## Ca/Mg
 carbonates ratio is about 1, silicates is greater than 2
 ```{r}

@@ -711,7 +711,12 @@ watershed_colors <- c(
     "Nakolikurok Creek" = "#F87FC7",
     "Nakolikurok" = "#F87FC7",
     "Tukpahlearik Creek" = "#FDDE74",
-    "Tukpahlearik" = "#FDDE74"
+    "Tukpahlearik" = "#FDDE74",
+    "Red Dog" = "black",
+    "Su-Lik" = "purple",
+    "False Wager Creek" = "red",
+    "Drenchwater Creek" = "green",
+    "Springs" = "blue"
     )
 
 group_colors <- c(
@@ -2337,6 +2342,123 @@ downstream_ficklin <- Downstream_df %>%
 ```
 
 ```{r}
+G_and_K_2009_Ficklin <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Graham and Kelley 2009 Ficklin Data.xlsx")
+```
+
+### Plot
+```{r}
+Seep_ficklin_plot <- 
+  ggplot(Seep_ficklin, aes(x = pH, y = Ficklin_metals, fill = Watershed)) +
+  
+  # horizontal lines
+  #geom_hline(yintercept = c(1, 10), linetype = "solid", color = "grey", linewidth = 0.8) + # use for mg/L scale
+   geom_hline(yintercept = c(1000, 100000), linetype = "solid", color = "grey", linewidth = 0.5) + # use for ug/L scale
+  
+  # Vertical lines
+  geom_vline(xintercept = c(1, 3, 5.5), 
+             linetype = "solid", color = "grey", linewidth = 0.5) +
+  
+  annotate("rect",
+           xmin = 7.89, xmax = 8.33,   # x range of rectangle
+           ymin = 1.5, ymax = 110,  # y range of rectangle
+           alpha = 0.2, fill = "#72D9FF", color = NA) +
+  
+  # annotate("rect",
+  #          xmin = 2.1, xmax = 3.5,   # x range of rectangle
+  #          ymin = 350000, ymax = 700000,  # y range of rectangle
+  #          fill = "white", color = NA) +
+
+  
+  # Data points
+    # overlay the second dataset as a layer
+    geom_point(data = G_and_K_2009_Ficklin, # impaired data
+             aes(x = pH, y = Ficklin_metals, color = Watershed),
+             size = 3, shape = 17, alpha = .5) +
+  
+  geom_point(data = impaired_trib_ficklin, # impaired data
+             aes(x = pH, y = Ficklin_metals, fill = Watershed),
+             size = 3.2, shape = 21, color = "black", stroke = 1.5, alpha = .8) +
+  
+  geom_point(size = 4, shape = 23, color = "black", stroke = 1.5) + #seep data
+  
+  # geom_point(data = upstream_ficklin, # upstream data
+  #            aes(x = pH, y = Ficklin_metals, fill = Watershed),
+  #            size = 3.2, shape = 24, color = "black", stroke = 1.5, alpha = .65) +
+  
+  # geom_point(data = downstream_ficklin, # upstream data
+  #            aes(x = pH, y = Ficklin_metals, fill = Watershed),
+  #            size = 3.2, shape = 22, color = "black", stroke = 1.5, alpha = .65) +
+  
+  scale_x_continuous(limits = c(2.1, 8.33),
+                     breaks = c(2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8),
+                     labels = c(2, "","","", 4,"", "","", 6,"","", "", 8),
+                     expand = expansion(mult = 0, add = 0)) +
+  scale_fill_manual(values = watershed_colors) +
+  scale_color_manual(values = watershed_colors) +
+  labs(
+    title = NULL,
+    #x = "pH",
+    x = NULL,
+    y = NULL,   
+    #y = "Sum of Zn+Cu+Cd+Pb+Co+Ni (µg/L)", 
+    color = "Watershed",
+    fill = "lit values"
+  ) +
+  # Labels
+  # annotate("text", x = 7,    y = 9, label = "Near-neutral", size = 4, hjust = 0.5) +
+  # annotate("text", x = 7,    y = 6.15, label = "Low-metal",    size = 4, hjust = 0.5) +
+  # annotate("text", x = 4.25, y = 25000, label = "Acidic",        size = 4, hjust = 0.5) +
+  # annotate("text", x = 4.25, y = 17500, label = "Low-metal",    size = 4, hjust = 0.5) +
+  # annotate("text", x = 2.8, y = 590000, label = "High-Acid",        size = 4, hjust = 0.5) +
+  # annotate("text", x = 2.8, y = 430000, label = "Extreme-metal",    size = 4, hjust = 0.5) +
+  
+  scale_y_log10(
+    limits = c(1.5, 900000),
+    labels = scales::comma,
+    breaks = c(1, 10, 100, 1000, 10000, 100000, 1000000),
+    minor_breaks = NULL,
+    expand = expansion(mult = 0, add = 0)
+  ) +
+  annotation_logticks(sides = "l") +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_blank(),
+    axis.text.x = element_blank(),
+    plot.title = element_text(hjust = 0.5),
+    legend.key.size = unit(0.4, "cm"),
+    legend.text = element_text(size = 7),
+    legend.title = element_text(size = 8),
+    legend.spacing.y = unit(0.1, "cm")# center title
+  ) +
+  guides(fill = "none")
+
+Seep_ficklin_plot
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Ficklin Diagram/Seeps Ficklin Diagram_v2_with lit values.png", Seep_ficklin_plot, width = 5, height = 5, dpi = 300, bg = "transparent")
+
+#Seep_ficklin_plotly <- ggplotly(Seep_ficklin_plot)
+#Seep_ficklin_plotly
+
+```
+
+Extract the legend
+```{r}
+library(cowplot)
+
+Seep_ficklin_plot_legend <- get_legend(Seep_ficklin_plot)
+
+library(grid)
+
+grid.draw(Seep_ficklin_plot_legend)
+
+ggsave('C:/Users/tevinger/Downloads/Seep_ficklin_plot_legend.png', 
+       Seep_ficklin_plot_legend, width = 5, height = 1, dpi = 250)
+```
+
+### Old plot codes
+```{r}
 Seep_metals_plot_2 <- 
   ggplot(All_Seep_Data, aes(x = pH, y = Ficklin_more_metals_mg_L, fill = Watershed)) +
   #geom_hline(yintercept = c(1, 10), linetype = "solid", color = "grey", linewidth = 0.8) + # use for mg/L scale
@@ -2364,7 +2486,6 @@ Seep_metals_plot_2
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Seeps Ficklin Diagram_all metals.png", Seep_metals_plot, width = 5, height = 5, dpi = 300, bg = "transparent")
 
 ```
-
 
 ```{r}
 Seep_metals_plot <- 
@@ -2395,88 +2516,7 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 
 ```
 
-```{r}
-Seep_ficklin_plot <- 
-  ggplot(Seep_ficklin, aes(x = pH, y = Ficklin_metals, fill = Watershed)) +
-  
-  # horizontal lines
-  #geom_hline(yintercept = c(1, 10), linetype = "solid", color = "grey", linewidth = 0.8) + # use for mg/L scale
-   geom_hline(yintercept = c(1000, 100000), linetype = "solid", color = "grey", linewidth = 0.5) + # use for ug/L scale
-  
-  # Vertical lines
-  geom_vline(xintercept = c(1, 3, 5.5), 
-             linetype = "solid", color = "grey", linewidth = 0.5) +
-  
-  annotate("rect",
-           xmin = 7.89, xmax = 8.33,   # x range of rectangle
-           ymin = 1.5, ymax = 110,  # y range of rectangle
-           alpha = 0.2, fill = "#72D9FF", color = NA) +
-  
-  # annotate("rect",
-  #          xmin = 2.1, xmax = 3.5,   # x range of rectangle
-  #          ymin = 350000, ymax = 700000,  # y range of rectangle
-  #          fill = "white", color = NA) +
 
-  
-  # Data points
-    # overlay the second dataset as a layer
-  geom_point(size = 4, shape = 23, color = "black", stroke = 1.5) + #seep data
-  
-  geom_point(data = impaired_trib_ficklin, # impaired data
-             aes(x = pH, y = Ficklin_metals, fill = Watershed),
-             size = 3.2, shape = 21, color = "black", stroke = 1.5, alpha = .8) +
-  
-  # geom_point(data = upstream_ficklin, # upstream data
-  #            aes(x = pH, y = Ficklin_metals, fill = Watershed),
-  #            size = 3.2, shape = 24, color = "black", stroke = 1.5, alpha = .65) +
-  
-  # geom_point(data = downstream_ficklin, # upstream data
-  #            aes(x = pH, y = Ficklin_metals, fill = Watershed),
-  #            size = 3.2, shape = 22, color = "black", stroke = 1.5, alpha = .65) +
-  
-  scale_x_continuous(limits = c(2.1, 8.33),
-                     expand = expansion(mult = 0, add = 0)) +
-  scale_fill_manual(values = boxplot_colors) +
-  labs(
-    title = NULL,
-    #x = "pH",
-    x = NULL,
-    y = NULL,   
-    #y = "Sum of Zn+Cu+Cd+Pb+Co+Ni (µg/L)", 
-    color = "Watershed"
-  ) +
-  # Labels
-  # annotate("text", x = 7,    y = 9, label = "Near-neutral", size = 4, hjust = 0.5) +
-  # annotate("text", x = 7,    y = 6.15, label = "Low-metal",    size = 4, hjust = 0.5) +
-  # annotate("text", x = 4.25, y = 25000, label = "Acidic",        size = 4, hjust = 0.5) +
-  # annotate("text", x = 4.25, y = 17500, label = "Low-metal",    size = 4, hjust = 0.5) +
-  # annotate("text", x = 2.8, y = 590000, label = "High-Acid",        size = 4, hjust = 0.5) +
-  # annotate("text", x = 2.8, y = 430000, label = "Extreme-metal",    size = 4, hjust = 0.5) +
-  
-  scale_y_log10(
-    limits = c(1.5, 900000),
-    labels = scales::comma,
-    breaks = c(1, 10, 100, 1000, 10000, 100000, 1000000),
-    minor_breaks = NULL,
-    expand = expansion(mult = 0, add = 0)
-  ) +
-  theme_minimal() +
-  DA_theme +
-  theme(
-    legend.position = "none",
-    axis.text.y = element_blank(),
-    axis.text.x = element_blank(),
-    plot.title = element_text(hjust = 0.5)      # center title
-  )
-
-Seep_ficklin_plot
-
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Seeps Ficklin Diagram_log scale_V3_with tribs.png", Seep_ficklin_plot, width = 5, height = 5, dpi = 300, bg = "transparent")
-
-#Seep_ficklin_plotly <- ggplotly(Seep_ficklin_plot)
-#Seep_ficklin_plotly
-
-```
 
 # 6. Piper Diagram
 Upstream
@@ -2714,7 +2754,97 @@ p_diamond <- ggplot(diamond, aes(x = X, y = Y, fill = New_Grouping)) +
   theme(legend.position = "bottom")
 ```
 
-# 7. Exploratory Analyses
+# 7. Seep Buffering
+```{r}
+All_Seep_Data_molar <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/All_seep_Data_molar.xlsx")
+```
+
+```{r}
+Seep_buffering_plot <- 
+  ggplot(All_Seep_Data_molar, aes(x = f_SO4_mol_L, y = `H+_mol_L`, fill = Watershed)) +
+  # Add 1:1 line
+    geom_abline(intercept = 0, slope = 1, color = "grey30", linetype = "dashed", linewidth = 0.8) +
+    
+    # Add 1:2.67 line (slope = 1/2.67 ≈ 0.374)
+    geom_abline(intercept = 0, slope = 2.67, color = "red", linetype = "dotdash", linewidth = 0.8) +
+  
+    geom_point(size = 4, shape = 21, stroke = 1.5, color = "black") +
+  scale_fill_manual(values = watershed_colors) +
+  scale_x_log10() +
+    scale_y_log10() +
+  theme_minimal() +
+  DA_theme
+
+Seep_buffering_plot
+```
+
+```{r}
+Seep_buffering_data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Seep Buffering Calculation.xlsx",
+                                  sheet = 2)
+
+shade_df <- data.frame(
+  x = c(0, 8, 8),
+  y = c(0, 8, 0)
+)
+```
+
+```{r}
+Seep_buffering_plot_pH <- 
+  ggplot(Seep_buffering_data, aes(fill = Watershed)) +
+  # Add 1:1 line
+    geom_abline(intercept = 0, slope = 1, color = "grey30", linetype = "dashed", linewidth = 0.8) +
+  geom_polygon(data = shade_df,
+               aes(x = x, y = y),
+               fill = "lightblue", alpha = 0.2, inherit.aes = FALSE) +
+  
+  #low theoretical pH value
+    # geom_point(aes(x = measured_pH, y = low_theoretical_pH), size = 4, shape = 21, stroke = 1.5, color = "black") +
+  
+    #high theoretical pH value
+    geom_point(aes(x = high_theoretical_pH, y = measured_pH), size = 4, shape = 21, stroke = 1.5, color = "black") +
+  
+  # Labels
+  annotate("text", x = 3,    y = 5.3, label = "Buffered", size = 5, hjust = 0.5) +
+  annotate("text", x = 3,    y = 5.05, label = "Measured pH > Theoretical pH", size = 4, hjust = 0.5) +
+  
+  
+  annotate("text", x =4.8,    y = 2.6, label = "Not Buffered",    size = 5, hjust = 0.5) +
+  annotate("text", x = 4.8,    y = 2.35, label = "Measured pH < Theoretical pH", size = 4, hjust = 0.5) +
+  
+  
+  scale_fill_manual(values = watershed_colors) +
+  coord_cartesian(xlim = c(0.5,7), ylim = c(0.5,7)) +
+  
+  scale_x_continuous(breaks = c(0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7),
+                     labels = c("","","",2,"","","",4,"","","",6,"",""),
+                     expand = expansion(mult = 0, add = 0)) +
+  
+  scale_y_continuous(breaks = c(0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7),
+                     labels = c("","","",2,"","","",4,"","","",6,"",""),
+                     expand = expansion(mult = 0, add = 0)) +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = NULL
+    # x = "Theoretical pH",
+    # y = "Measured pH"
+  ) +
+  #scale_x_log10() +
+  #scale_y_log10() +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    legend.position = c(0.77, 0.85),
+    legend.background = element_rect(fill = "white", color = "black")
+  )
+
+Seep_buffering_plot_pH
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Seep Subsurface Buffering.png", Seep_buffering_plot_pH, width = 6.5, height = 6.5, dpi = 300, bg = "transparent")
+```
+
+
+# 8. Exploratory Analyses
 ## Ca/SO4
 ```{r}
 Ca_SO4_molar_ratio <- working_Ferrum_data_molar %>%

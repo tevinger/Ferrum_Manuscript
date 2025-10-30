@@ -2801,7 +2801,7 @@ Seep_buffering_plot_pH <-
     # geom_point(aes(x = measured_pH, y = low_theoretical_pH), size = 4, shape = 21, stroke = 1.5, color = "black") +
   
     #high theoretical pH value
-    geom_point(aes(x = high_theoretical_pH, y = measured_pH), size = 4, shape = 21, stroke = 1.5, color = "black") +
+    geom_point(aes(x = high_theoretical_pH_SO4, y = measured_pH), size = 4, shape = 21, stroke = 1.5, color = "black") +
   
   # Labels
   annotate("text", x = 3,    y = 5.3, label = "Buffered", size = 5, hjust = 0.5) +
@@ -2834,15 +2834,69 @@ Seep_buffering_plot_pH <-
   theme_minimal() +
   DA_theme +
   theme(
-    legend.position = c(0.77, 0.85),
+    legend.position = c(0.8, 0.85),
     legend.background = element_rect(fill = "white", color = "black")
   )
 
 Seep_buffering_plot_pH
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Seep Subsurface Buffering.png", Seep_buffering_plot_pH, width = 6.5, height = 6.5, dpi = 300, bg = "transparent")
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Seep Subsurface Buffering.png", Seep_buffering_plot_pH, width = 6.5, height = 6.5, dpi = 300, bg = "transparent")
 ```
 
+```{r}
+Seep_buffering_plot_pH_from_Fe <- 
+  ggplot(Seep_buffering_data, aes(fill = Watershed)) +
+  # Add 1:1 line
+    geom_abline(intercept = 0, slope = 1, color = "grey30", linetype = "dashed", linewidth = 0.8) +
+  geom_polygon(data = shade_df,
+               aes(x = x, y = y),
+               fill = "lightblue", alpha = 0.2, inherit.aes = FALSE) +
+  
+  #low theoretical pH value
+    # geom_point(aes(x = measured_pH, y = low_theoretical_pH), size = 4, shape = 21, stroke = 1.5, color = "black") +
+  
+    #high theoretical pH value
+    geom_point(aes(x = high_theoretical_pH_Fe, y = measured_pH), size = 4, shape = 21, stroke = 1.5, color = "black") +
+  
+  # Labels
+  annotate("text", x = 3,    y = 4.8, label = "Buffered", size = 5, hjust = 0.5) +
+  annotate("text", x = 3,    y = 4.55, label = "Measured pH > Theoretical pH", size = 4, hjust = 0.5) +
+  
+  
+  annotate("text", x =4.5,    y = 2.6, label = "Not Buffered",    size = 5, hjust = 0.5) +
+  annotate("text", x = 4.5,    y = 2.35, label = "Measured pH < Theoretical pH", size = 4, hjust = 0.5) +
+  
+  
+  scale_fill_manual(values = watershed_colors) +
+  coord_cartesian(xlim = c(0.5,7), ylim = c(0.5,7)) +
+  
+  scale_x_continuous(breaks = c(0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7),
+                     labels = c("","","",2,"","","",4,"","","",6,"",""),
+                     expand = expansion(mult = 0, add = 0)) +
+  
+  scale_y_continuous(breaks = c(0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7),
+                     labels = c("","","",2,"","","",4,"","","",6,"",""),
+                     expand = expansion(mult = 0, add = 0)) +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = NULL
+    # x = "Theoretical pH",
+    # y = "Measured pH"
+  ) +
+  #scale_x_log10() +
+  #scale_y_log10() +
+  theme_minimal() +
+  DA_theme+
+  theme(
+    legend.position = c(0.2, 0.85),
+    legend.background = element_rect(fill = "white", color = "black")
+  )
+
+Seep_buffering_plot_pH_from_Fe
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Seep Subsurface Buffering_Fe.png", Seep_buffering_plot_pH_from_Fe, width = 6.5, height = 6.5, dpi = 300, bg = "transparent")
+```
 
 # 8. Exploratory Analyses
 ## Ca/SO4

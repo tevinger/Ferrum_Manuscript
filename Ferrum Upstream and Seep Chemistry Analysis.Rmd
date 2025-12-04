@@ -715,9 +715,17 @@ watershed_colors <- c(
     "Red Dog" = "black",
     "Su-Lik" = "purple",
     "False Wager Creek" = "red",
-    "Drenchwater Creek" = "green",
-    "Springs" = "blue"
+    "Drenchwater Creek" = "green"
+    #"Springs" = "blue"
     )
+
+watershed_shapes <- c(
+  "Red Dog" = 3,
+    "Su-Lik" = 1,
+    "False Wager Creek" = 2,
+    "Drenchwater Creek" = 0
+    #"Springs" = 7
+)
 
 group_colors <- c(
    "Unimpaired Tributary" = "#00589b",
@@ -2288,6 +2296,8 @@ Seep_ficklin <- All_Seep_Data %>%
                 f_Cd_mcg_per_l, f_Zn_mcg_per_l, f_Cu_mcg_per_l, f_Ni_mcg_per_l, f_Co_mcg_per_l, f_Pb_mcg_per_l) %>%
   mutate(Ficklin_metals = f_Cd_mcg_per_l + f_Zn_mcg_per_l + f_Cu_mcg_per_l + f_Co_mcg_per_l + f_Ni_mcg_per_l + f_Pb_mcg_per_l) %>%
   filter(!is.na(Ficklin_metals))
+
+write_xlsx(Seep_ficklin, "C:/Users/tevinger/Downloads/Seep Ficklin Data.xlsx")
 ```
 
 ```{r}
@@ -2305,6 +2315,8 @@ impaired_trib_ficklin <- Impaired_trib_df %>%
                 f_Cd_mcg_per_l, f_Zn_mcg_per_l, f_Cu_mcg_per_l, f_Ni_mcg_per_l, f_Co_mcg_per_l, f_Pb_mcg_per_l) %>%
   mutate(Ficklin_metals = f_Cd_mcg_per_l + f_Zn_mcg_per_l + f_Cu_mcg_per_l + f_Co_mcg_per_l + f_Ni_mcg_per_l + f_Pb_mcg_per_l) %>%
   filter(!is.na(Ficklin_metals))
+
+write_xlsx(impaired_trib_ficklin, "C:/Users/tevinger/Downloads/impaired_trib_ficklin.xlsx")
 ```
 
 ```{r}
@@ -2343,6 +2355,11 @@ downstream_ficklin <- Downstream_df %>%
 
 ```{r}
 G_and_K_2009_Ficklin <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Graham and Kelley 2009 Ficklin Data.xlsx")
+
+G_and_K_2009_Ficklin_mod <- G_and_K_2009_Ficklin %>%
+  filter(Watershed != "Springs")
+
+write_xlsx(G_and_K_2009_Ficklin_mod, "C:/Users/tevinger/Downloads/G_and_K_2009_Ficklin.xlsx")
 ```
 
 ### Plot
@@ -2372,14 +2389,17 @@ Seep_ficklin_plot <-
   # Data points
     # overlay the second dataset as a layer
     geom_point(data = G_and_K_2009_Ficklin, # impaired data
-             aes(x = pH, y = Ficklin_metals, color = Watershed),
-             size = 3, shape = 17, alpha = .5) +
+             aes(x = pH, y = Ficklin_metals, 
+                 #color = Watershed, 
+                 color = "grey",
+                 shape = Watershed),
+             size = 3) +
   
   geom_point(data = impaired_trib_ficklin, # impaired data
              aes(x = pH, y = Ficklin_metals, fill = Watershed),
-             size = 3.2, shape = 21, color = "black", stroke = 1.5, alpha = .8) +
+             size = 4, shape = 21, color = "black", stroke = 1.5, alpha = .8) +
   
-  geom_point(size = 4, shape = 23, color = "black", stroke = 1.5) + #seep data
+  geom_point(size = 4.5, shape = 23, color = "black", stroke = 1.5) + #seep data
   
   # geom_point(data = upstream_ficklin, # upstream data
   #            aes(x = pH, y = Ficklin_metals, fill = Watershed),
@@ -2395,6 +2415,7 @@ Seep_ficklin_plot <-
                      expand = expansion(mult = 0, add = 0)) +
   scale_fill_manual(values = watershed_colors) +
   scale_color_manual(values = watershed_colors) +
+  scale_shape_manual(values = watershed_shapes) +
   labs(
     title = NULL,
     #x = "pH",
@@ -2436,7 +2457,7 @@ Seep_ficklin_plot <-
 
 Seep_ficklin_plot
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Ficklin Diagram/Seeps Ficklin Diagram_v2_with lit values.png", Seep_ficklin_plot, width = 5, height = 5, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Ficklin Diagram/Seeps Ficklin Diagram_v3_with lit values.png", Seep_ficklin_plot, width = 5, height = 5, dpi = 300, bg = "transparent")
 
 #Seep_ficklin_plotly <- ggplotly(Seep_ficklin_plot)
 #Seep_ficklin_plotly
@@ -2455,6 +2476,126 @@ grid.draw(Seep_ficklin_plot_legend)
 
 ggsave('C:/Users/tevinger/Downloads/Seep_ficklin_plot_legend.png', 
        Seep_ficklin_plot_legend, width = 5, height = 1, dpi = 250)
+```
+
+### pie charts for metal composition
+```{r}
+Seep_ficklin_percent <- Seep_ficklin %>%
+  pivot_longer(
+    cols = matches("Co|Zn|Ni|Cu|Cd|Pb"),   # all metal columns
+    names_to = "metal",        # name of new column with metal names
+    values_to = "concentration"   # name of new column with values
+  ) %>%
+  mutate
+
+
+Seep_ficklin_pies <- ggplot(sub, aes(y=sdw.perc, x=2, fill=substrate, color=substrate)) +
+  geom_bar(position="stack", stat="identity", colour="black")+
+  scale_fill_brewer(palette="YlOrBr") +
+  coord_polar(theta="y") + # Try to remove that to understand how the chart is built initially
+  xlim(c(1, 3))+
+  facet_grid(.~watershed)+
+  theme(legend.position = "none")+
+  theme_void()+
+  theme(legend.position="bottom")
+```
+
+### versions for Brett
+```{r}
+Ficklin_plot <- 
+  ggplot(Seep_ficklin, aes(x = pH, y = Ficklin_metals, fill = Watershed)) +
+  
+  # horizontal lines
+  #geom_hline(yintercept = c(1, 10), linetype = "solid", color = "grey", linewidth = 0.8) + # use for mg/L scale
+   geom_hline(yintercept = c(1000, 100000), linetype = "solid", color = "grey", linewidth = 0.5) + # use for ug/L scale
+  
+  # Vertical lines
+  geom_vline(xintercept = c(1, 3, 5.5), 
+             linetype = "solid", color = "grey", linewidth = 0.5) +
+  
+  # annotate("rect",
+  #          xmin = 7.89, xmax = 8.33,   # x range of rectangle
+  #          ymin = 1.5, ymax = 110,  # y range of rectangle
+  #          alpha = 0.2, fill = "#72D9FF", color = NA) +
+  
+  # annotate("rect",
+  #          xmin = 2.1, xmax = 3.5,   # x range of rectangle
+  #          ymin = 350000, ymax = 700000,  # y range of rectangle
+  #          fill = "white", color = NA) +
+
+  
+  # Data points
+    # overlay the second dataset as a layer
+    geom_point(data = G_and_K_2009_Ficklin, # impaired data
+             aes(x = pH, y = Ficklin_metals,
+                 #color = Watershed,
+                 color = "grey",
+                 shape = Watershed),
+             size = 3) +
+
+  geom_point(data = impaired_trib_ficklin, # impaired data
+             aes(x = pH, y = Ficklin_metals, fill = Watershed),
+             size = 4, shape = 21, color = "black", stroke = 1.5, alpha = .8) +
+  
+  geom_point(size = 4.5, shape = 23, color = "black", stroke = 1.5) + #seep data
+  
+  # geom_point(data = upstream_ficklin, # upstream data
+  #            aes(x = pH, y = Ficklin_metals, fill = Watershed),
+  #            size = 3.2, shape = 24, color = "black", stroke = 1.5, alpha = .65) +
+  
+  # geom_point(data = downstream_ficklin, # upstream data
+  #            aes(x = pH, y = Ficklin_metals, fill = Watershed),
+  #            size = 3.2, shape = 22, color = "black", stroke = 1.5, alpha = .65) +
+  
+  scale_x_continuous(limits = c(2.1, 8.33),
+                     breaks = c(2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8),
+                     labels = c(2, "","","", 4,"", "","", 6,"","", "", 8),
+                     expand = expansion(mult = 0, add = 0)) +
+  scale_fill_manual(values = watershed_colors) +
+  scale_color_manual(values = watershed_colors) +
+  scale_shape_manual(values = watershed_shapes) +
+  labs(
+    title = NULL,
+    #x = "pH",
+    x = NULL,
+    y = NULL,   
+    #y = "Sum of Zn+Cu+Cd+Pb+Co+Ni (µg/L)", 
+    color = "Watershed",
+    fill = "lit values"
+  ) +
+  # Labels
+  # annotate("text", x = 7,    y = 9, label = "Near-neutral", size = 4, hjust = 0.5) +
+  # annotate("text", x = 7,    y = 6.15, label = "Low-metal",    size = 4, hjust = 0.5) +
+  # annotate("text", x = 4.25, y = 25000, label = "Acidic",        size = 4, hjust = 0.5) +
+  # annotate("text", x = 4.25, y = 17500, label = "Low-metal",    size = 4, hjust = 0.5) +
+  # annotate("text", x = 2.8, y = 590000, label = "High-Acid",        size = 4, hjust = 0.5) +
+  # annotate("text", x = 2.8, y = 430000, label = "Extreme-metal",    size = 4, hjust = 0.5) +
+  
+  scale_y_log10(
+    limits = c(1.5, 900000),
+    labels = scales::comma,
+    breaks = c(1, 10, 100, 1000, 10000, 100000, 1000000),
+    minor_breaks = NULL,
+    expand = expansion(mult = 0, add = 0)
+  ) +
+  annotation_logticks(sides = "l") +
+  theme_minimal() +
+  DA_theme +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_blank(),
+    axis.text.x = element_blank(),
+    plot.title = element_text(hjust = 0.5),
+    legend.key.size = unit(0.4, "cm"),
+    legend.text = element_text(size = 7),
+    legend.title = element_text(size = 8),
+    legend.spacing.y = unit(0.1, "cm")# center title
+  ) +
+  guides(fill = "none")
+
+Ficklin_plot
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Ficklin Diagram/Ficklin Diagram_everything without upstream.png", Ficklin_plot, width = 5, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ### Old plot codes
@@ -3101,3 +3242,564 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 Na_Cl_interactive <- ggplotly(Na_Cl_ratio)
 Na_Cl_interactive
 ```
+
+# 9. Particulate and Filtered Percentage
+## Dataframe
+```{r}
+Ferrum_metal_data <- working_Ferrum_data %>%
+  filter(New_Grouping %in% c("Impaired Tributary", "Seep")) %>%
+  mutate(u_REE = ifelse(
+      rowSums(is.na(dplyr::select(., 
+                           u_Ce_mcg_per_l, 
+                           u_Dy_mcg_per_l, 
+                           u_La_mcg_per_l, 
+                           u_Nd_mcg_per_l, 
+                           u_Pr_mcg_per_l, 
+                           u_Y_mcg_per_l))) > 0,
+      NA,
+      rowSums(dplyr::select(., 
+                     u_Ce_mcg_per_l, 
+                     u_Dy_mcg_per_l, 
+                     u_La_mcg_per_l, 
+                     u_Nd_mcg_per_l, 
+                     u_Pr_mcg_per_l, 
+                     u_Y_mcg_per_l), 
+              na.rm = TRUE)
+    )) %>%
+  dplyr::select(SamplingEventID,
+                New_Grouping,
+                pH,
+                f_Pb_mcg_per_l, p_Pb_mcg_per_l,
+                #f_Ag_mcg_per_l, p_Ag_mcg_per_l,
+f_Al_mcg_per_l, p_Al_mcg_per_l,
+f_As_mcg_per_l, p_As_mcg_per_l,
+f_Ba_mcg_per_l, p_Ba_mcg_per_l,
+#f_Be_mcg_per_l, p_Be_mcg_per_l,
+f_Cd_mcg_per_l, p_Cd_mcg_per_l,
+#f_Ce_mcg_per_l, p_Ce_mcg_per_l,
+f_Co_mcg_per_l, p_Co_mcg_per_l,
+f_Cr_mcg_per_l, p_Cr_mcg_per_l,
+f_Cu_mcg_per_l, p_Cu_mcg_per_l,
+#f_Dy_mcg_per_l, p_Dy_mcg_per_l,
+f_Fe_mcg_per_l, p_Fe_mcg_per_l,
+#f_La_mcg_per_l, p_La_mcg_per_l,
+f_Mn_mcg_per_l, p_Mn_mcg_per_l,
+#f_Nd_mcg_per_l, p_Nd_mcg_per_l,
+f_Ni_mcg_per_l, p_Ni_mcg_per_l,
+#f_Pr_mcg_per_l, p_Pr_mcg_per_l,
+f_Se_mcg_per_l, p_Se_mcg_per_l,
+#f_Th_mcg_per_l, p_Th_mcg_per_l,
+f_Tl_mcg_per_l, p_Tl_mcg_per_l,
+f_U_mcg_per_l, p_U_mcg_per_l,
+#f_V_mcg_per_l, p_V_mcg_per_l,
+#f_Y_mcg_per_l, p_Y_mcg_per_l,
+f_Zn_mcg_per_l, p_Zn_mcg_per_l,
+f_REE, p_REE,
+u_REE,
+u_Pb_mcg_per_l,
+#u_Ag_mcg_per_l,
+u_Al_mcg_per_l,
+u_As_mcg_per_l,
+u_Ba_mcg_per_l,
+# u_Be_mcg_per_l,
+u_Cd_mcg_per_l,
+#u_Ce_mcg_per_l,
+u_Co_mcg_per_l,
+u_Cr_mcg_per_l,
+u_Cu_mcg_per_l,
+#u_Dy_mcg_per_l,
+u_Fe_mcg_per_l,
+#u_La_mcg_per_l,
+u_Mn_mcg_per_l,
+#u_Nd_mcg_per_l,
+u_Ni_mcg_per_l,
+#u_Pr_mcg_per_l,
+u_Se_mcg_per_l,
+# u_Th_mcg_per_l,
+u_Tl_mcg_per_l,
+u_U_mcg_per_l,
+#u_V_mcg_per_l,
+#u_Y_mcg_per_l,
+u_Zn_mcg_per_l)
+```
+
+## Calculate the percentage of filtered and particulate metals in each sample
+```{r}
+Ferrum_metal_data_long <- Ferrum_metal_data %>%
+  pivot_longer(
+    cols = matches("^(f_|p_|u_)"),  # all fraction columns
+    names_to = c("fraction", "metal"),
+    names_pattern = "^(f|p|u)_(.*)$",
+    values_to = "value"
+  ) %>%
+  # pivot wider to get separate f, p, u columns again
+  pivot_wider(
+    names_from = fraction,
+    values_from = value
+  ) %>%
+  rename(
+    Filtered = f,
+    Particulate = p,
+    Unfiltered_total = u
+  ) %>%
+  
+  # drop rows with any NA in fraction columns
+  filter(if_all(c(Filtered, Particulate, Unfiltered_total), ~ !is.na(.x))) %>%
+  
+  # calculate percent ratios
+  mutate(
+    pct_filtered_of_unfiltered = case_when(
+      Particulate == 0 ~ 100,
+      TRUE   ~ (Filtered / Unfiltered_total) * 100
+    ),
+    pct_particulate_of_unfiltered = case_when(
+      Particulate == 0 ~ 0,
+      TRUE   ~ (Particulate / Unfiltered_total) * 100
+    )
+  )
+```
+
+##Transform dataframe for plotting
+```{r}
+pct_df_long <- Ferrum_metal_data_long %>%
+  # keep key columns and pivot the % columns
+  pivot_longer(
+    cols = c(pct_filtered_of_unfiltered, pct_particulate_of_unfiltered),
+    names_to = "fraction",
+    values_to = "pct_of_unfiltered"
+  ) %>%
+  mutate(
+    # nicer labels for plotting
+    fraction = dplyr::recode(
+      fraction,
+      pct_filtered_of_unfiltered   = "Filtered",
+      pct_particulate_of_unfiltered = "Particulate"
+    ),
+    # optional: set New_Grouping order
+    New_Grouping = factor(New_Grouping,
+                          levels = c("Seep", "Impaired Tributary"))
+  ) %>%
+  # manually change REE for KR_Trib2 
+  mutate(
+    pct_of_unfiltered = case_when(
+      SamplingEventID == "KR_Trib2_20230608_1540" &
+        metal == "REE" &
+        fraction == "Filtered" ~ 100,
+      
+      SamplingEventID == "KR_Trib2_20230608_1540" &
+        metal == "REE" &
+        fraction == "Particulate" ~ 0,
+
+      TRUE ~ pct_of_unfiltered
+    )
+  )
+```
+
+##Calculate summary stats to use for reporting in paper
+```{r}
+f_and_p_summary_stats <- pct_df_long %>%
+dplyr::select(New_Grouping, fraction, pct_of_unfiltered, metal) %>%
+#filter(Temporal_status %in% c("pre", "post")) %>%   # keep only the two groups
+  group_by(New_Grouping, fraction
+           #, metal
+           ) %>%
+  summarise(
+    n        = n(),                     # number of values
+    mean     = mean(pct_of_unfiltered, na.rm = TRUE),
+    median   = median(pct_of_unfiltered, na.rm = TRUE),
+    sd       = sd(pct_of_unfiltered, na.rm = TRUE),
+    se       = sd(pct_of_unfiltered, na.rm = TRUE) / sqrt(n()),
+    min      = min(pct_of_unfiltered, na.rm = TRUE),
+    max      = max(pct_of_unfiltered, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+view(f_and_p_summary_stats)
+```
+
+##Plots for all metals and all samples
+```{r}
+mean_df <- pct_df_long %>%
+  group_by(New_Grouping, fraction) %>%
+  summarise(mean_pct = mean(pct_of_unfiltered, na.rm = TRUE)) %>%
+  ungroup()
+
+fraction_patterns <- c(
+  "Filtered" = "none",
+  "Particulate" = "stripe"
+)
+```
+
+
+```{r}
+metal_fraction_bp <- ggplot(
+  pct_df_long,
+  aes(
+    x = New_Grouping,
+    y = pct_of_unfiltered,
+    fill = New_Grouping,          # color by grouping
+    pattern = fraction,           # pattern by fraction (filtered / particulate)
+    pattern_fill = fraction,
+    group = interaction(New_Grouping, fraction)  # needed for dodging
+  )
+) +
+  geom_boxplot_pattern(
+    position = position_dodge(width = 0.8),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
+    pattern_density = 0.3,
+    pattern_spacing = 0.025,
+    pattern_angle = 45,
+    width = 0.6,
+    alpha = 0.85,
+    size = 0.9
+  ) + 
+  geom_point(
+    data = mean_df,
+    aes(x = New_Grouping,
+        y = mean_pct,
+        group = fraction),
+    color = "black",
+    fill = "white",
+    size = 3,
+    shape = 21,
+    stroke = 1.5,
+    position = position_dodge(width = 0.8)
+  ) +
+  coord_cartesian(ylim = c(0, 100)) +
+  scale_fill_manual(values = group_colors) +
+  # adjust to match your actual fraction labels exactly
+  scale_pattern_manual(values = c("Filtered" = "none", "Particulate" = "stripe"), name = "Metal Phase") +
+  scale_pattern_fill_manual(values = c("Filtered" = NA, "Particulate" = "grey20")) +
+  labs(
+    x = NULL,
+    #x = "Grouping",
+    y = "Metal Phase Percent (% of total)",
+    fill = "Grouping",
+    pattern = "Fraction"
+  ) +
+  theme_classic() +
+  theme(
+    panel.grid.minor = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.background = element_rect(fill = "white"),
+  panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+  #axis.text.x = element_text(color = "white", size = 1),
+  axis.ticks.x = element_blank(),
+  axis.text.y = element_text(size = 16, color = "black", face = "bold"),
+  axis.title.y = element_text(size = 18, color = "black", face = "bold", vjust = 1.25, margin = margin(r = 0.5)),
+  legend.position = "none",
+  legend.title = element_blank(),
+  legend.background = element_rect(fill = NA),
+  legend.text = element_text(size = 12, color = "black", face = "bold"),
+  legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+  axis.ticks.y = element_line(size = 0.9, color = "black"),  # Thicker y-axis ticks
+  axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
+  plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold"),
+  axis.text.x = element_blank()
+  #axis.text.x = element_text(size = 16, color = "black", face = "bold", hjust = 0.5)
+  )
+
+metal_fraction_bp
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase.png", metal_fraction_bp, width = 3, height = 5, dpi = 300)
+```
+
+Indivdual Metal distributions Faceted by Sample Type
+```{r}
+f_vs_p_by_metal_bp <- pct_df_long %>%
+  filter(New_Grouping == "Seep") %>%
+  ggplot(aes(x = fraction,
+           y = pct_of_unfiltered,
+           fill = New_Grouping
+            pattern = fraction,
+     pattern_fill = fraction)
+    ) +
+  #geom_boxplot() +
+  geom_boxplot_pattern(
+    position = position_dodge(width = 0.8),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2,
+    alpha = 0.85,
+    size = 0.5,
+    width = 0.6,
+    pattern_density = 0.3,
+    pattern_spacing = 0.015,
+    pattern_angle = 45
+  ) +
+  scale_fill_manual(values = group_colors) +
+   scale_pattern_manual(values = c("Filtered" = "none", "Particulate" = "stripe"), name = "Metal Phase") +
+  scale_pattern_fill_manual(values = c("Filtered" = NA, "Particulate" = "grey20")) +
+  facet_grid(~ metal, scales = "free_y") +
+  labs(
+    x = "Grouping",
+    y = "% of unfiltered total",
+    fill = "Grouping"
+  ) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    strip.text.x = element_text(size = 7)  # metals on top
+  )
+
+f_vs_p_by_metal_bp
+```
+
+##Averages for each metal
+```{r}
+f_and_p_summary_stats_metal_specific <- pct_df_long %>%
+dplyr::select(New_Grouping, fraction, pct_of_unfiltered, metal) %>%
+#filter(Temporal_status %in% c("pre", "post")) %>%   # keep only the two groups
+  group_by(New_Grouping, fraction
+           , metal
+           ) %>%
+  summarise(
+    n        = n(),                     # number of values
+    mean     = mean(pct_of_unfiltered, na.rm = TRUE),
+    median   = median(pct_of_unfiltered, na.rm = TRUE),
+    sd       = sd(pct_of_unfiltered, na.rm = TRUE),
+    se       = sd(pct_of_unfiltered, na.rm = TRUE) / sqrt(n()),
+    min      = min(pct_of_unfiltered, na.rm = TRUE),
+    max      = max(pct_of_unfiltered, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+view(f_and_p_summary_stats_metal_specific)
+```
+
+##Plots with averages for each metal by sample type
+```{r}
+mean_df <- f_and_p_summary_stats_metal_specific %>%
+  group_by(New_Grouping, fraction) %>%
+  summarise(mean_pct = mean(pct_of_unfiltered, na.rm = TRUE)) %>%
+  ungroup()
+
+fraction_patterns <- c(
+  "Filtered" = "none",
+  "Particulate" = "stripe"
+)
+```
+
+```{r}
+metal_fraction_bp <- ggplot(
+  f_and_p_summary_stats_metal_specific,
+  aes(
+    x = New_Grouping,
+    y = mean,
+    fill = New_Grouping,          # color by grouping
+    pattern = fraction,           # pattern by fraction (filtered / particulate)
+    pattern_fill = fraction,
+    group = interaction(New_Grouping, fraction)  # needed for dodging
+  )
+) +
+  geom_boxplot_pattern(
+    position = position_dodge(width = 0.8),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2, 
+    pattern_density = 0.3,
+    pattern_spacing = 0.025,
+    pattern_angle = 45,
+    width = 0.6,
+    alpha = 0.85,
+    size = 0.9
+  ) + 
+  geom_point(
+    data = mean_df,
+    aes(x = New_Grouping,
+        y = mean_pct,
+        group = fraction),
+    color = "black",
+    #fill = "white",
+    size = 3,
+    #shape = 5,
+    position = position_dodge(width = 0.8)
+  ) +
+  coord_cartesian(ylim = c(0, 100)) +
+  scale_fill_manual(values = group_colors) +
+  # adjust to match your actual fraction labels exactly
+  scale_pattern_manual(values = c("Filtered" = "none", "Particulate" = "stripe"), name = "Metal Phase") +
+  scale_pattern_fill_manual(values = c("Filtered" = NA, "Particulate" = "grey20")) +
+  labs(
+    x = NULL,
+    #x = "Grouping",
+    y = "Metal Phase Percent (% of total)",
+    fill = "Grouping",
+    pattern = "Fraction"
+  ) +
+  theme_classic() +
+  theme(
+    panel.grid.minor = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.background = element_rect(fill = "white"),
+  panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+  #axis.text.x = element_text(color = "white", size = 1),
+  axis.ticks.x = element_blank(),
+  axis.text.y = element_text(size = 16, color = "black", face = "bold"),
+  axis.title.y = element_text(size = 18, color = "black", face = "bold", vjust = 1.25, margin = margin(r = 0.5)),
+  legend.position = "none",
+  legend.title = element_blank(),
+  legend.background = element_rect(fill = NA),
+  legend.text = element_text(size = 12, color = "black", face = "bold"),
+  legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+  axis.ticks.y = element_line(size = 0.9, color = "black"),  # Thicker y-axis ticks
+  axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
+  plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold"),
+  axis.text.x = element_blank()
+  #axis.text.x = element_text(size = 16, color = "black", face = "bold", hjust = 0.5)
+  )
+
+metal_fraction_bp
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase by average per metal.png", metal_fraction_bp, width = 3, height = 5, dpi = 300)
+```
+
+##Stacked Barplots
+```{r}
+bar_df <- pct_df_long %>% 
+  group_by(New_Grouping, metal, fraction) %>% 
+  summarise(mean_pct = mean(pct_of_unfiltered, na.rm = TRUE),
+            .groups = "drop")
+```
+
+```{r}
+stacked_bar <- ggplot(
+  bar_df,
+  aes(x = New_Grouping,
+      y = mean_pct,
+      fill = fraction)
+) +
+  geom_col(position = "stack", colour = "black") +
+  facet_wrap(~ metal, nrow = 3) +   # tweak rows/cols as you like
+  coord_cartesian(ylim = c(0, 100)) +
+  labs(
+    x   = NULL,
+    y   = "Mean % of unfiltered total",
+    fill = "Metal phase"
+  ) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1)
+  )
+
+stacked_bar
+```
+
+
+
+# Frey et al., 2007 Data
+```{r}
+# Load Data
+Frey_et_al_2007_df <- read_excel("C:/Users/tevinger/Downloads/combined_images.xlsx", 
+                                      sheet = 2, 
+                                      col_names = FALSE)
+view(Frey_et_al_2007_df)
+```
+
+```{r}
+# 1. Flatten the single-row df to a vector
+vals <- unlist(Frey_et_al_2007_df, use.names = FALSE)
+
+# 2. Find positions where entries start with "KF"
+kf_pos <- grep("^KF", vals)
+
+# 3. Build chunks: each chunk = KF_i ... just before KF_{i+1}
+chunks <- lapply(seq_along(kf_pos), function(i) {
+  start <- kf_pos[i]
+  end   <- if (i < length(kf_pos)) kf_pos[i + 1] - 1 else length(vals)
+  vals[start:end]
+})
+
+# 4. Find the maximum chunk width
+max_len <- max(lengths(chunks))
+min_len <- min(lengths(chunks))
+
+
+# 4. Turn chunks into individual 1-row data frames,
+#    padding those with only 20 entries by inserting NA after the KF cell
+dfs <- lapply(chunks, function(x) {
+  
+  len <- length(x)
+  
+  if (len == 20) {
+    # insert TWO NA columns after KF
+    x <- append(x, c(NA, NA), after = 1)
+    
+  } else if (len == 21) {
+    # insert ONE NA column after KF
+    x <- append(x, NA, after = 1)
+    
+  } else if (len == 22) {
+    # do nothing, correct width
+    x <- x
+    
+  } else {
+    warning("Chunk starting with ", x[1], " has unexpected length: ", len)
+  }
+  
+  as.data.frame(t(x), stringsAsFactors = FALSE)
+})
+
+# 5. Give them all consistent column names
+n_cols <- 22
+colnames_all <- paste0("V", seq_len(n_cols))
+dfs <- lapply(dfs, function(d) {
+  colnames(d) <- colnames_all
+  d
+})
+
+# 6. Bind back together into one data frame
+Frey_et_al_2007_Table_1 <- do.call(rbind, dfs)
+
+# Set column headers
+new_colnames <- c(
+  "Sample",
+  "River",
+  "River2",
+  "River3",
+  "Date",
+  "Latitude_degreesN",
+  "Longitude_degreesE",
+  "Watershed_Area_km2",
+  "Discharge_km3_yr_1",
+  "pH",
+  "Ca2_mumol_L_1",
+  "K_mumol_L_1",
+  "Mg2_mumol_L_1",
+  "Na_mumol_L_1",
+  "Si_mumol_L_1",
+  "Cl_mumol_L_1",
+  "HCO3_mumol_L_1",
+  "SO4_2",
+  "Alkinf",
+  "TIS_mg_L",
+  "TIS_109_g_yr",
+  "TIS_g_m2_yr"
+)
+
+colnames(Frey_et_al_2007_Table_1) <- new_colnames
+```
+
+```{r}
+write_xlsx(Frey_et_al_2007_Table_1,
+           "C:/Users/tevinger/Downloads/Frey_et_al_2007_Table_1.xlsx")
+```
+
+# pH conversions
+```{r}
+convert_pH_to_H <- function(pH) {
+  10^(-pH)
+}
+```
+
+```{r}
+convert_pH_to_H(8.33)
+convert_pH_to_H(8.4)
+convert_pH_to_H(8.07)
+convert_pH_to_H(7.74)
+```
+
+
+

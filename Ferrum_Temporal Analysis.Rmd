@@ -634,37 +634,11 @@ Agashashok_for_plots <- Agashashok_River_Data %>%
                 f_Mg_mg_l,
                 f_Na_mg_l,
                 f_K_mg_l,
-                f_SiO2_mg_per_l,
-                f_Pb_mcg_per_l,
-f_Ag_mcg_per_l,
-f_Al_mcg_per_l,
-f_As_mcg_per_l,
-f_Ba_mcg_per_l,
-#f_Be_mcg_per_l,
-f_Cd_mcg_per_l,
-f_Ce_mcg_per_l,
-f_Co_mcg_per_l,
-f_Cr_mcg_per_l,
-f_Cu_mcg_per_l,
-f_Dy_mcg_per_l,
-f_Fe_mcg_per_l,
-f_La_mcg_per_l,
-f_Mn_mcg_per_l,
-f_Nd_mcg_per_l,
-f_Ni_mcg_per_l,
-f_Pr_mcg_per_l,
-f_Se_mcg_per_l,
-#f_Th_mcg_per_l,
-f_Tl_mcg_per_l,
-f_U_mcg_per_l,
-f_V_mcg_per_l,
-f_Y_mcg_per_l,
-f_Zn_mcg_per_l
-)
+                HCO3_mg_L)
 
 # convert data columns to numeric
 Agashashok_for_plots <- Agashashok_for_plots %>%
-  mutate(across(11:49, as.numeric))
+  mutate(across(11:26, as.numeric))
 
 # remove sampled seeps from the dataframe
 Agashashok_for_plots <- Agashashok_for_plots %>%
@@ -2838,8 +2812,7 @@ temp_temporal_bp
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/temp seasonal temporal bp_V1.png", temp_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 ```
 
-# All Sites Stats - pre vs post
-
+# Aggie Sites Stats - pre vs post
 ## Add temporal_status to df
 ```{r}
 temporal_stats <- Agashashok_for_plots %>%
@@ -2851,7 +2824,8 @@ temporal_stats <- Agashashok_for_plots %>%
   mutate(
     temporal_status_season = paste(Temporal_status, sample_collection_season, sep = "_")
   ) %>%
-  relocate(temporal_status_season, .after = SamplingEventID) 
+  relocate(temporal_status_season, .after = SamplingEventID) %>%
+  mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
 
 early_temporal_stats <- temporal_stats %>%
   filter(sample_collection_season == "early") %>%
@@ -2860,6 +2834,662 @@ early_temporal_stats <- temporal_stats %>%
 late_temporal_stats <- temporal_stats %>%
   filter(sample_collection_season == "late") %>%
   mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
+```
+
+## NEW - Early season
+### Shapiro
+```{r}
+library(dplyr)
+library(purrr)
+library(broom)
+library(rstatix)
+
+# It must have: chemical_name, report_result_value, Temporal_status, and temporal_status_season
+# Temporal_status is used to do a comparison of pre to post including both seasons
+
+# List of columns to analyze
+columns_to_model <- c("pH", "Alk_mgCaCO3_per_l", "HCO3_mg_L", "DIC_mgC_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l")
+
+pdf("residuals_plots.pdf")  # Start a new PDF file
+
+# Initialize a results list
+model_results <- list()
+
+# Loop through each variable
+for (col in columns_to_model) {
+  
+  # Fit the model (example: linear model with sample_collection_season as predictor)
+  model <- lm(early_temporal_stats[[col]] ~ early_temporal_stats$Temporal_status, data = early_temporal_stats)
+  
+  # Extract residuals
+  residuals <- resid(model)
+  
+  # Plot histogram
+  hist(residuals, main = paste("Residuals Histogram:", col), xlab = "Residuals")
+  
+  # Plot QQ plot
+  qqnorm(residuals, main = paste("QQ Plot of Residuals:", col))
+  qqline(residuals)
+  
+  # Perform Shapiro-Wilk test on residuals
+  test_result <- tryCatch(
+    shapiro.test(residuals),
+    error = function(e) NULL
+  )
+  
+  # Create the interpretation
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The residuals are likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store the results in a data frame
+  model_results[[col]] <- data.frame(
+    Variable = col,
+    W = if (!is.null(test_result)) test_result$statistic else NA,
+    p_value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+}
+
+dev.off()  # Close the PDF device
+
+# Combine all results into a single data frame
+early_shapiro_results <- bind_rows(model_results)
+
+# Print results
+view(early_shapiro_results)
+
+#write_xlsx(early_shapiro_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY shapiro_results_long.xlsx")
+
+## HCO3 is normally distributed --> t-test
+```
+
+### Not-Normally distributed data
+```{r}
+library(dplyr)
+library(rstatix)
+library(purrr)
+
+data <- early_temporal_stats  # same df
+
+# Variables that FAILED Shapiro (NON-NORMAL)
+non_normal_vars <- c("pH", "Alk_mgCaCO3_per_l", "DIC_mgC_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l")
+
+run_wilcox_for_col <- function(var, data) {
+  df_var <- data %>%
+    filter(
+      !is.na(.data[[var]]),
+      !is.na(Temporal_status)
+    )
+  
+  # Check data sufficiency
+  if (nrow(df_var) < 3 || dplyr::n_distinct(df_var$Temporal_status) < 2) {
+    return(tibble(
+      variable = var,
+      test = "Wilcoxon rank-sum",
+      group1 = NA_character_,
+      group2 = NA_character_,
+      n1 = NA_real_,
+      n2 = NA_real_,
+      statistic = NA_real_,
+      p = NA_real_,
+      Interpretation = "Not enough data or only one Temporal_status level; test not run."
+    ))
+  }
+  
+  # Sample sizes per group
+  n_info <- df_var %>%
+    count(Temporal_status)
+  # ensure consistent order with the test output later
+  # (we'll match by group name)
+  
+  # Build formula `<var> ~ Temporal_status`
+  fml <- reformulate("Temporal_status", response = var)
+  
+  res <- wilcox_test(
+    data = df_var,
+    formula = fml
+  )
+  
+  # Add n1 and n2 by matching group1/group2 to Temporal_status
+  n1 <- n_info$n[match(res$group1, n_info$Temporal_status)]
+  n2 <- n_info$n[match(res$group2, n_info$Temporal_status)]
+  
+  res %>%
+    mutate(
+      variable = var,
+      test = "Wilcoxon rank-sum",
+      n1 = n1,
+      n2 = n2,
+      Interpretation = ifelse(
+        p < 0.05,
+        "Significant difference between groups (reject H0).",
+        "No significant difference between groups (fail to reject H0)."
+      )
+    ) %>%
+    dplyr::select(variable, test, group1, group2, n1, n2, statistic, p, Interpretation)
+}
+
+# Run Wilcoxon tests on all non-normal variables
+wilcox_results_wide <- map_dfr(non_normal_vars, run_wilcox_for_col, data = data)
+
+View(wilcox_results_wide)
+
+
+## no difference for Mg and K
+
+write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY season wilcox_results.xlsx")
+```
+
+### Normally distributed data
+```{r}
+library(dplyr)
+library(rstatix)
+library(purrr)
+
+# Wide-format data frame
+data <- early_temporal_stats  # <-- your df
+
+# Variables that passed Shapiro (NORMAL)
+normal_vars <- c("HCO3_mg_L")
+
+# Function to run a t-test on one wide column
+run_t_for_col <- function(var, data) {
+  df_var <- data %>%
+    filter(
+      !is.na(.data[[var]]),
+      !is.na(Temporal_status)
+    )
+  
+  # Need enough data and at least 2 groups
+  if (nrow(df_var) < 3 || dplyr::n_distinct(df_var$Temporal_status) < 2) {
+    return(tibble(
+      variable = var,
+      test = "t-test",
+      group1 = NA_character_,
+      group2 = NA_character_,
+      n1 = NA_real_,
+      n2 = NA_real_,
+      statistic = NA_real_,
+      df = NA_real_,
+      p = NA_real_,
+      Interpretation = "Not enough data or only one Temporal_status level; test not run."
+    ))
+  }
+  
+  # Build formula: `<var> ~ Temporal_status` (handles spaces/commas via reformulate)
+  fml <- reformulate("Temporal_status", response = var)
+  
+  res <- t_test(
+    data = df_var,
+    formula = fml,
+    var.equal = FALSE   # Welch t-test
+  )
+  
+  res %>%
+    mutate(
+      variable = var,
+      test = "t-test",
+      Interpretation = ifelse(
+        p < 0.05,
+        "Significant difference between groups (reject H0).",
+        "No significant difference between groups (fail to reject H0)."
+      )
+    ) %>%
+    dplyr::select(variable, test, group1, group2, n1, n2, statistic, df, p, Interpretation)
+}
+
+# Run t-tests on all normal variables
+t_test_results <- map_dfr(normal_vars, run_t_for_col, data = data)
+
+View(t_test_results)
+
+
+write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY season t_test results.xlsx")
+```
+
+## Late season
+### Shapiro
+```{r}
+library(dplyr)
+library(purrr)
+library(broom)
+library(rstatix)
+
+# It must have: chemical_name, report_result_value, Temporal_status, and temporal_status_season
+# Temporal_status is used to do a comparison of pre to post including both seasons
+
+# List of columns to analyze
+columns_to_model <- c("pH", "Alk_mgCaCO3_per_l", "HCO3_mg_L", "DIC_mgC_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l")
+
+pdf("residuals_plots.pdf")  # Start a new PDF file
+
+# Initialize a results list
+model_results <- list()
+
+# Loop through each variable
+for (col in columns_to_model) {
+  
+  # Fit the model (example: linear model with sample_collection_season as predictor)
+  model <- lm(late_temporal_stats[[col]] ~ late_temporal_stats$Temporal_status, data = late_temporal_stats)
+  
+  # Extract residuals
+  residuals <- resid(model)
+  
+  # Plot histogram
+  hist(residuals, main = paste("Residuals Histogram:", col), xlab = "Residuals")
+  
+  # Plot QQ plot
+  qqnorm(residuals, main = paste("QQ Plot of Residuals:", col))
+  qqline(residuals)
+  
+  # Perform Shapiro-Wilk test on residuals
+  test_result <- tryCatch(
+    shapiro.test(residuals),
+    error = function(e) NULL
+  )
+  
+  # Create the interpretation
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The residuals are likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store the results in a data frame
+  model_results[[col]] <- data.frame(
+    Variable = col,
+    W = if (!is.null(test_result)) test_result$statistic else NA,
+    p_value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+}
+
+dev.off()  # Close the PDF device
+
+# Combine all results into a single data frame
+late_shapiro_results <- bind_rows(model_results)
+
+# Print results
+view(late_shapiro_results)
+
+#write_xlsx(early_shapiro_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY shapiro_results_long.xlsx")
+
+## pH, Alkalinity, DIC, and Mg are normally distributed --> t-test
+```
+
+### Not-Normally distributed data
+```{r}
+library(dplyr)
+library(rstatix)
+library(purrr)
+
+data <- late_temporal_stats  # same df
+
+# Variables that FAILED Shapiro (NON-NORMAL)
+non_normal_vars <- c("DOC_mgC_per_l", "HCO3_mg_L", "f_Cl_mg_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Na_mg_l", "f_K_mg_l")
+
+run_wilcox_for_col <- function(var, data) {
+  df_var <- data %>%
+    filter(
+      !is.na(.data[[var]]),
+      !is.na(Temporal_status)
+    )
+  
+  # Check data sufficiency
+  if (nrow(df_var) < 3 || dplyr::n_distinct(df_var$Temporal_status) < 2) {
+    return(tibble(
+      variable = var,
+      test = "Wilcoxon rank-sum",
+      group1 = NA_character_,
+      group2 = NA_character_,
+      n1 = NA_real_,
+      n2 = NA_real_,
+      statistic = NA_real_,
+      p = NA_real_,
+      Interpretation = "Not enough data or only one Temporal_status level; test not run."
+    ))
+  }
+  
+  # Sample sizes per group
+  n_info <- df_var %>%
+    count(Temporal_status)
+  # ensure consistent order with the test output later
+  # (we'll match by group name)
+  
+  # Build formula `<var> ~ Temporal_status`
+  fml <- reformulate("Temporal_status", response = var)
+  
+  res <- wilcox_test(
+    data = df_var,
+    formula = fml
+  )
+  
+  # Add n1 and n2 by matching group1/group2 to Temporal_status
+  n1 <- n_info$n[match(res$group1, n_info$Temporal_status)]
+  n2 <- n_info$n[match(res$group2, n_info$Temporal_status)]
+  
+  res %>%
+    mutate(
+      variable = var,
+      test = "Wilcoxon rank-sum",
+      n1 = n1,
+      n2 = n2,
+      Interpretation = ifelse(
+        p < 0.05,
+        "Significant difference between groups (reject H0).",
+        "No significant difference between groups (fail to reject H0)."
+      )
+    ) %>%
+    dplyr::select(variable, test, group1, group2, n1, n2, statistic, p, Interpretation)
+}
+
+# Run Wilcoxon tests on all non-normal variables
+wilcox_results_wide <- map_dfr(non_normal_vars, run_wilcox_for_col, data = data)
+
+View(wilcox_results_wide)
+
+
+## no difference for HCO3 and Ca
+
+write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/LATE season wilcox_results.xlsx")
+```
+
+### Normally distributed data
+```{r}
+library(dplyr)
+library(rstatix)
+library(purrr)
+
+# Wide-format data frame
+data <- late_temporal_stats  # <-- your df
+
+# Variables that passed Shapiro (NORMAL)
+normal_vars <- c("pH", "Alk_mgCaCO3_per_l", "DIC_mgC_per_l", "f_Mg_mg_l")
+
+# Function to run a t-test on one wide column
+run_t_for_col <- function(var, data) {
+  df_var <- data %>%
+    filter(
+      !is.na(.data[[var]]),
+      !is.na(Temporal_status)
+    )
+  
+  # Need enough data and at least 2 groups
+  if (nrow(df_var) < 3 || dplyr::n_distinct(df_var$Temporal_status) < 2) {
+    return(tibble(
+      variable = var,
+      test = "t-test",
+      group1 = NA_character_,
+      group2 = NA_character_,
+      n1 = NA_real_,
+      n2 = NA_real_,
+      statistic = NA_real_,
+      df = NA_real_,
+      p = NA_real_,
+      Interpretation = "Not enough data or only one Temporal_status level; test not run."
+    ))
+  }
+  
+  # Build formula: `<var> ~ Temporal_status` (handles spaces/commas via reformulate)
+  fml <- reformulate("Temporal_status", response = var)
+  
+  res <- t_test(
+    data = df_var,
+    formula = fml,
+    var.equal = FALSE   # Welch t-test
+  )
+  
+  res %>%
+    mutate(
+      variable = var,
+      test = "t-test",
+      Interpretation = ifelse(
+        p < 0.05,
+        "Significant difference between groups (reject H0).",
+        "No significant difference between groups (fail to reject H0)."
+      )
+    ) %>%
+    dplyr::select(variable, test, group1, group2, n1, n2, statistic, df, p, Interpretation)
+}
+
+# Run t-tests on all normal variables
+t_test_results <- map_dfr(normal_vars, run_t_for_col, data = data)
+
+View(t_test_results)
+
+# no difference for all
+
+write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/LATE season t_test results.xlsx")
+```
+
+## All seasons - pre vs post
+### Shapiro
+```{r}
+library(dplyr)
+library(purrr)
+library(broom)
+library(rstatix)
+
+# It must have: chemical_name, report_result_value, Temporal_status, and temporal_status_season
+# Temporal_status is used to do a comparison of pre to post including both seasons
+
+# List of columns to analyze
+columns_to_model <- c("pH", "Alk_mgCaCO3_per_l", "HCO3_mg_L", "DIC_mgC_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l")
+
+pdf("residuals_plots.pdf")  # Start a new PDF file
+
+# Initialize a results list
+model_results <- list()
+
+# Loop through each variable
+for (col in columns_to_model) {
+  
+  # Fit the model (example: linear model with sample_collection_season as predictor)
+  model <- lm(temporal_stats[[col]] ~ temporal_stats$Temporal_status, data = temporal_stats)
+  
+  # Extract residuals
+  residuals <- resid(model)
+  
+  # Plot histogram
+  hist(residuals, main = paste("Residuals Histogram:", col), xlab = "Residuals")
+  
+  # Plot QQ plot
+  qqnorm(residuals, main = paste("QQ Plot of Residuals:", col))
+  qqline(residuals)
+  
+  # Perform Shapiro-Wilk test on residuals
+  test_result <- tryCatch(
+    shapiro.test(residuals),
+    error = function(e) NULL
+  )
+  
+  # Create the interpretation
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The residuals are likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store the results in a data frame
+  model_results[[col]] <- data.frame(
+    Variable = col,
+    W = if (!is.null(test_result)) test_result$statistic else NA,
+    p_value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+}
+
+dev.off()  # Close the PDF device
+
+# Combine all results into a single data frame
+all_shapiro_results <- bind_rows(model_results)
+
+# Print results
+view(all_shapiro_results)
+
+#write_xlsx(early_shapiro_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY shapiro_results_long.xlsx")
+
+## only DIC normally distributed --> t-test
+```
+
+### Not-Normally distributed data
+```{r}
+library(dplyr)
+library(rstatix)
+library(purrr)
+
+data <- temporal_stats  # same df
+
+# Variables that FAILED Shapiro (NON-NORMAL)
+non_normal_vars <- c("pH", "Alk_mgCaCO3_per_l", "HCO3_mg_L", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l")
+
+run_wilcox_for_col <- function(var, data) {
+  df_var <- data %>%
+    filter(
+      !is.na(.data[[var]]),
+      !is.na(Temporal_status)
+    )
+  
+  # Check data sufficiency
+  if (nrow(df_var) < 3 || dplyr::n_distinct(df_var$Temporal_status) < 2) {
+    return(tibble(
+      variable = var,
+      test = "Wilcoxon rank-sum",
+      group1 = NA_character_,
+      group2 = NA_character_,
+      n1 = NA_real_,
+      n2 = NA_real_,
+      statistic = NA_real_,
+      p = NA_real_,
+      Interpretation = "Not enough data or only one Temporal_status level; test not run."
+    ))
+  }
+  
+  # Sample sizes per group
+  n_info <- df_var %>%
+    count(Temporal_status)
+  # ensure consistent order with the test output later
+  # (we'll match by group name)
+  
+  # Build formula `<var> ~ Temporal_status`
+  fml <- reformulate("Temporal_status", response = var)
+  
+  res <- wilcox_test(
+    data = df_var,
+    formula = fml
+  )
+  
+  # Add n1 and n2 by matching group1/group2 to Temporal_status
+  n1 <- n_info$n[match(res$group1, n_info$Temporal_status)]
+  n2 <- n_info$n[match(res$group2, n_info$Temporal_status)]
+  
+  res %>%
+    mutate(
+      variable = var,
+      test = "Wilcoxon rank-sum",
+      n1 = n1,
+      n2 = n2,
+      Interpretation = ifelse(
+        p < 0.05,
+        "Significant difference between groups (reject H0).",
+        "No significant difference between groups (fail to reject H0)."
+      )
+    ) %>%
+    dplyr::select(variable, test, group1, group2, n1, n2, statistic, p, Interpretation)
+}
+
+# Run Wilcoxon tests on all non-normal variables
+wilcox_results_wide <- map_dfr(non_normal_vars, run_wilcox_for_col, data = data)
+
+View(wilcox_results_wide)
+
+
+## no difference for pH, Ca, Mg
+
+write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/all seasons wilcox_results.xlsx")
+```
+
+### Normally distributed data
+```{r}
+library(dplyr)
+library(rstatix)
+library(purrr)
+
+# Wide-format data frame
+data <- temporal_stats  # <-- your df
+
+# Variables that passed Shapiro (NORMAL)
+normal_vars <- c("DIC_mgC_per_l")
+
+# Function to run a t-test on one wide column
+run_t_for_col <- function(var, data) {
+  df_var <- data %>%
+    filter(
+      !is.na(.data[[var]]),
+      !is.na(Temporal_status)
+    )
+  
+  # Need enough data and at least 2 groups
+  if (nrow(df_var) < 3 || dplyr::n_distinct(df_var$Temporal_status) < 2) {
+    return(tibble(
+      variable = var,
+      test = "t-test",
+      group1 = NA_character_,
+      group2 = NA_character_,
+      n1 = NA_real_,
+      n2 = NA_real_,
+      statistic = NA_real_,
+      df = NA_real_,
+      p = NA_real_,
+      Interpretation = "Not enough data or only one Temporal_status level; test not run."
+    ))
+  }
+  
+  # Build formula: `<var> ~ Temporal_status` (handles spaces/commas via reformulate)
+  fml <- reformulate("Temporal_status", response = var)
+  
+  res <- t_test(
+    data = df_var,
+    formula = fml,
+    var.equal = FALSE   # Welch t-test
+  )
+  
+  res %>%
+    mutate(
+      variable = var,
+      test = "t-test",
+      Interpretation = ifelse(
+        p < 0.05,
+        "Significant difference between groups (reject H0).",
+        "No significant difference between groups (fail to reject H0)."
+      )
+    ) %>%
+    dplyr::select(variable, test, group1, group2, n1, n2, statistic, df, p, Interpretation)
+}
+
+# Run t-tests on all normal variables
+t_test_results <- map_dfr(normal_vars, run_t_for_col, data = data)
+
+View(t_test_results)
+
+# significant difference for DIC
+
+write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/all seasons t_test results.xlsx")
 ```
 
 ## OLD - Early season

@@ -228,19 +228,19 @@ view(working_Ferrum_data)
 
 # Summary Stats
 
-## Sample Count
+## Sample Count for Figure 2 and Figure 3
 ``` {r}
 # calculate the count for each site_grouping for each variable that we care about
 # Select relevant columns (Site_Grouping + target columns)
 #selected_columns <- c(4,15:17,19:22,25:27,31,33:41,43,45:48,57,58)
-selected_columns <- c(4,17:60)
+selected_columns <- c(4,17:106)
 
 # Create count table
 group_counts <- working_Ferrum_data %>%
-  dplyr::select(Site_Grouping, all_of(selected_columns)) %>%  # Select Site_Grouping + target variables
-  pivot_longer(cols = -Site_Grouping, names_to = "Variable", values_to = "Value") %>%  # Convert wide to long format
+  dplyr::select(New_Grouping, all_of(selected_columns)) %>%  # Select Site_Grouping + target variables
+  pivot_longer(cols = -New_Grouping, names_to = "Variable", values_to = "Value") %>%  # Convert wide to long format
   filter(!is.na(Value)) %>%  # Remove NA values
-  group_by(Site_Grouping, Variable) %>%
+  group_by(New_Grouping, Variable) %>%
   summarise(Count = n(), .groups = "drop") %>% # Count occurrences per group-variable pair
   pivot_wider(names_from = Variable, values_from = Count, values_fill = list(Count = 0))
 
@@ -250,8 +250,24 @@ print(group_counts)
 columns_to_move <- c("pH", "Temp_deg_celsius", "Spec_Cond_microS_per_cm", "Diss_oxy_mg_per_l", "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l")
 
 group_counts <- group_counts %>%
-  dplyr::select(Site_Grouping, all_of(columns_to_move), everything())
+  dplyr::select(New_Grouping, all_of(columns_to_move), everything())
 
+```
+
+```{r}
+group_counts_wide <- group_counts %>%
+  pivot_longer(
+    cols = -New_Grouping,        # all columns except New_Grouping
+    names_to  = "Variable",      # old headers → Variable
+    values_to = "value"          # cell values
+  ) %>%
+  pivot_wider(
+    names_from  = New_Grouping,  # New_Grouping values become new headers
+    values_from = value          # fill cells with the values
+  )
+
+# Save as an excel file
+write_xlsx(group_counts_wide, path = "C:/Users/tevinger/Downloads/New_Groupings Sample Count_wide.xlsx")
 ```
 
 ``` {r}
@@ -259,10 +275,10 @@ group_counts <- group_counts %>%
 group_counts_table <- flextable(group_counts)
 
 # Save as an excel file
-write_xlsx(group_counts, path = "C:/Users/tayta/Downloads/Site_Grouping Data Distribution and Density.xlsx")
+write_xlsx(group_counts, path = "C:/Users/tevinger/Downloads/New_Groupings Sample Count.xlsx")
 ```
 
-## Mean and Std Dev
+## Mean and Std Dev - DELETE THIS
 
 ``` {r}
 # calculate the count for each site_grouping for each variable that we care about
@@ -291,7 +307,7 @@ columns_to_move <- c("pH", "Temp_deg_celsius", "Spec_Cond_microS_per_cm", "Diss_
 group_stats <- group_stats %>%
   dplyr::select(Site_Grouping, all_of(columns_to_move), everything())
 
-write_xlsx(group_stats, path = "C:/Users/tayta/Downloads/Proximity Grouping Stats.xlsx")
+write_xlsx(group_stats, path = "C:/Users/tevinger/Downloads/Proximity Grouping Stats.xlsx")
 ```
 
 
@@ -709,6 +725,32 @@ Salmon_Ni_relative
 ```
 
 #Final Grouping - 5 groups from Rel watershed area
+
+## Sample count
+```{r}
+watershed_group_count <- working_Ferrum_data %>%
+  group_by(New_Groups, Watershed) %>%
+  summarise(N = n(), .groups = "drop")  # Count observations
+
+group_count <- working_Ferrum_data %>%
+  group_by(New_Groups) %>%
+  summarise(N = n(), .groups = "drop")  # Count observations
+
+print(watershed_group_count)
+print(group_count)
+
+watershed_sites_count <- working_Ferrum_data %>%
+  group_by(Watershed, Field_label) %>%
+  summarise(N = n(), .groups = "drop")
+
+write_xlsx(watershed_sites_count, "C:/Users/tevinger/Downloads/count of sites per watershed.xlsx")
+
+watershed_sites_groups_count <- working_Ferrum_data %>%
+  group_by(Watershed, New_Grouping) %>%
+  summarise(N = n(), .groups = "drop")
+
+write_xlsx(watershed_sites_groups_count, "C:/Users/tevinger/Downloads/count of group per watershed.xlsx")
+```
 
 ## pH 
 ```{r}

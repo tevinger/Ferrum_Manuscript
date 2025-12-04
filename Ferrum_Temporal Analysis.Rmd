@@ -78,7 +78,7 @@ sites <- whatNWISsites(sites = site_numbers)
 
 view(sites)
 
-write_xlsx(sites, "C:/Users/tayta/Downloads/USGS water stations.xlsx")
+# write_xlsx(sites, "C:/Users/tayta/Downloads/USGS water stations.xlsx")
 
 # Define the time period
 start_date <- "2015-01-01"
@@ -102,6 +102,13 @@ discharge_data <- discharge_data %>%
   mutate(Year = year(Date)) %>%
   dplyr::rename(discharge_cfs = X_00060_00003)
 
+cumulative_discharge_by_year <- discharge_data %>%
+  group_by(station_nm, Year) %>%
+  summarise(
+    total_discharge_cfs = sum(discharge_cfs, na.rm = TRUE),
+    .groups = "drop"
+  )
+
 # plot the Q data
 library(ggplot2)
 
@@ -117,13 +124,281 @@ q.p <- ggplot(discharge_data, aes(x = Date, y = discharge_cfs, color = station_n
 
 q.p
 
-ggsave(q.p, filename = "02_Hydrographs_Available_Data_2015to2025.png",
-       width = 11, height = 7)
+q.p_2 <- ggplot(cumulative_discharge_by_year, aes(x = Year, y = total_discharge_cfs, color = station_nm)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(station_nm~., scales = "free", ncol = 2)+
+  labs(x = "Date",
+       y = "Discharge (cfs)") +
+  theme_minimal() +
+  theme(
+    legend.position = "none"
+  )
+
+q.p_2
+
+ggsave("C:/Users/tevinger/Downloads/Total Discharge.png", q.p_2, width = 11, height = 7)
+
+# ggsave(q.p, filename = "02_Hydrographs_Available_Data_2015to2025.png",
+#        width = 11, height = 7)
+```
+
+## cumulative discharge per year
+```{r}
+cumulative_discharge_by_year_stats <- cumulative_discharge_by_year %>%
+mutate(Temporal_status = ifelse(Year %in% c(2015, 2016, 2017, 2018), 'pre',
+                      ifelse(Year %in% c(2019, 2020, 2021, 2022, 2023, 2024), 'post', NA)))
+
+cumulative_discharge_DahlCreek <- cumulative_discharge_by_year_stats %>%
+  filter(station_nm == "DAHL C NR KOBUK AK")
+
+cumulative_discharge_KobukRiver <- cumulative_discharge_by_year_stats %>%
+  filter(station_nm == "KOBUK R NR KIANA AK")
+
+cumulative_discharge_SlateCreek <- cumulative_discharge_by_year_stats %>%
+  filter(station_nm == "SLATE C AT COLDFOOT AK")
+
+cumulative_discharge_WulikRiver <- cumulative_discharge_by_year_stats %>%
+  filter(station_nm == "WULIK R BL TUTAK C NR KIVALINA AK")
+```
+
+## Shapiro
+```{r}
+library(dplyr)
+library(purrr)
+library(broom)
+library(rstatix)
+
+# List of columns to analyze
+columns_to_model <- c("total_discharge_cfs")
+
+pdf("residuals_plots.pdf")  # Start a new PDF file
+
+# Initialize a results list
+model_results <- list()
+
+# Loop through each variable
+for (col in columns_to_model) {
+  
+  # Fit the model (example: linear model with New_Grouping as predictor)
+  model <- lm(cumulative_discharge_by_year_stats[[col]] ~ cumulative_discharge_by_year_stats$Temporal_status, data = cumulative_discharge_by_year_stats)
+  
+  # Extract residuals
+  residuals <- resid(model)
+  
+  # Plot histogram
+  hist(residuals, main = paste("Residuals Histogram:", col), xlab = "Residuals")
+  
+  # Plot QQ plot
+  qqnorm(residuals, main = paste("QQ Plot of Residuals:", col))
+  qqline(residuals)
+  
+  # Perform Shapiro-Wilk test on residuals
+  test_result <- tryCatch(
+    shapiro.test(residuals),
+    error = function(e) NULL
+  )
+  
+  # Create the interpretation
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The residuals are likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store the results in a data frame
+  model_results[[col]] <- data.frame(
+    Variable = col,
+    W = if (!is.null(test_result)) test_result$statistic else NA,
+    p_value = if (!is.null(test_result)) test_result$p.value else NA,
+    Interpretation = interpretation
+  )
+}
+
+dev.off()  # Close the PDF device
+
+# Combine all results into a single data frame
+shapiro_results <- bind_rows(model_results)
+
+# Print results
+view(shapiro_results)
+```
+
+##Emmeans
+```{r}
+Dahl_Discharge_data_model <- lm(total_discharge_cfs ~ Temporal_status, data = cumulative_discharge_DahlCreek)
+Dahl_Discharge_data_emm <- emmeans(Dahl_Discharge_data_model, ~ Temporal_status)
+Dahl_Discharge_data_contrast <- contrast(Dahl_Discharge_data_emm, method = "pairwise")
+print(Dahl_Discharge_data_contrast)
+
+Kobuk_Discharge_data_model <- lm(total_discharge_cfs ~ Temporal_status, data = cumulative_discharge_KobukRiver)
+Kobuk_Discharge_data_emm <- emmeans(Kobuk_Discharge_data_model, ~ Temporal_status)
+Kobuk_Discharge_data_contrast <- contrast(Kobuk_Discharge_data_emm, method = "pairwise")
+print(Kobuk_Discharge_data_contrast)
+
+Slate_Discharge_data_model <- lm(total_discharge_cfs ~ Temporal_status, data = cumulative_discharge_SlateCreek)
+Slate_Discharge_data_emm <- emmeans(Slate_Discharge_data_model, ~ Temporal_status)
+Slate_Discharge_data_contrast <- contrast(Slate_Discharge_data_emm, method = "pairwise")
+print(Slate_Discharge_data_contrast)
+
+Wulik_Discharge_data_model <- lm(total_discharge_cfs ~ Temporal_status, data = cumulative_discharge_WulikRiver)
+Wulik_Discharge_data_emm <- emmeans(Wulik_Discharge_data_model, ~ Temporal_status)
+Wulik_Discharge_data_contrast <- contrast(Wulik_Discharge_data_emm, method = "pairwise")
+print(Wulik_Discharge_data_contrast)
+```
+
+## Kruskal
+```{r}
+library(dplyr)
+library(rstatix)
+
+# List of columns to analyze - alkalinity removed from the list because shapiro showed normality
+nonparametric_columns <- c("total_discharge_cfs")
+
+# Initialize a results list
+kruskal_results_list <- list()
+
+# Loop through each variable in your list
+for (col in nonparametric_columns) {
+  
+  # Filter out NAs for the current variable
+  df_filtered <- cumulative_discharge_by_year_stats %>%
+    filter(!is.na(.data[[col]]))
+  
+  # Perform Kruskal-Wallis test
+  test_result <- tryCatch(
+    {
+      kruskal_test(as.formula(paste(col, "~ Temporal_status")), data = df_filtered)
+    },
+    error = function(e) {
+      # Return a default result if test fails
+      data.frame(
+        variable = col,
+        statistic = NA,
+        p = NA,
+        df = NA
+      )
+    }
+  )
+  
+  # Create interpretation
+  interpretation <- if (!is.null(test_result$p) && test_result$p < 0.05) {
+    "Significant difference among groups (reject H0)."
+  } else if (!is.null(merged_result$p)) {
+    "No significant difference among groups (fail to reject H0)."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  test_result$Interpretation <- interpretation
+  
+  # Store the result
+  kruskal_results_list[[col]] <- test_result
+}
+
+# Combine all results into a single dataframe
+kruskal_results_df <- bind_rows(kruskal_results_list)
+
+# Print the results
+view(kruskal_results_df)
+
+#write_xlsx(kruskal_results_df, "C:/Users/tevinger/Downloads/Kruskal Wallis results_f_Al.xlsx")
+```
+
+## Dunn
+```{r}
+# List of columns to do the dunn post hoc test for 
+# I removed analytes that did not have any differences identified by the kruskal wallis 
+columns_for_dunn <- c("f_Al_mcg_per_l")
+
+library(dplyr)
+library(rstatix)
+library(multcompView)
+
+# Initialize a results list
+dunn_results_list <- list()
+
+# Loop through each variable in columns_for_dunn
+for (col in columns_for_dunn) {
+  
+  # Filter out NAs for the current variable
+  df_filtered <- Grouped_Ferrum_2022_2023_data %>%
+    filter(!is.na(.data[[col]]))
+  
+  # Try performing Dunn's test with Bonferroni adjustment
+  test_result <- tryCatch(
+    {
+      df_filtered %>%
+        dunn_test(as.formula(paste(col, "~ New_Grouping")), p.adjust.method = "bonferroni")
+    },
+    error = function(e) {
+      # Return a default result if test fails
+      data.frame(
+        Variable = col,
+        group1 = NA,
+        group2 = NA,
+        Z = NA,
+        p = NA,
+        p.adj = NA
+      )
+    }
+  )
+  
+  # Add the variable name to each row
+  test_result$Variable <- col
+  
+  # Store the result
+  dunn_results_list[[col]] <- test_result
+  
+  # If there is at least one valid pairwise comparison, generate the CLD
+  if (!all(is.na(test_result$p.adj))) {
+     # Build a matrix of p-values manually
+    groups <- unique(c(test_result$group1, test_result$group2))
+    pval_matrix <- matrix(1, nrow = length(groups), ncol = length(groups),
+                          dimnames = list(groups, groups))
+    
+    for (i in seq_len(nrow(test_result))) {
+      g1 <- as.character(test_result$group1[i])
+      g2 <- as.character(test_result$group2[i])
+      pval <- test_result$p.adj[i]
+      
+      pval_matrix[g1, g2] <- pval
+      pval_matrix[g2, g1] <- pval  # symmetric
+    }
+    
+    # Generate CLD using multcompView
+    cld <- multcompLetters(pval_matrix)
+    
+    # Convert to a tidy data frame
+    cld_df <- data.frame(
+      Variable = col,
+      Group = names(cld$Letters),
+      Letters = cld$Letters
+    )
+    
+    # Store the CLD result
+    cld_results_list[[col]] <- cld_df
+  }
+}
+
+# Combine all Dunn's test results into a single dataframe
+dunn_results_df <- bind_rows(dunn_results_list)
+
+# Combine all CLD results into a single dataframe
+cld_results_df <- bind_rows(cld_results_list)
+
+# Print the results
+view(dunn_results_df)
+view(cld_results_df)
+
+write_xlsx(dunn_results_df, "C:/Users/tevinger/Downloads/Dunns Test results_updated f_Al.xlsx")
+
+write_xlsx(cld_results_df, "C:/Users/tevinger/Downloads/CLD results_updated f_Al.xlsx")
 ```
 
 ```{r}
-
-
 str(discharge_data)
 
 discharge_summary <- discharge_data %>%
@@ -152,10 +427,8 @@ discharge_summary_wide <- discharge_summary %>%
 
 view(discharge_summary_wide)
 
-write_xlsx(discharge_summary_wide, "C:/Users/tayta/Downloads/Brooks Range Pre and Post Discharge Averages.xlsx")
+#write_xlsx(discharge_summary_wide, "C:/Users/tayta/Downloads/Brooks Range Pre and Post Discharge Averages.xlsx")
 ```
-
-
 
 ```{r}
 # Download data from Wulik station
@@ -402,7 +675,1698 @@ view(Agashashok_for_plots)
 write_xlsx(Agashashok_for_plots, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Aggie temporal df.xlsx")
 ```
 
-# All Sites Temporal Analysis 
+# Red Dog Temporal Analysis
+```{r}
+ADF_G_all_stns <- read_excel("C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Ferrum Project/Red Dog Data/FW_ Red Dog regional data/ADF&G all stns.xlsx")
+
+View(ADF_G_all_stns)
+```
+
+## All years
+```{r}
+Red_Dog_stn_9_ALL <- ADF_G_all_stns %>%
+  filter(loc_name == "Station 9")
+
+unique(Red_Dog_stn_9_ALL$chemical_name)
+
+# Aluminum, Cadmium, Copper, Lead, Manganese, Calcium, Magnesium, Bicarbonate (As CaCO3), Temperature, Field, Conductivity, Field
+```
+
+```{r}
+Red_Dog_stn_9_ALL <- Red_Dog_stn_9_ALL %>%
+  mutate(
+    sample_collection_year = year(sample_date),
+    sample_collection_month = month(sample_date, label = TRUE, abbr = TRUE)
+  ) %>%
+  mutate(
+    sample_collection_season = case_when(
+      sample_collection_month %in% c("May", "Jun") ~ "early",
+      sample_collection_month == "Jul" ~ "middle",
+      sample_collection_month %in% c("Aug", "Sep") ~ "late",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  relocate(sample_collection_year, sample_collection_month, sample_collection_season, .after = sample_date)
+```
+
+## 2015-2024
+```{r}
+Red_Dog_stn_9 <- ADF_G_all_stns %>%
+  filter(loc_name == "Station 9") %>%
+   mutate(sample_date = as.Date(sample_date)) %>%
+  filter(lubridate::year(sample_date) >= 2015,
+         lubridate::year(sample_date) <= 2024)
+```
+
+```{r}
+Red_Dog_stn_9 <- Red_Dog_stn_9 %>%
+  mutate(
+    sample_collection_year = year(sample_date),
+    sample_collection_month = month(sample_date, label = TRUE, abbr = TRUE)
+  ) %>%
+  mutate(
+    sample_collection_season = case_when(
+      sample_collection_month %in% c("May", "Jun") ~ "early",
+      sample_collection_month == "Jul" ~ "middle",
+      sample_collection_month %in% c("Aug", "Sep") ~ "late",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  relocate(sample_collection_year, sample_collection_month, sample_collection_season, .after = sample_date)
+```
+
+
+## Sulfate
+```{r}
+RD_sulfate <- Red_Dog_stn_9 %>%
+  filter(chemical_name == "Sulfate") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) 
+
+RD_sulfate_ALL <- Red_Dog_stn_9_ALL %>%
+  filter(chemical_name == "Sulfate") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) 
+
+write_xlsx(RD_sulfate, "C:/Users/tevinger/Downloads/WulikR Station 9 Sulfate 2015 to 2024.xlsx")
+```
+
+```{r}
+# sample size of each year_season
+
+RD_sulfate_counts <- RD_sulfate %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  count(year_season)
+
+print(RD_sulfate_counts)
+```
+
+```{r}
+RD_Sulfate_temporal_bp <- RD_sulfate %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.75), width = 0.55) +
+  #scale_y_log10() +
+  # scale_y_continuous(breaks = c(0,50,100,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000,1050,1100), labels = c(0,"","","",200,"","","",400,"","","",600,"","","",800,"","","",1000,"","")) +
+  scale_y_continuous(breaks = c(0,100,200,300,400,500,600,700,800,900,1000,1100), labels = c(0,"",200,"",400,"",600,"",800,"",1000,"")) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  coord_cartesian(ylim = c(10, 1200)) +
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  #geom_vline(xintercept = 21.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  labs(
+    title = NULL,
+    #title = "Station 9 - Sulfate", 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    y = "Sulfate Concentration (mg/L)",
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+RD_Sulfate_temporal_bp
+
+# library(plotly)
+# Sulfate_temporal_bp_interactive <- ggplotly(Sulfate_temporal_bp)
+# Sulfate_temporal_bp_interactive
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V1.png", Sulfate_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/SO4_2015 to 2024.png", RD_Sulfate_temporal_bp, width = 3.25, height = 4, dpi = 300, bg = "transparent")
+```
+
+## Alkalinity
+
+```{r}
+RD_alkalinity <- Red_Dog_stn_9 %>%
+  filter(chemical_name == "Alkalinity (As CaC03)") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) 
+
+RD_alkalinity_ALL <- Red_Dog_stn_9_ALL %>%
+  filter(chemical_name == "Alkalinity (As CaC03)") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) 
+```
+
+```{r}
+# sample size of each year_season
+
+RD_alkalinity_counts <- RD_alkalinity %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  count(year_season)
+
+print(RD_alkalinity_counts)
+```
+
+```{r}
+RD_Alkalinity_temporal_bp <- RD_alkalinity_ALL %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
+  #coord_cartesian(ylim = c(25,225)) +
+  #scale_y_continuous(breaks = c(25, 50,75,100,125,150,175,200,225), labels = c("", 50, "", 100, "", 150, "", 200, "")) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  # Add counts as text
+  # geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.9, alpha = 0.7) +
+  geom_vline(xintercept = 19.5, linetype = "dashed", color = "black", size = 0.9, alpha = 0.7) +
+  labs(
+    title = NULL,
+    #title = "Station 9 - Alkalinity", 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    y = ylab_Alk,
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        legend.text = element_text(size = 8),       # smaller legend labels
+    legend.title = element_text(size = 8),      # smaller legend title
+    legend.key.size = unit(2, "cm"),
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+RD_Alkalinity_temporal_bp
+# 
+# library(plotly)
+# Alkalinity_temporal_bp_interactive <- ggplotly(Alkalinity_temporal_bp)
+# Alkalinity_temporal_bp_interactive
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Alkalinity seasonal temporal bp_V1.png", Alkalinity_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Alkalinity seasonal temporal bp_V2.png", Alkalinity_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Alkalinity with all years.png", RD_Alkalinity_temporal_bp, width = 7, height = 5, dpi = 300, bg = "transparent")
+```
+
+## pH
+```{r}
+RD_pH <- Red_Dog_stn_9 %>%
+  filter(chemical_name == "pH, Field") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) 
+
+RD_pH_ALL <- Red_Dog_stn_9_ALL %>%
+  filter(chemical_name == "pH, Field") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_"))
+```
+
+```{r}
+# sample size of each year_season
+
+RD_pH_counts <- RD_pH %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  count(year_season)
+
+print(RD_pH_counts)
+```
+
+```{r}
+RD_pH_temporal_bp <- RD_pH_ALL %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
+  #coord_cartesian(ylim = c(7.6, 8.52)) +
+  #scale_y_continuous(breaks = c(7.5, 7.75, 8.0, 8.25, 8.5), labels = c("7.50", 7.75, "8.00", 8.25, "8.50")) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  # Add counts as text
+  # geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.9, alpha = 0.7) +
+  geom_vline(xintercept = 19.5, linetype = "dashed", color = "black", size = 0.9, alpha = 0.7) +
+  labs(
+    title = NULL,
+    #title = "Station 9 - pH", 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    y = ylab_Alk,
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+RD_pH_temporal_bp
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/pH seasonal temporal bp_V1.png", pH_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/pH for all years.png", RD_pH_temporal_bp, width = 7, height = 5, dpi = 300, bg = "transparent")
+```
+
+## Iron
+```{r}
+RD_iron <- Red_Dog_stn_9 %>%
+  filter(chemical_name == "Iron") %>%
+  filter(fraction == "T") %>%
+  # filter(fraction == "D") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) 
+
+RD_iron_ALL <- Red_Dog_stn_9_ALL %>%
+  filter(chemical_name == "Iron") %>%
+  #filter(fraction == "T") %>%
+  #filter(fraction == "D") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) %>%
+  mutate(
+    report_result_value = if_else(
+      report_result_unit == "mg/L",
+      report_result_value * 1000,
+      report_result_value
+    ),
+    report_result_unit = if_else(
+      report_result_unit == "mg/L",
+      "ug/L",
+      report_result_unit
+    )
+  )
+  #filter(lubridate::year(sample_date) >= 2011)
+```
+
+```{r}
+# sample size of each year_season
+
+RD_iron_counts <- RD_iron %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  count(year_season)
+
+print(RD_iron_counts)
+```
+
+```{r}
+RD_Iron_temporal_bp <- RD_iron_ALL %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
+  #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  scale_y_log10() +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  #coord_cartesian(ylim = c(0, 250)) +
+  # Add counts as text
+  #geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  labs(
+    title = NULL,
+    #title = "Station 9 - Iron", 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    #y = NULL,
+    y = "Concentration (µg/L)",
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+RD_Iron_temporal_bp
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Iron_1998 to 2024.png", RD_Iron_temporal_bp, width = 7, height = 5, dpi = 300, bg = "transparent")
+```
+
+## Nickel
+```{r}
+RD_nickel <- Red_Dog_stn_9 %>%
+  filter(chemical_name == "Nickel, dissolved") %>%
+  #filter(fraction == "T") %>%
+  # filter(fraction == "D") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) 
+
+RD_nickel_ALL <- Red_Dog_stn_9_ALL %>%
+  filter(chemical_name == "Nickel") %>%
+  #filter(fraction == "T") %>%
+  #filter(fraction == "D") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) %>%
+  mutate(
+    report_result_value = if_else(
+      report_result_unit == "mg/L",
+      report_result_value * 1000,
+      report_result_value
+    ),
+    report_result_unit = if_else(
+      report_result_unit == "mg/L",
+      "ug/L",
+      report_result_unit
+    )
+  )
+  #filter(lubridate::year(sample_date) >= 2011)
+```
+
+```{r}
+# sample size of each year_season
+
+RD_iron_counts <- RD_iron %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  count(year_season)
+
+print(RD_iron_counts)
+```
+
+```{r}
+RD_Nickel_temporal_bp <- RD_nickel_ALL %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
+  #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  scale_y_log10() +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  #coord_cartesian(ylim = c(0, 250)) +
+  # Add counts as text
+  #geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  labs(
+    #title = NULL,
+    title = "Station 9 - Nickel", 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    #y = NULL,
+    y = "Concentration (µg/L)",
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+RD_Nickel_temporal_bp
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Iron_2011 to 2024.png", RD_Iron_temporal_bp, width = 7, height = 5, dpi = 300, bg = "transparent")
+```
+
+## Zinc
+```{r}
+RD_zinc <- Red_Dog_stn_9 %>%
+  filter(chemical_name == "Zinc") %>%
+  #filter(fraction == "T") %>%
+  # filter(fraction == "D") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) %>%
+  mutate(
+    report_result_value = if_else(
+      report_result_unit == "mg/L",
+      report_result_value * 1000,
+      report_result_value
+    ),
+    report_result_unit = if_else(
+      report_result_unit == "mg/L",
+      "ug/L",
+      report_result_unit
+    )
+  )
+
+RD_zinc_ALL <- Red_Dog_stn_9_ALL %>%
+  filter(chemical_name == "Zinc") %>%
+  #filter(fraction == "T") %>%
+  #filter(fraction == "D") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) %>%
+  mutate(
+    report_result_value = if_else(
+      report_result_unit == "mg/L",
+      report_result_value * 1000,
+      report_result_value
+    ),
+    report_result_unit = if_else(
+      report_result_unit == "mg/L",
+      "ug/L",
+      report_result_unit
+    )
+  )
+  #filter(lubridate::year(sample_date) >= 2011)
+
+write_xlsx(RD_zinc, "C:/Users/tevinger/Downloads/WulikR Station 9 Zinc 2015 to 2024.xlsx")
+
+```
+
+```{r}
+# sample size of each year_season
+
+RD_iron_counts <- RD_iron %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  count(year_season)
+
+print(RD_iron_counts)
+```
+
+```{r}
+RD_Zinc_temporal_bp <- RD_zinc %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.75), width = 0.55) +
+  #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  scale_y_log10() +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  #coord_cartesian(ylim = c(5, 110000)) +
+  # Add counts as text
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  #geom_vline(xintercept = 21.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  labs(
+    title = NULL,
+    #title = "Station 9 - Zinc", 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    #y = NULL,
+    y = "Concentration (µg/L)",
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+RD_Zinc_temporal_bp
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Zinc_2015 to 2024.png", RD_Zinc_temporal_bp, width = 3.25, height = 4, dpi = 300, bg = "transparent")
+```
+
+## Chloride
+```{r}
+RD_chloride <- Red_Dog_stn_9 %>%
+  filter(chemical_name == "Chloride") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) 
+
+RD_chloride_ALL <- Red_Dog_stn_9_ALL %>%
+  filter(chemical_name == "Chloride") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) 
+```
+
+```{r}
+# sample size of each year_season
+
+RD_chloride_counts <- RD_chloride %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  count(year_season)
+
+print(RD_chloride_counts)
+```
+
+```{r}
+RD_chloride_temporal_bp <- RD_chloride_ALL %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
+  #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  #scale_y_log10() +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  #coord_cartesian(ylim = c(0, 250)) +
+  # Add counts as text
+  # geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  geom_vline(xintercept = 21.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  labs(
+    title = NULL,
+    #title = "Station 9 - Iron", 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    y = NULL,
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+RD_chloride_temporal_bp
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Chloride with all years.png", RD_chloride_temporal_bp, width = 7, height = 5, dpi = 300, bg = "transparent")
+```
+
+## SO4/Cl
+```{r}
+RD_SO4_Cl_ALL <- Red_Dog_stn_9_ALL %>%
+  filter(chemical_name %in% c("Chloride", "Sulfate")) %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_"))
+
+RD_SO4_Cl_clean_ALL <- RD_SO4_Cl_ALL %>%
+  # select the columns I need to do the SO4:Cl calculation
+  dplyr::select(
+    sample_date,
+    year_season,
+    sample_collection_year,
+    sample_collection_month,
+    sample_collection_season,
+    task_code,
+    chemical_name,
+    report_result_value
+  ) %>%
+  # group by these variables to group the duplicates together
+    group_by(
+    sample_date,
+    year_season,
+    sample_collection_year,
+    sample_collection_month,
+    sample_collection_season,
+    task_code,
+    chemical_name
+  ) %>%
+  # calculate the mean values for the duplicates and use that in place of the individual reported values
+  summarise(
+    report_result_value = mean(report_result_value, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  # pivot wider with no more duplicates
+  pivot_wider(
+    id_cols = c(
+      sample_date,
+      year_season,
+      sample_collection_year,
+      sample_collection_month,
+      sample_collection_season,
+      task_code
+    ),
+    names_from  = chemical_name,
+    values_from = report_result_value
+  ) %>%
+  mutate(
+    # 1. Convert mg/L → mmol/L  (divide by molecular weight in g/mol = mg/mmol)
+
+    Chloride_mM  = Chloride  / 35.45,  # Cl⁻
+    Sulfate_mM = Sulfate / 96.06,  # SO₄²⁻ (as sulfate)
+
+    # 2. Molar SO4:Cl ratio
+    SO4_to_Cl_molar  = Sulfate / Chloride
+  )
+```
+
+```{r}
+RD_SO4_Cl <- Red_Dog_stn_9 %>%
+  filter(chemical_name %in% c("Chloride", "Sulfate")) %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_"))
+
+RD_SO4_Cl_clean <- RD_SO4_Cl %>%
+  # select the columns I need to do the SO4:Cl calculation
+  dplyr::select(
+    sample_date,
+    year_season,
+    sample_collection_year,
+    sample_collection_month,
+    sample_collection_season,
+    task_code,
+    chemical_name,
+    report_result_value
+  ) %>%
+  # group by these variables to group the duplicates together
+    group_by(
+    sample_date,
+    year_season,
+    sample_collection_year,
+    sample_collection_month,
+    sample_collection_season,
+    task_code,
+    chemical_name
+  ) %>%
+  # calculate the mean values for the duplicates and use that in place of the individual reported values
+  summarise(
+    report_result_value = mean(report_result_value, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  # pivot wider with no more duplicates
+  pivot_wider(
+    id_cols = c(
+      sample_date,
+      year_season,
+      sample_collection_year,
+      sample_collection_month,
+      sample_collection_season,
+      task_code
+    ),
+    names_from  = chemical_name,
+    values_from = report_result_value
+  ) %>%
+  mutate(
+    # 1. Convert mg/L → mmol/L  (divide by molecular weight in g/mol = mg/mmol)
+
+    Chloride_mM  = Chloride  / 35.45,  # Cl⁻
+    Sulfate_mM = Sulfate / 96.06,  # SO₄²⁻ (as sulfate)
+
+    # 2. Molar SO4:Cl ratio
+    SO4_to_Cl_molar  = Sulfate / Chloride
+  )
+```
+
+```{r}
+# sample size of each year_season
+
+RD_SO4_Cl_counts <- RD_SO4_Cl_clean %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  count(year_season)
+
+print(RD_SO4_Cl_counts)
+```
+
+```{r}
+RD_SO4_Cl_temporal_bp <- RD_SO4_Cl_clean_ALL %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = SO4_to_Cl_molar, fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
+  #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  scale_y_log10() +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  #coord_cartesian(ylim = c(0, 250)) +
+  # Add counts as text
+  # geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  geom_vline(xintercept = 21.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  labs(
+    title = NULL,
+    #title = "Station 9 - SO4:Cl, 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    y = NULL,
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+RD_SO4_Cl_temporal_bp
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Red Dog SO4 to Cl for all years_log.png", RD_SO4_Cl_temporal_bp, width = 7, height = 5, dpi = 300, bg = "transparent")
+```
+
+## Ca:SO4
+```{r}
+## Ca/SO4
+RD_Ca_SO4_ALL <- Red_Dog_stn_9_ALL %>%
+  filter(chemical_name %in% c("Calcium", "Sulfate")) %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_"))
+
+RD_Ca_SO4_clean_ALL <- RD_Ca_SO4_ALL %>%
+  # Select columns needed for ratio calculation
+  dplyr::select(
+    sample_date,
+    year_season,
+    sample_collection_year,
+    sample_collection_month,
+    sample_collection_season,
+    task_code,
+    chemical_name,
+    report_result_value
+  ) %>%
+  # Collapse duplicates
+  group_by(
+    sample_date,
+    year_season,
+    sample_collection_year,
+    sample_collection_month,
+    sample_collection_season,
+    task_code,
+    chemical_name
+  ) %>%
+  summarise(
+    report_result_value = mean(report_result_value, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  # Pivot wide
+  pivot_wider(
+    id_cols = c(
+      sample_date,
+      year_season,
+      sample_collection_year,
+      sample_collection_month,
+      sample_collection_season,
+      task_code
+    ),
+    names_from  = chemical_name,
+    values_from = report_result_value
+  ) %>%
+  mutate(
+    # Convert mg/L -> mmol/L (mg/mmol = MW in g/mol)
+    Calcium_mM  = Calcium / 40.078,   # Ca2+
+    Sulfate_mM  = Sulfate / 96.06,    # SO4--
+
+    # Molar Ca:SO4 ratio
+    Ca_to_SO4_molar = Calcium_mM / Sulfate_mM
+  ) %>%
+  filter(lubridate::year(sample_date) >= 1999)
+
+```
+
+```{r}
+RD_Ca_SO4 <- Red_Dog_stn_9 %>%
+  filter(chemical_name %in% c("Calcium", "Sulfate")) %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_"))
+
+RD_Ca_SO4_clean <- RD_Ca_SO4 %>%
+  dplyr::select(
+    sample_date,
+    year_season,
+    sample_collection_year,
+    sample_collection_month,
+    sample_collection_season,
+    task_code,
+    chemical_name,
+    report_result_value
+  ) %>%
+  group_by(
+    sample_date,
+    year_season,
+    sample_collection_year,
+    sample_collection_month,
+    sample_collection_season,
+    task_code,
+    chemical_name
+  ) %>%
+  summarise(
+    report_result_value = mean(report_result_value, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  pivot_wider(
+    id_cols = c(
+      sample_date,
+      year_season,
+      sample_collection_year,
+      sample_collection_month,
+      sample_collection_season,
+      task_code
+    ),
+    names_from  = chemical_name,
+    values_from = report_result_value
+  ) %>%
+  mutate(
+    Calcium_mM  = Calcium / 40.078,
+    Sulfate_mM  = Sulfate / 96.06,
+    Ca_to_SO4_molar = Calcium_mM / Sulfate_mM
+  )
+
+```
+
+```{r}
+RD_Ca_SO4_counts <- RD_Ca_SO4_clean %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  count(year_season)
+
+print(RD_Ca_SO4_counts)
+
+```
+
+```{r}
+RD_Ca_SO4_temporal_bp <- RD_Ca_SO4_clean_ALL %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year),
+             y = Ca_to_SO4_molar,
+             fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
+  scale_y_log10() +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  geom_vline(xintercept = 21.5, linetype = "dashed",
+             color = "black", size = 0.8, alpha = 0.7) +
+  labs(
+    title = NULL,
+    x = "Year",
+    y = NULL,
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.background = element_rect(fill = "transparent", color = NA),
+    panel.background = element_rect(fill = "transparent", color = NA)
+  )
+
+RD_Ca_SO4_temporal_bp
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Red Dog Ca_to_SO4_for_all_years_V2.png",
+       RD_Ca_SO4_temporal_bp,
+       width = 7, height = 5, dpi = 300, bg = "transparent")
+
+```
+
+# Station 9 stats
+```{r}
+RD_temporal_stats <- Red_Dog_stn_9 %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  dplyr::select(4,9,10,11,12,42,45,28) %>% # selecting the columns I want (28 is the analysis date that I'm hoping to use as a unique identifier for pivotting wider)
+   mutate(
+    Temporal_status = ifelse(sample_collection_year %in% c(2015, 2016, 2017, 2018), 'pre',
+                      ifelse(sample_collection_year %in% c(2019, 2020, 2021, 2022, 2023, 2024), 'post', NA))
+  ) %>%
+  mutate(
+    temporal_status_season = paste(Temporal_status, sample_collection_season, sep = "_")
+  ) %>%
+  relocate(temporal_status_season, Temporal_status, analysis_date, .after = sample_date) %>%
+  mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
+
+RD_early_temporal_stats <- RD_temporal_stats %>%
+  filter(sample_collection_season == "early") %>%
+  mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
+
+RD_late_temporal_stats <- RD_temporal_stats %>%
+  filter(sample_collection_season == "late") %>%
+  mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
+```
+
+```{r}
+RD_early_temporal_stats <- RD_early_temporal_stats %>%
+ mutate(
+    unique_ID = paste(sample_date, analysis_date, sep = "_")) %>%
+  relocate(unique_ID, .after = analysis_date)
+
+dups <- RD_early_temporal_stats_wide %>%
+  #filter(unique_ID == "2024-06-03_2024-06-03 11:57:00")
+  group_by(across(1:9)) %>%   # columns 1–7 (ID cols) and column 8 (names_from)
+  summarise(n = n(), .groups = "drop") %>%
+  filter(n > 1)
+  
+# remove duplicates because they are the exact same values
+RD_early_temporal_stats_no_dupes <- RD_early_temporal_stats %>%
+  distinct(unique_ID, chemical_name, .keep_all = TRUE)
+
+RD_early_temporal_stats_wide <- RD_early_temporal_stats_no_dupes %>%
+  dplyr::select(-c(analysis_date, unique_ID)) 
+  pivot_wider(
+    id_cols   = c(1:7),   # keep columns 1–7 as identifiers
+    names_from  = 8,   # column 8 becomes the new headers
+    values_from = 9    # column 9 fills the values
+  )
+
+
+```
+
+
+## Summary Stats - pre and post
+```{r}
+RD_temporal_stats_summary <- RD_temporal_stats %>%
+  filter(Temporal_status %in% c("pre", "post")) %>%   # keep only the two groups
+  group_by(chemical_name, Temporal_status) %>%
+  summarise(
+    n        = n(),                     # number of values
+    mean     = mean(report_result_value, na.rm = TRUE),
+    median   = median(report_result_value, na.rm = TRUE),
+    sd       = sd(report_result_value, na.rm = TRUE),
+    se       = sd(report_result_value, na.rm = TRUE) / sqrt(n()),
+    min      = min(report_result_value, na.rm = TRUE),
+    max      = max(report_result_value, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+view(RD_temporal_stats_summary)
+
+write_xlsx(RD_temporal_stats_summary, "C:/Users/tevinger/Downloads/Red Dog Station 9 summary stats.xlsx")
+```
+
+Early summary stats
+```{r}
+RD_temporal_stats_summary_early <- RD_early_temporal_stats %>%
+  filter(temporal_status_season %in% c("pre_early", "post_early")) %>%   # keep only the two groups
+  group_by(chemical_name, temporal_status_season) %>%
+  summarise(
+    n        = n(),                     # number of values
+    mean     = mean(report_result_value, na.rm = TRUE),
+    median   = median(report_result_value, na.rm = TRUE),
+    sd       = sd(report_result_value, na.rm = TRUE),
+    se       = sd(report_result_value, na.rm = TRUE) / sqrt(n()),
+    min      = min(report_result_value, na.rm = TRUE),
+    max      = max(report_result_value, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+view(RD_temporal_stats_summary_early)
+
+write_xlsx(RD_temporal_stats_summary_early, "C:/Users/tevinger/Downloads/Red Dog Station 9 EARLY SEASON summary stats.xlsx")
+```
+
+Late summary stats
+```{r}
+RD_temporal_stats_summary_late <- RD_late_temporal_stats %>%
+  filter(temporal_status_season %in% c("pre_late", "post_late")) %>%   # keep only the two groups
+  group_by(chemical_name, temporal_status_season) %>%
+  summarise(
+    n        = n(),                     # number of values
+    mean     = mean(report_result_value, na.rm = TRUE),
+    median   = median(report_result_value, na.rm = TRUE),
+    sd       = sd(report_result_value, na.rm = TRUE),
+    se       = sd(report_result_value, na.rm = TRUE) / sqrt(n()),
+    min      = min(report_result_value, na.rm = TRUE),
+    max      = max(report_result_value, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+view(RD_temporal_stats_summary_late)
+
+write_xlsx(RD_temporal_stats_summary_late, "C:/Users/tevinger/Downloads/Red Dog Station 9 LATE SEASON summary stats.xlsx")
+```
+
+## Early season Comparison
+### Shapiro
+```{r}
+library(dplyr)
+library(purrr)
+library(broom)
+library(rstatix)
+
+# It must have: chemical_name, report_result_value, Temporal_status, and temporal_status_season
+# Temporal_status is used to do a comparison of pre to post including both seasons
+# temporal_status_season is used to compare pre to post within each season
+
+data_long <- RD_early_temporal_stats  # <-- change to your df name
+
+# List of columns to analyze
+chemicals_to_model <- c("pH, Field", "Alkalinity (As CaC03)", "Aluminum", "Barium", 
+  "Bicarbonate (As CaC03)", "Cadmium", "Chloride", "Conductivity, Field", "Copper", "Hardness, Total", "Temperature, Field", "Iron", "Lead", "Nickel", "Sulfate", "Zinc")
+
+pdf("residuals_plots_long.pdf")  # Start a new PDF file
+
+model_results <- list()
+
+for (chem in chemicals_to_model) {
+  
+  # Filter data for this chemical
+  df_chem <- data_long %>%
+    filter(chemical_name == chem)
+  
+  # Optional: drop NAs in response or predictor
+  df_chem <- df_chem %>%
+    filter(!is.na(report_result_value), !is.na(Temporal_status))
+  
+  # Safety check: need enough data & at least 2 groups for the model
+  if (nrow(df_chem) < 3 || dplyr::n_distinct(df_chem$Temporal_status) < 2) {
+    model_results[[chem]] <- data.frame(
+      Variable = chem,
+      W = NA_real_,
+      p_value = NA_real_,
+      Interpretation = "Not enough data or only one Temporal_status level; model not fit."
+    )
+    next
+  }
+  
+  # Fit the linear model: value ~ Temporal_status
+  model <- lm(report_result_value ~ Temporal_status, data = df_chem)
+  
+  # Residuals
+  residuals <- resid(model)
+  
+  # Residual histogram
+  hist(
+    residuals,
+    main = paste("Residuals Histogram:", chem),
+    xlab = "Residuals"
+  )
+  
+  # QQ plot
+  qqnorm(residuals, main = paste("QQ Plot of Residuals:", chem))
+  qqline(residuals)
+  
+  # Shapiro-Wilk test on residuals
+  test_result <- tryCatch(
+    shapiro.test(residuals),
+    error = function(e) NULL
+  )
+  
+  # Interpretation text
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The residuals are likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store results
+  model_results[[chem]] <- data.frame(
+    Variable = chem,
+    W = if (!is.null(test_result)) unname(test_result$statistic) else NA_real_,
+    p_value = if (!is.null(test_result)) test_result$p.value else NA_real_,
+    Interpretation = interpretation
+  )
+}
+
+dev.off()  # Close the PDF
+
+early_shapiro_results_long <- bind_rows(model_results)
+
+View(early_shapiro_results_long)
+
+write_xlsx(early_shapiro_results_long, "C:/Users/tevinger/Downloads/early_shapiro_results_long.xlsx")
+
+## Copper and Nickel had only one Temporal status so the model couldn't run for those
+## pH, Alkalinity and Bicarboante are normally distributed and need to be compared with an ANOVA
+```
+
+### Not-Normally distributed data
+```{r}
+library(dplyr)
+library(rstatix)
+library(purrr)
+
+data_long <- RD_early_temporal_stats  # <-- change to your df name
+
+# Variables that failed Shapiro (non-normal)
+non_normal_vars <- c("Aluminum", "Barium", "Cadmium", "Chloride", "Conductivity, Field", "Hardness, Total", "Temperature, Field", "Iron", "Lead", "Sulfate", "Zinc")
+
+# Function to run Wilcoxon test
+run_wilcox_for_var <- function(var, data) {
+  df_var <- data %>%
+    filter(
+      chemical_name == var,
+      !is.na(report_result_value),
+      !is.na(Temporal_status)
+    )
+  
+  # Check for data sufficiency
+  if (nrow(df_var) < 3 || n_distinct(df_var$Temporal_status) < 2) {
+    return(tibble(
+      variable = var,
+      test = "Wilcoxon rank-sum",
+      statistic = NA_real_,
+      p = NA_real_,
+      Interpretation = "Not enough data or only one group; test not run."
+    ))
+  }
+
+  # Compute group sample sizes
+  n_info <- df_var %>%
+    count(Temporal_status) %>%
+    pull(n)
+  
+  n1 <- n_info[1]
+  n2 <- n_info[2]
+  
+  res <- wilcox_test(
+    report_result_value ~ Temporal_status,
+    data = df_var
+  )
+  
+  res %>%
+    mutate(
+      variable = var,
+      test = "Wilcoxon rank-sum",
+      Interpretation = ifelse(
+        p < 0.05,
+        "Significant difference (reject H0).",
+        "No significant difference (fail to reject H0)."
+      )
+    ) %>%
+    dplyr::select(variable, test, group1, group2, n1, n2, statistic, p, Interpretation)
+}
+
+# Run Wilcoxon tests for all non-normal variables
+wilcox_results <- map_dfr(non_normal_vars, run_wilcox_for_var, data = data_long)
+
+view(wilcox_results)
+
+## no difference for Lead, Temp, Chloride and Barium
+
+write_xlsx(wilcox_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/early season wilcox_results.xlsx")
+```
+
+### Normally distributed data
+```{r}
+library(dplyr)
+library(rstatix)
+library(purrr)
+
+# Long-format data frame
+data_long <- RD_early_temporal_stats   # <-- replace with your df name
+
+# Variables that passed Shapiro (normal)
+normal_vars <- c("pH, Field", "Alkalinity (As CaC03)", "Bicarbonate (As CaC03)")
+
+# Function to run t-test on one variable
+run_t_for_var <- function(var, data) {
+  df_var <- data %>%
+    filter(
+      chemical_name == var,
+      !is.na(report_result_value),
+      !is.na(Temporal_status)
+    )
+  
+  # Check for data sufficiency
+  if (nrow(df_var) < 3 || n_distinct(df_var$Temporal_status) < 2) {
+    return(tibble(
+      variable = var,
+      test = "t-test",
+      statistic = NA_real_,
+      df = NA_real_,
+      p = NA_real_,
+      Interpretation = "Not enough data or only one group; test not run."
+    ))
+  }
+
+  res <- t_test(
+    report_result_value ~ Temporal_status,
+    data = df_var,
+    var.equal = FALSE  # Welch t-test
+  )
+  
+  res %>%
+    mutate(
+      variable = var,
+      test = "t-test",
+      Interpretation = ifelse(
+        p < 0.05,
+        "Significant difference (reject H0).",
+        "No significant difference (fail to reject H0)."
+      )
+    ) %>%
+    dplyr::select(variable, test, group1, group2, n1, n2, statistic, df, p, Interpretation)
+}
+
+# Run t-tests for all normal variables
+t_test_results <- map_dfr(normal_vars, run_t_for_var, data = data_long)
+
+View(t_test_results)
+
+write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/early season t_test results.xlsx")
+```
+
+## Late season
+### Shapiro
+```{r}
+library(dplyr)
+library(purrr)
+library(broom)
+library(rstatix)
+
+# It must have: chemical_name, report_result_value, Temporal_status, and temporal_status_season
+# Temporal_status is used to do a comparison of pre to post including both seasons
+
+data_long <- RD_late_temporal_stats  # <-- change to your df name
+
+# List of columns to analyze
+chemicals_to_model <- c("pH, Field", "Alkalinity (As CaC03)", "Aluminum", "Barium", 
+  "Bicarbonate (As CaC03)", "Cadmium", "Chloride", "Conductivity, Field", "Copper", "Hardness, Total", "Temperature, Field", "Iron", "Lead", "Nickel", "Sulfate", "Zinc")
+
+pdf("residuals_plots_long.pdf")  # Start a new PDF file
+
+model_results <- list()
+
+for (chem in chemicals_to_model) {
+  
+  # Filter data for this chemical
+  df_chem <- data_long %>%
+    filter(chemical_name == chem)
+  
+  # Optional: drop NAs in response or predictor
+  df_chem <- df_chem %>%
+    filter(!is.na(report_result_value), !is.na(Temporal_status))
+  
+  # Safety check: need enough data & at least 2 groups for the model
+  if (nrow(df_chem) < 3 || dplyr::n_distinct(df_chem$Temporal_status) < 2) {
+    model_results[[chem]] <- data.frame(
+      Variable = chem,
+      W = NA_real_,
+      p_value = NA_real_,
+      Interpretation = "Not enough data or only one Temporal_status level; model not fit."
+    )
+    next
+  }
+  
+  # Fit the linear model: value ~ Temporal_status
+  model <- lm(report_result_value ~ Temporal_status, data = df_chem)
+  
+  # Residuals
+  residuals <- resid(model)
+  
+  # Residual histogram
+  hist(
+    residuals,
+    main = paste("Residuals Histogram:", chem),
+    xlab = "Residuals"
+  )
+  
+  # QQ plot
+  qqnorm(residuals, main = paste("QQ Plot of Residuals:", chem))
+  qqline(residuals)
+  
+  # Shapiro-Wilk test on residuals
+  test_result <- tryCatch(
+    shapiro.test(residuals),
+    error = function(e) NULL
+  )
+  
+  # Interpretation text
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The residuals are likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store results
+  model_results[[chem]] <- data.frame(
+    Variable = chem,
+    W = if (!is.null(test_result)) unname(test_result$statistic) else NA_real_,
+    p_value = if (!is.null(test_result)) test_result$p.value else NA_real_,
+    Interpretation = interpretation
+  )
+}
+
+dev.off()  # Close the PDF
+
+late_shapiro_results_long <- bind_rows(model_results)
+
+View(late_shapiro_results_long)
+
+write_xlsx(late_shapiro_results_long, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/late_shapiro_results_long.xlsx")
+
+## Copper and Nickel had only one Temporal status so the model couldn't run for those
+## Bicarboante Temp are normally distributed and need to be compared with an ANOVA
+```
+
+### Not-Normally distributed data
+```{r}
+library(dplyr)
+library(rstatix)
+library(purrr)
+
+data_long <- RD_early_temporal_stats  # <-- change to your df name
+
+# Variables that failed Shapiro (non-normal)
+non_normal_vars <- c("pH, Field", "Alkalinity (As CaC03)", "Aluminum", "Barium", "Cadmium", "Chloride", "Conductivity, Field", "Hardness, Total", "Iron", "Lead", "Sulfate", "Zinc")
+
+# Function to run Wilcoxon test
+run_wilcox_for_var <- function(var, data) {
+  df_var <- data %>%
+    filter(
+      chemical_name == var,
+      !is.na(report_result_value),
+      !is.na(Temporal_status)
+    )
+  
+  # Check for data sufficiency
+  if (nrow(df_var) < 3 || n_distinct(df_var$Temporal_status) < 2) {
+    return(tibble(
+      variable = var,
+      test = "Wilcoxon rank-sum",
+      statistic = NA_real_,
+      p = NA_real_,
+      Interpretation = "Not enough data or only one group; test not run."
+    ))
+  }
+
+  # Compute group sample sizes
+  n_info <- df_var %>%
+    count(Temporal_status) %>%
+    pull(n)
+  
+  n1 <- n_info[1]
+  n2 <- n_info[2]
+  
+  res <- wilcox_test(
+    report_result_value ~ Temporal_status,
+    data = df_var
+  )
+  
+  res %>%
+    mutate(
+      variable = var,
+      test = "Wilcoxon rank-sum",
+      Interpretation = ifelse(
+        p < 0.05,
+        "Significant difference (reject H0).",
+        "No significant difference (fail to reject H0)."
+      )
+    ) %>%
+    dplyr::select(variable, test, group1, group2, n1, n2, statistic, p, Interpretation)
+}
+
+# Run Wilcoxon tests for all non-normal variables
+wilcox_results <- map_dfr(non_normal_vars, run_wilcox_for_var, data = data_long)
+
+view(wilcox_results)
+
+## no difference for Lead, Alkalinity, Chloride and Barium
+
+write_xlsx(wilcox_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/late season wilcox_results.xlsx")
+```
+
+### Normally distributed data
+```{r}
+library(dplyr)
+library(rstatix)
+library(purrr)
+
+# Long-format data frame
+data_long <- RD_late_temporal_stats   # <-- replace with your df name
+
+# Variables that passed Shapiro (normal)
+normal_vars <- c("Bicarbonate (As CaC03)", "Temperature, Field")
+
+# Function to run t-test on one variable
+run_t_for_var <- function(var, data) {
+  df_var <- data %>%
+    filter(
+      chemical_name == var,
+      !is.na(report_result_value),
+      !is.na(Temporal_status)
+    )
+  
+  # Check for data sufficiency
+  if (nrow(df_var) < 3 || n_distinct(df_var$Temporal_status) < 2) {
+    return(tibble(
+      variable = var,
+      test = "t-test",
+      statistic = NA_real_,
+      df = NA_real_,
+      p = NA_real_,
+      Interpretation = "Not enough data or only one group; test not run."
+    ))
+  }
+
+  res <- t_test(
+    report_result_value ~ Temporal_status,
+    data = df_var,
+    var.equal = FALSE  # Welch t-test
+  )
+  
+  res %>%
+    mutate(
+      variable = var,
+      test = "t-test",
+      Interpretation = ifelse(
+        p < 0.05,
+        "Significant difference (reject H0).",
+        "No significant difference (fail to reject H0)."
+      )
+    ) %>%
+    dplyr::select(variable, test, group1, group2, n1, n2, statistic, df, p, Interpretation)
+}
+
+# Run t-tests for all normal variables
+t_test_results <- map_dfr(normal_vars, run_t_for_var, data = data_long)
+
+View(t_test_results)
+
+## Significant difference in bicarbonate
+
+write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/late season t_test results.xlsx")
+```
+
+## All seasons - pre vs post
+### Shapiro
+```{r}
+library(dplyr)
+library(purrr)
+library(broom)
+library(rstatix)
+
+# It must have: chemical_name, report_result_value, Temporal_status, and temporal_status_season
+# Temporal_status is used to do a comparison of pre to post including both seasons
+
+data_long <- RD_temporal_stats  # <-- change to your df name
+
+# List of columns to analyze
+chemicals_to_model <- c("pH, Field", "Alkalinity (As CaC03)", "Aluminum", "Barium", 
+  "Bicarbonate (As CaC03)", "Cadmium", "Chloride", "Conductivity, Field", "Copper", "Hardness, Total", "Temperature, Field", "Iron", "Lead", "Nickel", "Sulfate", "Zinc")
+
+pdf("residuals_plots_long.pdf")  # Start a new PDF file
+
+model_results <- list()
+
+for (chem in chemicals_to_model) {
+  
+  # Filter data for this chemical
+  df_chem <- data_long %>%
+    filter(chemical_name == chem)
+  
+  # Optional: drop NAs in response or predictor
+  df_chem <- df_chem %>%
+    filter(!is.na(report_result_value), !is.na(Temporal_status))
+  
+  # Safety check: need enough data & at least 2 groups for the model
+  if (nrow(df_chem) < 3 || dplyr::n_distinct(df_chem$Temporal_status) < 2) {
+    model_results[[chem]] <- data.frame(
+      Variable = chem,
+      W = NA_real_,
+      p_value = NA_real_,
+      Interpretation = "Not enough data or only one Temporal_status level; model not fit."
+    )
+    next
+  }
+  
+  # Fit the linear model: value ~ Temporal_status
+  model <- lm(report_result_value ~ Temporal_status, data = df_chem)
+  
+  # Residuals
+  residuals <- resid(model)
+  
+  # Residual histogram
+  hist(
+    residuals,
+    main = paste("Residuals Histogram:", chem),
+    xlab = "Residuals"
+  )
+  
+  # QQ plot
+  qqnorm(residuals, main = paste("QQ Plot of Residuals:", chem))
+  qqline(residuals)
+  
+  # Shapiro-Wilk test on residuals
+  test_result <- tryCatch(
+    shapiro.test(residuals),
+    error = function(e) NULL
+  )
+  
+  # Interpretation text
+  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
+    "The residuals are likely normally distributed (fail to reject H0)."
+  } else if (!is.null(test_result)) {
+    "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+  } else {
+    "Test could not be performed due to insufficient data or errors."
+  }
+  
+  # Store results
+  model_results[[chem]] <- data.frame(
+    Variable = chem,
+    W = if (!is.null(test_result)) unname(test_result$statistic) else NA_real_,
+    p_value = if (!is.null(test_result)) test_result$p.value else NA_real_,
+    Interpretation = interpretation
+  )
+}
+
+dev.off()  # Close the PDF
+
+shapiro_results_long <- bind_rows(model_results)
+
+View(shapiro_results_long)
+
+write_xlsx(shapiro_results_long, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/both seasons shapiro_results_long.xlsx")
+
+## Copper and Nickel had only one Temporal status so the model couldn't run for those
+## Bicarboante and Alkalinity are normally distributed and need to be compared with an ANOVA
+```
+
+### Not-Normally distributed data
+```{r}
+library(dplyr)
+library(rstatix)
+library(purrr)
+
+data_long <- RD_temporal_stats  # <-- change to your df name
+
+# Variables that failed Shapiro (non-normal)
+non_normal_vars <- c("pH, Field", "Aluminum", "Barium", "Cadmium", "Chloride", "Conductivity, Field", "Copper", "Hardness, Total", "Temperature, Field", "Iron", "Lead", "Nickel", "Sulfate", "Zinc")
+
+# Function to run Wilcoxon test
+run_wilcox_for_var <- function(var, data) {
+  df_var <- data %>%
+    filter(
+      chemical_name == var,
+      !is.na(report_result_value),
+      !is.na(Temporal_status)
+    )
+  
+  # Check for data sufficiency
+  if (nrow(df_var) < 3 || n_distinct(df_var$Temporal_status) < 2) {
+    return(tibble(
+      variable = var,
+      test = "Wilcoxon rank-sum",
+      statistic = NA_real_,
+      p = NA_real_,
+      Interpretation = "Not enough data or only one group; test not run."
+    ))
+  }
+
+  # Compute group sample sizes
+  n_info <- df_var %>%
+    count(Temporal_status) %>%
+    pull(n)
+  
+  n1 <- n_info[1]
+  n2 <- n_info[2]
+  
+  res <- wilcox_test(
+    report_result_value ~ Temporal_status,
+    data = df_var
+  )
+  
+  res %>%
+    mutate(
+      variable = var,
+      test = "Wilcoxon rank-sum",
+      Interpretation = ifelse(
+        p < 0.05,
+        "Significant difference (reject H0).",
+        "No significant difference (fail to reject H0)."
+      )
+    ) %>%
+    dplyr::select(variable, test, group1, group2, n1, n2, statistic, p, Interpretation)
+}
+
+# Run Wilcoxon tests for all non-normal variables
+wilcox_results <- map_dfr(non_normal_vars, run_wilcox_for_var, data = data_long)
+
+view(wilcox_results)
+
+## no difference for Chloride and Temperature
+
+write_xlsx(wilcox_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/all seasons wilcox_results.xlsx")
+```
+
+### Normally distributed data
+```{r}
+library(dplyr)
+library(rstatix)
+library(purrr)
+
+# Long-format data frame
+data_long <- RD_temporal_stats   # <-- replace with your df name
+
+# Variables that passed Shapiro (normal)
+normal_vars <- c("Alkalinity (As CaC03)", "Bicarbonate (As CaC03)")
+
+# Function to run t-test on one variable
+run_t_for_var <- function(var, data) {
+  df_var <- data %>%
+    filter(
+      chemical_name == var,
+      !is.na(report_result_value),
+      !is.na(Temporal_status)
+    )
+  
+  # Check for data sufficiency
+  if (nrow(df_var) < 3 || n_distinct(df_var$Temporal_status) < 2) {
+    return(tibble(
+      variable = var,
+      test = "t-test",
+      statistic = NA_real_,
+      df = NA_real_,
+      p = NA_real_,
+      Interpretation = "Not enough data or only one group; test not run."
+    ))
+  }
+
+  res <- t_test(
+    report_result_value ~ Temporal_status,
+    data = df_var,
+    var.equal = FALSE  # Welch t-test
+  )
+  
+  res %>%
+    mutate(
+      variable = var,
+      test = "t-test",
+      Interpretation = ifelse(
+        p < 0.05,
+        "Significant difference (reject H0).",
+        "No significant difference (fail to reject H0)."
+      )
+    ) %>%
+    dplyr::select(variable, test, group1, group2, n1, n2, statistic, df, p, Interpretation)
+}
+
+# Run t-tests for all normal variables
+t_test_results <- map_dfr(normal_vars, run_t_for_var, data = data_long)
+
+View(t_test_results)
+
+## Significant difference in bicarbonate and alkalinity
+
+write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/all seasons t_test results.xlsx")
+```
+
+
+# Ferrum Sites Temporal Analysis 
 ## data frame modifications
 ```{r}
 # Purpose of this chunk: Add years the are missing data to have a continuous x-axis on the plots
@@ -426,7 +2390,7 @@ temporal_filled$sample_collection_year <- factor(
   )
 )
 
-temporal_filled[1, 17] <- NA
+#temporal_filled[1, 17] <- NA
 
 view(temporal_filled)
 ```
@@ -476,20 +2440,44 @@ view(temporal_df)
 
 ## Sulfate
 ```{r}
+# add a gap between 2018 and 2019 so there is more space on the figure
+temporal_df_headers <- temporal_filled %>% slice(0)
+
+temporal_df_headers <- temporal_df_headers %>%
+  mutate(sample_collection_year = as.numeric(as.character(sample_collection_year)))
+
+temporal_df_headers <- temporal_df_headers %>%
+  add_row(sample_collection_year = 2018.5, f_SO4_mg_per_l = 0)
+
+temporal_filled <- temporal_filled %>%
+  mutate(sample_collection_year = as.numeric(as.character(sample_collection_year)))
+
+temporal_filled <- bind_rows(temporal_df_headers, temporal_filled)
+
+temporal_filled$sample_collection_year <- factor(
+  temporal_filled$sample_collection_year,
+  levels = c(
+    "2015", "2016", "2017", "2018", "2018.5", "2019", "2020", "2021", "2022", "2023", "2024"
+  )
+)
+```
+
+```{r}
 Sulfate_temporal_bp <- temporal_filled %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
   ggplot(aes(x = as.factor(sample_collection_year), y = f_SO4_mg_per_l, fill = sample_collection_season)) +
-  geom_boxplot(position = position_dodge(width = 0.95)) +
+  geom_boxplot(position = position_dodge(width = 0.75), width = 0.55) +
   scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_fill_manual(
     values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
   ) +
-  coord_cartesian(ylim = c(0, 250)) +
+  coord_cartesian(ylim = c(0, 300)) +
   # Add counts as text
   geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
   labs(
-    title = NULL, 
+    title = NULL,
+    #title = "Aggie", 
     #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
     x = "Year",
     y = "Sulfate Concentration (mg/L)",
@@ -498,20 +2486,20 @@ Sulfate_temporal_bp <- temporal_filled %>%
   theme_minimal() +
   temporal_theme +
   theme(legend.position = "none",
-        #axis.text.y = element_blank(),
+        axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
         plot.background = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA))
 
 Sulfate_temporal_bp
 
-library(plotly)
-Sulfate_temporal_bp_interactive <- ggplotly(Sulfate_temporal_bp)
-Sulfate_temporal_bp_interactive
+# library(plotly)
+# Sulfate_temporal_bp_interactive <- ggplotly(Sulfate_temporal_bp)
+# Sulfate_temporal_bp_interactive
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V1.png", Sulfate_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V2.png", Sulfate_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V3_smaller.png", Sulfate_temporal_bp, width = 3.25, height = 4, dpi = 300, bg = "transparent")
 ```
 
 ## Alkalinity
@@ -638,6 +2626,66 @@ Chloride_temporal_bp
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V2.png", Chloride_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
+```
+
+## SO4:Cl
+```{r}
+Aggie_SO4_Cl <- temporal_filled %>%
+    mutate(
+    # 1. Convert mg/L → mmol/L  (divide by molecular weight in g/mol = mg/mmol)
+
+    f_Cl_mmol_per_l  = f_Cl_mg_per_l  / 35.45,  # Cl⁻
+    f_SO4_mmol_per_l = f_SO4_mg_per_l / 96.06,  # SO₄²⁻ (as sulfate)
+
+    # 2. Molar SO4:Cl ratio
+    SO4_to_Cl_molar  = f_SO4_mmol_per_l / f_Cl_mmol_per_l
+  )
+
+# sample size of each year_season
+SO4_Cl_counts <- Aggie_SO4_Cl %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  count(year_season)
+
+print(SO4_Cl_counts)
+```
+
+```{r}
+Aggie_SO4_Cl_temporal_bp <- Aggie_SO4_Cl %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = SO4_to_Cl_molar, fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.95)) +
+  #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  #scale_y_log10() +
+  scale_fill_manual(
+    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+  ) +
+  #coord_cartesian(ylim = c(0, 250)) +
+  # Add counts as text
+  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  labs(
+    title = NULL, 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    y = "Concentration Ratio",
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+Aggie_SO4_Cl_temporal_bp
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Aggie SO4 to Cl.png", Aggie_SO4_Cl_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ## Sodium
@@ -814,7 +2862,7 @@ late_temporal_stats <- temporal_stats %>%
   mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
 ```
 
-## Early season
+## OLD - Early season
 ### Shapiro
 ```{r}
 library(dplyr)
@@ -1097,7 +3145,7 @@ write.csv(temporal_pairwise_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project F
 # No differences from the tukey adjusted pairwise comparison
 ```
 
-## Late season
+## OLD - Late season
 ### Shapiro
 ```{r}
 library(dplyr)

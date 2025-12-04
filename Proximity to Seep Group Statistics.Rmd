@@ -127,8 +127,8 @@ Alaska_DataRelease_2022_2023_Ferrum_V11_molar <- read_excel("C:/Users/tevinger/B
 ```{r}
 # filter out samples without a New_Group - use for summary stats of the groups
 Grouped_Ferrum_2022_2023_data <- 
-  #Alaska_DataRelease_2022_2023_Ferrum_V10 %>%
-  Alaska_DataRelease_2022_2023_Ferrum_V11_molar %>%
+  Alaska_DataRelease_2022_2023_Ferrum_V10 %>%
+  #Alaska_DataRelease_2022_2023_Ferrum_V11_molar %>%
   dplyr::select(ParkID,
                 Watershed,
                 #Subcatchment,
@@ -190,11 +190,14 @@ f_U_mcg_per_l, p_U_mcg_per_l,
 f_V_mcg_per_l, p_V_mcg_per_l,
 f_Y_mcg_per_l, p_Y_mcg_per_l,
 f_Zn_mcg_per_l, p_Zn_mcg_per_l,
-f_REE, p_REE) %>%
+f_REE, p_REE,
+f_sum_all_metals, 
+u_sum_all_metals,
+p_sum_all_metals) %>%
   filter(!(is.na(New_Grouping)))
 
 Grouped_Ferrum_2022_2023_data <- Grouped_Ferrum_2022_2023_data %>%
-  mutate(across(17:83, as.numeric))
+  mutate(across(19:86, as.numeric))
 
 view(Grouped_Ferrum_2022_2023_data)
 ```
@@ -505,7 +508,8 @@ elements <- c(
 "f_V", "p_V",
 "f_Y", "p_Y",
 "f_Zn", "p_Zn",
-"f_REE", "p_REE"
+"f_REE", "p_REE",
+"f_sum_of_metals", "p_sum_of_metals"
 )
 
 columns <- c(
@@ -539,7 +543,8 @@ columns <- c(
 "f_V_mcg_per_l", "p_V_mcg_per_l",
 "f_Y_mcg_per_l", "p_Y_mcg_per_l",
 "f_Zn_mcg_per_l", "p_Zn_mcg_per_l",
-"f_REE", "p_REE"
+"f_REE", "p_REE",
+"f_sum_all_metals", "p_sum_all_metals"
 )
 ```
 
@@ -571,9 +576,10 @@ for (i in seq_along(elements)) {
     #dplyr::select(4,9:70) %>% # Year
     #dplyr::select(5,9:70) %>% # Month
     #dplyr::select(6,9:70) %>% # Season
-    dplyr::select(2,4,19:83) %>% # New Grouping
+    dplyr::select(2,4,19:86) %>% # New Grouping and Watershed
     filter(!is.na(.data[[column]])) %>%
-    group_by(New_Grouping, Watershed) %>% #This is where you can change what variable you want to group the data by
+    #group_by(New_Grouping, Watershed) %>% #This is where you can change what variable you want to group the data by
+    group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
     summarise(
     Variable = element,
     Mean = round(mean(.data[[column]], na.rm = TRUE), 2),
@@ -598,7 +604,7 @@ summary_stats_results <- do.call(rbind, summary_stats_list)
 
 view(summary_stats_results)
 
-write_xlsx(summary_stats_results, "C:/Users/tevinger/Downloads/Group summary stats with Watershed.xlsx")
+write_xlsx(summary_stats_results, "C:/Users/tevinger/Downloads/Group summary stats_updated Nov 13_2025.xlsx")
 ```
 
 ```{r}
@@ -628,8 +634,6 @@ view(summary_stats_wide)
 library(dplyr)
 library(rstatix)
 
-elements <- c("sum of filtered metals", "sum of particulate metals")
-columns <- c("f_sum_all_metals", "p_sum_all_metals")
 
 # Initialize an empty list to store results
 summary_stats_list <- list()
@@ -650,9 +654,10 @@ for (i in seq_along(elements)) {
     #dplyr::select(4,9:70) %>% # Year
     #dplyr::select(5,9:70) %>% # Month
     #dplyr::select(6,9:70) %>% # Season
-    dplyr::select(2,4,19:83) %>% # New Grouping
+    dplyr::select(2,4,19:86) %>% # New Grouping
     filter(!is.na(.data[[column]])) %>%
      group_by(New_Grouping, Watershed) %>% #This is where you can change what variable you want to group the data by
+    #group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
       get_summary_stats(vars = column, type = "common")
 
   
@@ -665,19 +670,16 @@ for (i in seq_along(elements)) {
     #dplyr::select(4,9:70) %>% # Year
     #dplyr::select(5,9:70) %>% # Month
     #dplyr::select(6,9:70) %>% # Season
-    dplyr::select(2,4,19:83) %>% # New Grouping
+    dplyr::select(2,4,19:86) %>% # New Grouping
     filter(!is.na(.data[[column]])) %>%
-     group_by(New_Grouping, Watershed) %>% #This is where you can change what variable you want to group the data by
+    group_by(New_Grouping, Watershed) %>% #This is where you can change what variable you want to group the data by
+    #group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
       summarise(
         variable = column,
         Q1 = round(quantile(.data[[column]], probs = 0.25, na.rm = TRUE), 2),
         Q3 = round(quantile(.data[[column]], probs = 0.75, na.rm = TRUE), 2),
         .groups = "drop"
       )
-  
-  # Combine summary with Q1 and Q3
-  #summary_combined <- summary %>%
-    #left_join(q1_q3, by = c("New_Grouping", "variable"))
   
   # Store result
   summary_stats_list[[i]] <- summary
@@ -690,20 +692,28 @@ quartiles_df <- do.call(rbind, quartiles_list)
 
 quartiles_df <- quartiles_df %>%
   dplyr::rename(Variable = variable) %>%
-  mutate(joining = paste(Watershed, New_Grouping, Variable, sep = "_"))
+  mutate(joining = paste(
+    Watershed, 
+    New_Grouping, 
+    Variable, sep = "_"))
 
 summary_df_2 <- summary_df_2 %>%
   dplyr::rename(Variable = variable) %>%
-  mutate(joining = paste(Watershed, New_Grouping, Variable, sep = "_"))
+  mutate(joining = paste(
+    Watershed, 
+    New_Grouping, 
+    Variable, sep = "_"))
 
 view(summary_df_2) # Grouped by New_Grouping
 view(quartiles_df)
 
 summary_combined <- summary_df_2 %>%
   left_join(quartiles_df, by = "joining") %>%
-  dplyr::select(-joining, -Watershed.y, -New_Grouping.y, -Variable.y) %>%
+  dplyr::select(-joining, 
+                -Watershed.y, 
+                -New_Grouping.y, -Variable.y) %>%
   dplyr::rename(New_Grouping = New_Grouping.x) %>%
-  dplyr::rename(Variable = Variable.x) %>%
+  dplyr::rename(Variable = Variable.x)%>%
   dplyr::rename(Watershed = Watershed.x)
 
 #arrange New_Grouping so it goes upstream to downstream
@@ -717,7 +727,7 @@ summary_combined <- summary_combined %>%
 view(summary_combined)
 #view(summary_df) # grouped by New_Grouping only
 
-write_xlsx(summary_combined, "C:/Users/tevinger/Downloads/Group and Watershed summary stats_rstatix.xlsx")
+write_xlsx(summary_combined, "C:/Users/tevinger/Downloads/Group and watershed summary stats_rstatix_updated Nov 13_2025.xlsx")
 ```
 
 ```{r}

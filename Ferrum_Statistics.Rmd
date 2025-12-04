@@ -1,0 +1,522 @@
+---
+title: "Ferrum Manuscript Statistics"
+output: html_document
+date: "2025-11-14"
+---
+ #Load packages
+```{r}
+library(dataRetrieval)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(emmeans)
+library(lme4)
+library(ggeasy)
+library(lattice)
+library(rstatix)
+library(ggsignif)
+library(outliers)
+library(ggpmisc)
+library(ggpubr)
+library(r2symbols)
+library(stargazer)
+library(ggbreak)
+library(writexl)
+library(ggrepel)
+library(stringr)
+library(ggthemes)
+library(reshape)
+library(RColorBrewer)
+library(readxl)
+library(dplyr)
+library(gridExtra)
+library(scales)
+library(dbscan)
+library(mclust)
+library(devtools)
+library(factoextra)
+library(corrplot)
+library(ggbiplot)
+library(ggcorrplot)
+library(GGally)
+library(Hmisc)
+library(ggbiplot)
+library(ggfortify)
+library(emmeans)
+library(lme4)
+library(lmerTest)
+library(multcomp)
+library(readxl)
+library(learnr)
+library(scatterplot3d)
+library(vegan)
+library(ggtern)
+library(plotrix)
+library(smwrBase)
+library(smwrData)
+library(smwrGraphs)
+library(colorBlindness)
+library(flextable)
+library(officer)
+library(dunn.test)
+library(multcompView)
+library(patchwork)
+library(ggpattern)
+```
+
+#Load Data
+```{r}
+Alaska_DataRelease_2022_2023_Ferrum_V10 <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V10.xlsx")
+
+Alaska_DataRelease_2022_2023_Ferrum_V11_molar <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Alaska_DataRelease_2022_2023_Ferrum_V11_molar.xlsx")
+```
+
+# Statistics Codes
+
+#Summary Stats Set Up
+## Create specific dataframes
+### Site Classification Group Data Only
+```{r}
+# filter out samples without a New_Group - use for summary stats of the groups
+Grouped_Ferrum_2022_2023_data <- 
+  Alaska_DataRelease_2022_2023_Ferrum_V10 %>%
+  #Alaska_DataRelease_2022_2023_Ferrum_V11_molar %>%
+  dplyr::select(ParkID,
+                Watershed,
+                #Subcatchment,
+                New_Groups,
+                New_Grouping,
+                Field_label,
+                Latitude,
+                Longitude,
+                sample_collection_year,
+                sample_collection_month,
+                sample_collection_season,
+                Watershed_Area,
+                Relative_MS_Watershed_Area,
+                SamplingEventID,
+                VisualDescription,
+                Site_Classification,
+                Hyd_Classification,
+                Distance_km,
+                Elevation_ft,
+                pH,
+                Temp_deg_celsius,
+                Diss_oxy_mg_per_l,
+                Diss_oxy_percent_sat,
+                Spec_Cond_microS_per_cm,
+                DIC_mgC_per_l,
+                HCO3_mg_per_l,
+                Alk_mgCaCO3_per_l,
+                DOC_mgC_per_l,
+                f_Cl_mg_per_l,
+                f_NO3_mgN_per_l,
+                f_SO4_mg_per_l,
+                f_Ca_mg_l,
+                f_Mg_mg_l,
+                f_Na_mg_l,
+                f_K_mg_l,
+                f_SiO2_mg_per_l,
+                f_Pb_mcg_per_l, p_Pb_mcg_per_l,
+                f_Ag_mcg_per_l, p_Ag_mcg_per_l,
+f_Al_mcg_per_l, p_Al_mcg_per_l,
+f_As_mcg_per_l, p_As_mcg_per_l,
+f_Ba_mcg_per_l, p_Ba_mcg_per_l,
+#f_Be_mcg_per_l, p_Be_mcg_per_l,
+f_Cd_mcg_per_l, p_Cd_mcg_per_l,
+f_Ce_mcg_per_l, p_Ce_mcg_per_l,
+f_Co_mcg_per_l, p_Co_mcg_per_l,
+f_Cr_mcg_per_l, p_Cr_mcg_per_l,
+f_Cu_mcg_per_l, p_Cu_mcg_per_l,
+f_Dy_mcg_per_l, p_Dy_mcg_per_l,
+f_Fe_mcg_per_l, p_Fe_mcg_per_l,
+f_La_mcg_per_l, p_La_mcg_per_l,
+f_Mn_mcg_per_l, p_Mn_mcg_per_l,
+f_Nd_mcg_per_l, p_Nd_mcg_per_l,
+f_Ni_mcg_per_l, p_Ni_mcg_per_l,
+f_Pr_mcg_per_l, p_Pr_mcg_per_l,
+f_Se_mcg_per_l, p_Se_mcg_per_l,
+#f_Th_mcg_per_l, p_Th_mcg_per_l,
+f_Tl_mcg_per_l, p_Tl_mcg_per_l,
+f_U_mcg_per_l, p_U_mcg_per_l,
+f_V_mcg_per_l, p_V_mcg_per_l,
+f_Y_mcg_per_l, p_Y_mcg_per_l,
+f_Zn_mcg_per_l, p_Zn_mcg_per_l,
+f_REE, p_REE,
+f_sum_all_metals, 
+u_sum_all_metals,
+p_sum_all_metals) %>%
+  filter(!(is.na(New_Grouping)))
+
+Grouped_Ferrum_2022_2023_data <- Grouped_Ferrum_2022_2023_data %>%
+  mutate(across(19:86, as.numeric))
+
+view(Grouped_Ferrum_2022_2023_data)
+```
+
+# Summary Statistics
+## set elements and columns for summary stats loop
+```{r}
+#summary stats
+library(dplyr)
+
+# Define the elements and corresponding column names
+#elements <- c("pH", "SpC", "SO4", "DIC", "Alk", "DOC", "Ca", "Mg", "Na", "K", "Cl", "NO3", "DO")
+#columns <- c("pH", "Spec_Cond_microS_per_cm", "f_SO4_mg_per_l", "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l", "f_Cl_mg_per_l", "f_NO3_mg_per_l", "Diss_oxy_mg_per_l")
+
+elements <- c(
+  "pH", "Temp", "Diss_oxy", "Diss_oxy_percent_sat", "Spec_Cond", "DIC", "HCO3",
+  "Alk", "DOC", "f_Cl", "f_NO3", "f_SO4", "f_Ca", "f_Mg", "f_Na", "f_K",
+  "f_SiO2",
+ "f_Pb", "p_Pb", 
+ "f_Ag", "p_Ag",
+"f_Al", "p_Al",
+"f_As", "p_As",
+"f_Ba", "p_Ba",
+#"f_Be", "p_Be",
+"f_Cd", "p_Cd",
+"f_Ce", "p_Ce",
+"f_Co", "p_Co",
+"f_Cr", "p_Cr",
+"f_Cu", "p_Cu",
+"f_Dy", "p_Dy",
+"f_Fe", "p_Fe",
+"f_La", "p_La",
+"f_Mn", "p_Mn",
+"f_Nd", "p_Nd",
+"f_Ni", "p_Ni",
+"f_Pr", "p_Pr",
+"f_Se", "p_Se",
+#"f_Th", "p_Th",
+"f_Tl", "p_Tl",
+"f_U", "p_U",
+"f_V", "p_V",
+"f_Y", "p_Y",
+"f_Zn", "p_Zn",
+"f_REE", "p_REE",
+"f_sum_of_metals", "p_sum_of_metals"
+)
+
+columns <- c(
+  "pH", "Temp_deg_celsius", "Diss_oxy_mg_per_l", "Diss_oxy_percent_sat", "Spec_Cond_microS_per_cm", 
+  "DIC_mgC_per_l", "HCO3_mg_per_l",  "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", "f_NO3_mgN_per_l", 
+  "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l",
+  "f_SiO2_mg_per_l",
+  "f_Pb_mcg_per_l", "p_Pb_mcg_per_l", 
+  "f_Ag_mcg_per_l", "p_Ag_mcg_per_l",
+"f_Al_mcg_per_l", "p_Al_mcg_per_l",
+"f_As_mcg_per_l", "p_As_mcg_per_l",
+"f_Ba_mcg_per_l", "p_Ba_mcg_per_l",
+#"f_Be_mcg_per_l", "p_Be_mcg_per_l",
+#"f_Br_mcg_per_l", "p_Br_mcg_per_l",
+"f_Cd_mcg_per_l", "p_Cd_mcg_per_l",
+"f_Ce_mcg_per_l", "p_Ce_mcg_per_l",
+"f_Co_mcg_per_l", "p_Co_mcg_per_l",
+"f_Cr_mcg_per_l", "p_Cr_mcg_per_l",
+"f_Cu_mcg_per_l", "p_Cu_mcg_per_l",
+"f_Dy_mcg_per_l", "p_Dy_mcg_per_l",
+"f_Fe_mcg_per_l", "p_Fe_mcg_per_l",
+"f_La_mcg_per_l", "p_La_mcg_per_l",
+"f_Mn_mcg_per_l", "p_Mn_mcg_per_l",
+"f_Nd_mcg_per_l", "p_Nd_mcg_per_l",
+"f_Ni_mcg_per_l", "p_Ni_mcg_per_l",
+"f_Pr_mcg_per_l", "p_Pr_mcg_per_l",
+"f_Se_mcg_per_l", "p_Se_mcg_per_l",
+#"f_Th_mcg_per_l", "p_Th_mcg_per_l",
+"f_Tl_mcg_per_l", "p_Tl_mcg_per_l",
+"f_U_mcg_per_l", "p_U_mcg_per_l",
+"f_V_mcg_per_l", "p_V_mcg_per_l",
+"f_Y_mcg_per_l", "p_Y_mcg_per_l",
+"f_Zn_mcg_per_l", "p_Zn_mcg_per_l",
+"f_REE", "p_REE",
+"f_sum_all_metals", "p_sum_all_metals"
+)
+```
+
+## rstatix summary stats
+```{r}
+# Trying to make a loop for summary stats using rstatix instead of base R
+library(dplyr)
+library(rstatix)
+
+
+# Initialize an empty list to store results
+summary_stats_list <- list()
+quartiles_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform summary operation with a default empty tibble if an error occurs
+  summary <- 
+    #stats_working_Ferrum_data %>% # use for all data, watershed, year and month summary stats
+    Grouped_Ferrum_2022_2023_data %>% # to group by New Grouping (seeps included)
+    
+    #dplyr::select(9:70) %>% # all data
+    #dplyr::select(2,9:70) %>% # Watershed
+    #dplyr::select(4,9:70) %>% # Year
+    #dplyr::select(5,9:70) %>% # Month
+    #dplyr::select(6,9:70) %>% # Season
+    dplyr::select(2,4,19:86) %>% # New Grouping
+    filter(!is.na(.data[[column]])) %>%
+     group_by(New_Grouping
+              #, Watershed
+              ) %>% #This is where you can change what variable you want to group the data by
+    #group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
+      get_summary_stats(vars = column, type = "common")
+
+  
+  # Calculate Q1 and Q3
+  q1_q3 <- 
+    #stats_working_Ferrum_data %>% # use for all data, watershed, year and month summary stats
+    Grouped_Ferrum_2022_2023_data %>% # to group by New Grouping (seeps included)
+    #dplyr::select(9:70) %>% # all data
+    #dplyr::select(2,9:70) %>% # Watershed
+    #dplyr::select(4,9:70) %>% # Year
+    #dplyr::select(5,9:70) %>% # Month
+    #dplyr::select(6,9:70) %>% # Season
+    dplyr::select(2,4,19:86) %>% # New Grouping
+    filter(!is.na(.data[[column]])) %>%
+    group_by(New_Grouping
+             #, Watershed
+             ) %>% #This is where you can change what variable you want to group the data by
+    #group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
+      summarise(
+        variable = column,
+        Q1 = round(quantile(.data[[column]], probs = 0.25, na.rm = TRUE), 2),
+        Q3 = round(quantile(.data[[column]], probs = 0.75, na.rm = TRUE), 2),
+        .groups = "drop"
+      )
+  
+  # Store result
+  summary_stats_list[[i]] <- summary
+  quartiles_list[[i]] <- q1_q3
+}
+
+# Combine into one dataframe
+summary_df_2 <- do.call(rbind, summary_stats_list)
+quartiles_df <- do.call(rbind, quartiles_list)
+
+quartiles_df <- quartiles_df %>%
+  dplyr::rename(Variable = variable) %>%
+  mutate(joining = paste(
+    #Watershed, 
+    New_Grouping, 
+    Variable, sep = "_"))
+
+summary_df_2 <- summary_df_2 %>%
+  dplyr::rename(Variable = variable) %>%
+  mutate(joining = paste(
+    #Watershed, 
+    New_Grouping, 
+    Variable, sep = "_"))
+
+view(summary_df_2) # Grouped by New_Grouping
+view(quartiles_df)
+
+summary_combined <- summary_df_2 %>%
+  left_join(quartiles_df, by = "joining") %>%
+  dplyr::select(-joining, 
+                #-Watershed.y, 
+                -New_Grouping.y, -Variable.y) %>%
+  dplyr::rename(New_Grouping = New_Grouping.x) %>%
+  dplyr::rename(Variable = Variable.x)
+  #dplyr::rename(Watershed = Watershed.x)
+
+#arrange New_Grouping so it goes upstream to downstream
+summary_combined <- summary_combined %>%
+  # 1. Define the order of New_grouping
+  mutate(New_Grouping = factor(New_Grouping,
+                               levels = c("Upstream", "Unimpaired Tributary", "Seep", "Impaired Tributary", "Downstream MS"))) %>%
+  # 2. Arrange rows first by Variable, then by the factor order of New_grouping
+  arrange(Variable, New_Grouping)
+
+view(summary_combined)
+#view(summary_df) # grouped by New_Grouping only
+
+summary_combined_watershed <- summary_combined
+
+#write_xlsx(summary_combined, "C:/Users/tevinger/Downloads/Group and watershed summary stats_rstatix_updated Nov 13_2025.xlsx")
+```
+
+```{r}
+stats_Upstream <- summary_combined %>%
+  dplyr::select(New_Grouping, Variable, n, median, sd) %>%   # keep only what you need
+ filter(New_Grouping == "Upstream")
+
+stats_UnimpairedTrib <- summary_combined %>%
+  dplyr::select(New_Grouping, Variable, n, median, sd) %>%
+  filter(New_Grouping == "Unimpaired Tributary")
+
+stats_Seep <- summary_combined %>%
+  dplyr::select(New_Grouping, Variable, n, median, sd) %>%
+  filter(New_Grouping == "Seep")
+
+stats_ImpairedTrib <- summary_combined %>%
+  dplyr::select(New_Grouping, Variable, n, median, sd) %>%
+  filter(New_Grouping == "Impaired Tributary")
+
+stats_DownstreamMS <- summary_combined %>%
+  dplyr::select(New_Grouping, Variable, n, median, sd) %>%
+  filter(New_Grouping == "Downstream MS")
+
+# Create a new workbook
+wb <- createWorkbook()
+
+# Add each dataframe as a sheet
+addWorksheet(wb, "Upstream")
+writeData(wb, "Upstream", stats_Upstream)
+
+addWorksheet(wb, "UnimpairedTrib")
+writeData(wb, "UnimpairedTrib", stats_UnimpairedTrib)
+
+addWorksheet(wb, "Seep")
+writeData(wb, "Seep", stats_Seep)
+
+addWorksheet(wb, "ImpairedTrib")
+writeData(wb, "ImpairedTrib", stats_ImpairedTrib)
+
+addWorksheet(wb, "DownstreamMS")
+writeData(wb, "DownstreamMS", stats_DownstreamMS)
+
+# Save to Downloads (Windows/Mac compatible)
+file_path <- file.path("C:/Users/tevinger/Downloads", "summary_stats_by_group.xlsx")
+saveWorkbook(wb, file_path, overwrite = TRUE)
+
+file_path
+```
+
+## subset Upstream, Seep, and Downstream MS groups
+```{r}
+# filter to keep only upstream and seep
+summary_df_filtered <- summary_combined %>%
+  filter(New_Grouping %in% c("Upstream", "Seep", "Downstream MS")) %>%
+  mutate(New_Grouping = factor(New_Grouping, levels = c("Upstream", "Seep", "Downstream MS"))) %>%
+  arrange(Variable, New_Grouping)
+
+view(summary_df_filtered)
+
+#write_xlsx(summary_df_filtered, "C:/Users/tevinger/Downloads/Upstream,seep,Downstream_filtered_rstatix.xlsx")
+
+
+summary_df_filtered_wide <- summary_df_filtered %>%
+  # select median (6) or mean (8)
+  dplyr::select(1,2,8) %>%
+  pivot_wider(
+  id_cols = Variable,
+  names_from = New_Grouping,
+  values_from = mean
+)
+
+view(summary_df_filtered_wide)
+
+#write_xlsx(summary_df_filtered_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Ferrum Manuscript Summary Stats/Upstream, seep, downstream_means.xlsx")
+```
+
+## subset Upstream and Downstream MS groups for each watershed
+```{r}
+# filter to keep only upstream and seep
+summary_df_filtered <- summary_combined_watershed %>%
+  filter(New_Grouping %in% c("Upstream", "Downstream MS")) %>%
+  mutate(New_Grouping = factor(New_Grouping, levels = c("Upstream", "Downstream MS"))) %>%
+  arrange(Watershed, Variable, New_Grouping)
+
+view(summary_df_filtered)
+```
+
+```{r}
+Upstream_particulate_metals <- summary_df_filtered %>%
+  filter(New_Grouping %in% c("Upstream")) %>%
+  dplyr::select(1,2,3,7) %>% # Watershed, New_Grouping, Variable, and median
+  filter(str_starts(Variable, "p_")) %>%
+  filter(median == 0.000) %>%
+  mutate(
+    median = case_when(
+      # Group 1: Al, Mn, Ni, Cu, Zn → replace with sqrt(2)/2 * 0.1
+      str_detect(Variable, "(Mn|Ni|Zn)") & median == 0.000 ~ (sqrt(2)/2) * 0.1,
+      
+      # Group 2: Fe → replace with sqrt(2)/2 * 1
+      str_detect(Variable, "Fe") & median == 0.000 ~ (sqrt(2)/2) * 1,
+      
+      # Group 3: Be, V, Cr, Co, As, Se, Ag, Cd, Ba, Tl, Pb, Th, U, REE → sqrt(2)/2 * 0.01
+      str_detect(Variable, "(Cr|Co|Se|Cd|Ba|U|sum)") & median == 0 ~ (sqrt(2)/2) * 0.01,
+      
+      # Group 4: REE → sqrt(2)/2 * 0.001
+      str_detect(Variable, "(REE|Pr|Nd|Dy|La|Ce|Y)") & median == 0 ~ (sqrt(2)/2) * 0.001,
+      
+      # Else: keep value
+      TRUE ~ median
+    )
+  )
+```
+
+```{r}
+summary_df_filtered_median <- summary_df_filtered %>%
+  dplyr::select(1,2,3,7)  # Watershed, New_Grouping, Variable, and median
+```
+
+```{r}
+# Define key columns
+key_cols <- c("Watershed", "New_Grouping", "Variable")
+
+# Find all non-key columns that exist in BOTH data frames
+common_value_cols <- intersect(
+  setdiff(names(summary_df_filtered_median), key_cols),
+  setdiff(names(Upstream_particulate_metals), key_cols)
+)
+
+common_value_cols
+# just to eyeball: this is the set of columns that will be replaced
+
+# 3. Join particulate values onto the summary df
+joined <- summary_df_filtered_median %>%
+  left_join(
+    Upstream_particulate_metals,
+    by = key_cols,
+    suffix = c("", "_partic")  # summary: col, particulate: col_partic
+  )
+
+# 4. For each shared value column, replace with particulate where available
+for (col in common_value_cols) {
+  joined[[col]] <- dplyr::coalesce(
+    joined[[paste0(col, "_partic")]],  # particulate version
+    joined[[col]]                      # original version
+  )
+}
+
+# 5. Drop the helper *_partic columns
+summary_df_filtered_median <- joined %>%
+  dplyr::select(-ends_with("_partic"))
+```
+
+```{r}
+summary_df_filtered_wide <- summary_df_filtered_median %>%
+  pivot_wider(
+  id_cols = c(Watershed, Variable),
+  names_from = New_Grouping,
+  values_from = median
+) %>%
+  dplyr::rename(
+    Upstream_median   = 3,
+    Downstream_median = 4
+  ) 
+  
+
+view(summary_df_filtered_wide)
+
+#write_xlsx(summary_df_filtered_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Ferrum Manuscript Summary Stats/Upstream, seep, downstream_means.xlsx")
+```
+
+```{r}
+Up_to_Downstream_differences <- summary_df_filtered_wide %>%
+  mutate(downstream_diff_conc = Downstream_median - Upstream_median) %>%
+  mutate(downstream_diff_fold_greater = (Downstream_median/Upstream_median)) %>%
+  mutate(downstream_percent_increase = ((Downstream_median - Upstream_median)/Upstream_median) * 100)
+```
+
+```{r}
+write_xlsx(Up_to_Downstream_differences, "C:/Users/tevinger/Downloads/Differences from Upstream to downstream.xlsx")
+```

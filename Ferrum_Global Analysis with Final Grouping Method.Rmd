@@ -89,7 +89,7 @@ Grouped_Ferrum_2022_2023_data <- Alaska_DataRelease_2022_2023_Ferrum_V10 %>%
                 #Subcatchment,
                 New_Groups,
                 New_Grouping,
-                `Field label`,
+                Field_label,
                 Latitude,
                 Longitude,
                 sample_collection_year,
@@ -170,15 +170,14 @@ u_U_mcg_per_l,
 u_V_mcg_per_l,
 u_Y_mcg_per_l,
 u_Zn_mcg_per_l,
-u_REE) %>%
-  filter(New_Grouping != "NA") 
+f_REE, p_REE,
+f_sum_all_metals, 
+u_sum_all_metals,
+p_sum_all_metals) %>%
+  filter(!(is.na(New_Grouping)))
 
-# Change class of the data
-#Ferrum_2022_2023_data$Site_Grouping <- as.factor(Ferrum_2022_2023_data$Site_Grouping)
-Grouped_Ferrum_2022_2023_data$Latitude <- as.numeric(Grouped_Ferrum_2022_2023_data$Latitude)
-Grouped_Ferrum_2022_2023_data$Longitude <- as.numeric(Grouped_Ferrum_2022_2023_data$Longitude)
-Grouped_Ferrum_2022_2023_data$DOC_mgC_per_l <- as.numeric(Grouped_Ferrum_2022_2023_data$DOC_mgC_per_l)
-#Ferrum_2022_2023_data$sample_collection_date_mm_dd_yy <- as.Date(Ferrum_2022_2023_data$sample_collection_date_mm_dd_yy)
+Grouped_Ferrum_2022_2023_data <- Grouped_Ferrum_2022_2023_data %>%
+  mutate(across(19:86, as.numeric))
 
 view(Grouped_Ferrum_2022_2023_data)
 ```
@@ -1006,7 +1005,7 @@ f_SO4_mg_per_l_plot <- ggplot(SO4_long, aes(x = New_Groups, y = Conc)) +
 f_SO4_mg_per_l_plot
 
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/SO4_no labels_presentation.png", f_SO4_mg_per_l_plot, width = 2.5, height = 4.2, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/SO4_no labels.png", f_SO4_mg_per_l_plot, width = 1.5, height = 3.5, dpi = 300)
 
 ```
 

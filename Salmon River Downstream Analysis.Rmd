@@ -932,7 +932,7 @@ SalmonR_SO4_area <- ggplot() +
   theme_minimal() +
   DA_theme +
   theme(
-    #axis.text.y = element_blank(),
+    axis.text.y = element_blank(),
     axis.ticks.length.y.right = unit(-0.1, "cm")  # negative to extend into plot
   )
 
@@ -1130,7 +1130,7 @@ SalmonR_SO4_area_combo <- (
 SalmonR_SO4_area_combo
 
 # Save final plot
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/M_SO4 area plus heat plot_with labels.png",SalmonR_SO4_area_combo, width = 3.6, height = 1.8, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/M_SO4 area plus heat plot_no labels.png",SalmonR_SO4_area_combo, width = 3.6, height = 1.8, dpi = 300)
 ```
 
 ### geom point
@@ -1237,10 +1237,25 @@ ggsave("C:/Users/tevinger/Downloads/SalmonR SO4.png", SalmonR_SO4_combo, width =
 
 ```
 
-## Mg
+# SO4:Cl
+## Data frames
 ```{r}
-Mg_MS <- SalmonR_filtered_MS %>%
-  filter(!is.na(f_Mg_mg_l))
+SO4_MS <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, New_Grouping, Hyd_Classification,Rel_Water_Area_plotting, f_SO4_mg_per_l, f_Cl_mg_per_l) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+```
+
+
+# Mg
+```{r}
+SalmonR_Mg <- SalmonR_2023_river_data %>%
+  dplyr::select(
+    SamplingEventID, New_Grouping, Hyd_Classification, Rel_Water_Area_plotting,
+    f_Mg_mg_l
+  ) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+
+# view(SalmonR_Mg)
 
 DA_x_breaks <- seq(0,25, by = 2.5)
 DA_x_labels <- c(0,"",5,"",10,"",15,"",20,"",25)
@@ -1256,99 +1271,14 @@ print(Mg_labels)
 ```
 
 ```{r}
-SalmonR_Mg_bottom <- ggplot() +
-  # Line plot for SalmonR_filtered_MS
-  geom_line(data = Mg_MS, aes(x = Rel_Water_Area_plotting, y = f_Mg_mg_l), color = "black", size = 1) +
-geom_point(data = Mg_MS, aes(x = Rel_Water_Area_plotting, y = f_Mg_mg_l), pch = 21, color = "black", 
-           #fill = "#2DAA9E",
-           fill = "#28968b",
-           size = 4, stroke = 1.3) +
-  # Points for SalmonR_filtered_Trib
-  geom_point(data = Salmon_unimpaired_tribs, aes(x = Rel_Water_Area_plotting, y = f_Mg_mg_l), pch = 24, color = "black", 
-             #fill = "#c0eeea",
-             fill = "#a1e6ce",
-             #fill = "#92e2c6",
-             #fill = "#b1ead6",
-             size = 3.4, stroke = 1.2) +
-  # Points for impaired tribs
-  geom_point(data = Salmon_impaired_tribs, aes(x = Rel_Water_Area_plotting, y = f_Mg_mg_l), pch = 25, color = "black", 
-             fill = "indianred2", 
-             size = 3.3, stroke = 1.2) +
-  coord_cartesian(x = c(0, 22), y = c(0, 60)) +
-  scale_x_continuous( 
-    breaks = DA_breaks,
-    labels = DA_labels) +
-  scale_y_continuous(breaks = Mg_bottom_breaks, labels = Mg_bottom_labels) +
-  labs(
-    title = NULL,
-    x = "Distance Downstream (km)",
-    y = NULL,
-    color = "Legend"
-  ) +
-  theme_minimal() +
-  DA_theme +
-  theme(
-    axis.title.x = element_blank(),
-    plot.margin = margin(0, 5, 0, 2)
-  )
 
-SalmonR_Mg_bottom
-
-#ggsave("C:/Users/tevinger/Downloads/SalmonR DIC.png", SalmonR_DIC_top, width = 5, height = 2.5, dpi = 300)
 ```
 
 ```{r}
-SalmonR_Mg_top <- ggplot() +
-  # Line plot for SalmonR_filtered_MS
-  geom_line(data = Mg_MS, aes(x = Rel_Water_Area_plotting, y = f_Mg_mg_l), color = "black", size = 1) +
-geom_point(data = Mg_MS, aes(x = Rel_Water_Area_plotting, y = f_Mg_mg_l), pch = 21, color = "black", 
-           #fill = "#2DAA9E",
-           fill = "#28968b",
-           size = 4, stroke = 1.3) +
-  # Points for SalmonR_filtered_Trib
-  geom_point(data = Salmon_unimpaired_tribs, aes(x = Rel_Water_Area_plotting, y = f_Mg_mg_l), pch = 24, color = "black", 
-             #fill = "#c0eeea",
-             fill = "#a1e6ce",
-             #fill = "#92e2c6",
-             #fill = "#b1ead6",
-             size = 3.4, stroke = 1.2) +
-  # Points for impaired tribs
-  geom_point(data = Salmon_impaired_tribs, aes(x = Rel_Water_Area_plotting, y = f_Mg_mg_l), pch = 25, color = "black", 
-             fill = "indianred2", 
-             size = 3.3, stroke = 1.2) +
-  coord_cartesian(x = c(0, 22), y = c(120, 125)) +
-  scale_x_continuous( 
-    breaks = DA_breaks,
-    labels = DA_labels) +
-  scale_y_continuous(breaks = Mg_breaks, labels = Mg_labels) +
-  labs(
-    title = NULL,
-    x = "Distance Downstream (km)",
-    y = NULL,
-    color = "Legend"
-  ) +
-  theme_minimal() +
-  DA_theme +
-  theme(
-    axis.title.x = element_blank(),
-    plot.margin = margin(0, 5, 0, 2),
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank()
-  )
 
-SalmonR_Mg_top
 ```
 
 ```{r}
-SalmonR_Mg_combo <- SalmonR_Mg_top / SalmonR_Mg_bottom + plot_layout(
-  heights = c(1, 4), 
-  guides = "collect") & theme(plot.margin = margin(0, 5, 0, 2), panel.background = element_rect(fill = "NA", color = "NA"), # Panel background
-    plot.background = element_rect(fill = "NA", color = "NA") # Plot background
-    )
-
-SalmonR_Mg_combo
-
-ggsave("C:/Users/tevinger/Downloads/SalmonR Mg.png", SalmonR_Mg_combo, width = 5, height = 2.5, dpi = 300)
 
 ```
 
@@ -4407,3 +4337,1362 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 
 ```
 
+# Co
+## Data frames
+```{r}
+SalmonR_Co <- SalmonR_2023_river_data %>%
+  dplyr::select(SamplingEventID, New_Grouping, Hyd_Classification, Rel_Water_Area_plotting,
+                u_Co_mcg_per_l, f_Co_mcg_per_l, p_Co_mcg_per_l) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+
+SalmonR_Co <- SalmonR_Co %>%
+  mutate(p_Co_mcg_per_l = if_else(
+    p_Co_mcg_per_l == 0.000,
+    (sqrt(2) / 2) * 0.01,
+    p_Co_mcg_per_l
+  ))
+
+# view(SalmonR_Co)
+```
+
+```{r}
+SalmonR_MS_Co_area <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Co_mcg_per_l, u_Co_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Co_mcg_per_l, u_Co_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Co",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+MS_f_Co_area <- SalmonR_MS_Co_area %>% filter(Metal_type == "f")
+MS_u_Co_area <- SalmonR_MS_Co_area %>% filter(Metal_type == "u")
+
+```
+
+```{r}
+SalmonR_trib_Co_area <- SalmonR_filtered_Trib %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Co_mcg_per_l, u_Co_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Co_mcg_per_l, u_Co_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Co", 
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+trib_f_Co_area <- SalmonR_trib_Co_area %>% filter(Metal_type == "f")
+trib_u_Co_area <- SalmonR_trib_Co_area %>% filter(Metal_type == "u")
+
+```
+
+## Trib heat plot
+```{r}
+# Step 1: map tributary sample to nearest upstream MS reference
+ref_map <- tibble(
+  SamplingEventID = c(
+    "SalmonR_Trib1_20230722_1745","SalmonR_Trib2_20230722_1911","SheepC_1_20230719_0923",
+    "Anaktok_1_20230723_1945","SalmonR_Trib3_20230724_1140","SalmonR_Trib4_20230724_1155",
+    "SalmonR_Trib5_20230724_1311","SalmonR_Trib6_20230724_1428","SalmonR_Trib7_20230724_1453"
+  ),
+  RefID = c(
+    "SalmonR_MS_above_Trib1_20230722_1753","SalmonR_MS_above_Trib2_20230722_1915",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_above_Trib6_20230724_1439",
+    "SalmonR_MS_above_Trib6_20230724_1439"
+  )
+)
+
+# Step 2: compute tributary:mainstem ratios
+Co_rel_data <- SalmonR_Co %>%
+  inner_join(ref_map, by = "SamplingEventID") %>%
+  relocate(RefID, .after = SamplingEventID) %>%
+  left_join(
+    SalmonR_Co %>%
+      dplyr::select(RefID = SamplingEventID,
+                    ref_u_Co = u_Co_mcg_per_l,
+                    ref_f_Co = f_Co_mcg_per_l,
+                    ref_p_Co = p_Co_mcg_per_l),
+    by = "RefID"
+  ) %>%
+  mutate(
+    rel_u_Co = u_Co_mcg_per_l / ref_u_Co,
+    rel_f_Co = f_Co_mcg_per_l / ref_f_Co,
+    rel_p_Co = p_Co_mcg_per_l / ref_p_Co
+  )
+
+view(Co_rel_data)
+
+#should have 9 rows
+
+```
+
+```{r}
+# Join relative concentrations back to the main Co data
+Co_rel_data_to_join <- Co_rel_data %>%
+  dplyr::select(SamplingEventID, rel_u_Co, rel_f_Co, rel_p_Co)
+
+SalmonR_Co_with_rel <- SalmonR_Co %>%
+  left_join(Co_rel_data_to_join, by = "SamplingEventID")
+
+view(SalmonR_Co_with_rel)
+
+# should have 19 rows
+```
+
+```{r}
+# Create a dense x-axis and align values
+full_sequence <- data.frame(Rel_Water_Area_plotting = seq(0, 22.5, by = 0.05))
+
+Co_df_expanded <- full_sequence %>%
+  left_join(Co_rel_data, by = "Rel_Water_Area_plotting")
+
+Co_rel_data_to_plot <- Co_df_expanded %>%
+  dplyr::select(-c(u_Co_mcg_per_l, f_Co_mcg_per_l, p_Co_mcg_per_l,
+                   ref_u_Co, ref_f_Co, ref_p_Co)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+Co_Anaktok_salmon <- Co_rel_data %>%
+  filter(Rel_Water_Area_plotting == 6.35) %>%
+  dplyr::select(-c(u_Co_mcg_per_l, f_Co_mcg_per_l, p_Co_mcg_per_l,
+                   ref_u_Co, ref_f_Co, ref_p_Co)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+Co_rel_data_to_plot <- Co_rel_data_to_plot %>%
+  rows_update(Co_Anaktok_salmon, by = "Rel_Water_Area_plotting")
+
+view(Co_rel_data_to_plot)
+
+```
+
+```{r}
+# set specific locations to 0 so that the values are 0 before the next tributary
+Co_mod_data <- data.frame(
+  Rel_Water_Area_plotting = c(4.35, 4.7, 5.6, 6.2, 6.3, 7.2, 7.95, 8.05, 8.6, 8.95, 9.9, 10.75, 10.95, 12),
+  rel_u_Co = 0, rel_f_Co = 0, rel_p_Co = 0
+) %>% mutate(across(everything(), as.numeric))
+
+Co_rel_data_mod <- Co_rel_data_to_plot %>%
+  rows_update(Co_mod_data, by = "Rel_Water_Area_plotting")
+
+Co_rel_data_mod2 <- Co_rel_data_mod %>%
+  mutate(rel_p_Co = dplyr::case_when(
+    Rel_Water_Area_plotting == 9.00 ~ 400,
+    TRUE ~ rel_p_Co
+  )) %>%
+  mutate(rel_p_Co = dplyr::case_when(
+    Rel_Water_Area_plotting == 3.75 ~ 200,
+    TRUE ~ rel_p_Co
+  )) %>%
+  mutate(rel_p_Co = dplyr::case_when(
+    Rel_Water_Area_plotting == 6.35 ~ 60,
+    TRUE ~ rel_p_Co
+  )) %>%
+  mutate(rel_p_Co = dplyr::case_when(
+    Rel_Water_Area_plotting == 6.25 ~ 100,
+    TRUE ~ rel_p_Co
+  )) %>%
+  mutate(rel_p_Co = dplyr::case_when(
+    Rel_Water_Area_plotting == 11.00 ~ 20,
+    TRUE ~ rel_p_Co
+  )) %>%
+  mutate(rel_f_Co = dplyr::case_when(
+    Rel_Water_Area_plotting == 4.75 ~ 100,
+    TRUE ~ rel_f_Co
+  ))
+
+# check what value was there before manually changing it to manually set the legend
+# f_Co_val_4.75 <- Co_rel_data_to_plot %>% filter(Rel_Water_Area_plotting == 4.75) %>% pull(rel_f_Co)
+# p_Co_high_val <- Co_rel_data_to_plot %>% filter(Rel_Water_Area_plotting == 11.00) %>% pull(rel_p_Co)
+# print(f_Co_val_4.75); print(p_Co_high_val)
+
+```
+
+```{r}
+Co_rel_data_to_plot_interp <- Co_rel_data_mod2 %>%
+  mutate(across(
+    .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
+    .fns = ~ na.approx(., x = Rel_Water_Area_plotting, na.rm = FALSE, rule = 2)
+  ))
+
+Co_rel_data_to_plot_interp[1:75, 6:8] <- 0
+
+f_Co_rel_data_to_plot_interp <- Co_rel_data_to_plot_interp %>% filter(rel_f_Co >= 1.01)
+p_Co_rel_data_to_plot_interp <- Co_rel_data_to_plot_interp %>% filter(rel_p_Co >= 1.01)
+
+```
+
+```{r}
+# Filtered Co heat
+f_Co_heat <- ggplot(f_Co_rel_data_to_plot_interp,
+                    aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Co)) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "white", high = "darkred") +
+  labs(title = NULL, x = NULL, y = NULL, fill = "Tributary:Mainstem") +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
+                     expand = expansion(mult = c(0.035, 0.015))) +
+  theme_minimal() + DA_theme +
+  theme(axis.text.y = element_blank(),
+        legend.position = "top",
+        axis.ticks.y = element_blank(),
+        panel.grid = element_blank(),
+        axis.text.x = element_blank(),
+        legend.title = element_blank(),
+        axis.ticks.length.x = unit(0.1, "cm"))
+
+# Particulate Co heat
+p_Co_heat <- ggplot(p_Co_rel_data_to_plot_interp,
+                    aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_p_Co)) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "white", high = "#301934") +
+  labs(title = NULL, x = NULL, y = NULL, fill = "Tributary:Mainstem") +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
+                     expand = expansion(mult = c(0.035, 0.015))) +
+  theme_minimal() + DA_theme +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.ticks.x = element_blank(),
+        panel.grid = element_blank(),
+        axis.text.x = element_blank(),
+        legend.position = "top",
+        legend.margin = margin(2, 2, 0, 2),
+        plot.margin = margin(0, 1, 1, 1),
+        legend.title = element_blank(),
+        axis.ticks.length.x = unit(0.1, "cm"))
+
+# Combine Co heatmaps
+Salmon_Co_combined <- p_Co_heat / f_Co_heat
+Salmon_Co_combined
+
+```
+
+## Area plot
+```{r}
+SalmonR_Co_area <- ggplot() +
+  geom_area(data = MS_u_Co_area,
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "grey30") +
+  geom_line(data = MS_u_Co_area,
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            color = "grey28", linewidth = 0.5) +
+  geom_area(data = MS_f_Co_area,
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#2daa9e") +
+  geom_line(data = MS_f_Co_area,
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            color = "#1d6e66", linewidth = 0.4) +
+  geom_point(data = MS_f_Co_area,
+             aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+             pch = 21, fill = "white", color = "black", size = 2) +
+  geom_point(data = MS_u_Co_area,
+             aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+             pch = 19, color = "black", size = 2) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "grey15", linewidth = 0.5) +
+  coord_cartesian(x = c(1,22.5), y = c(0,200)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
+                     expand = expansion(mult = c(0.035, 0.015))) +
+  scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200),
+                     labels = c(0,"",50,"",100,"",150,"",200),
+                     sec.axis = dup_axis(),
+                     expand = expansion(mult = c(0.02, 0.02))) +
+  labs(x = NULL, y = NULL, title = NULL) +
+  theme_minimal() +
+  theme(
+    axis.text.y.right = element_blank(),
+        axis.text.y.left = element_blank()
+    ) +
+  DA_theme
+
+SalmonR_Co_area
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Co area_with labels.png", SalmonR_Co_area, width = 3.6, height = 2.1, dpi = 300)
+
+```
+
+## Combo
+```{r}
+SalmonR_Co_area_combo <- (
+  Salmon_Co_combined / SalmonR_Co_area +
+  plot_layout(ncol = 1, nrow = 3, heights = c(1, 1, 6), guides = "collect")
+) &
+  theme(
+    plot.margin = margin(1, 1, 1, 1),
+    panel.background = element_rect(fill = NA, color = NA),
+    plot.background = element_rect(fill = NA, color = NA),
+    legend.position = "none",
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 9),
+    legend.key.size = unit(0.4, "cm"),
+    legend.margin = margin(2, 2, 0, 2),
+    legend.spacing = unit(0.1, "cm")
+  )
+
+SalmonR_Co_area_combo
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Co area plus heat plot_without labels.png", SalmonR_Co_area_combo, width = 3.6, height = 2.1, dpi = 300)
+
+```
+
+```{r}
+
+```
+
+# Ba
+## Data frames
+```{r}
+SalmonR_Ba <- SalmonR_2023_river_data %>%
+  dplyr::select(SamplingEventID, New_Grouping, Hyd_Classification, Rel_Water_Area_plotting,
+                u_Ba_mcg_per_l, f_Ba_mcg_per_l, p_Ba_mcg_per_l) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+
+SalmonR_Ba <- SalmonR_Ba %>%
+  mutate(p_Ba_mcg_per_l = if_else(
+    p_Ba_mcg_per_l == 0.000,
+    (sqrt(2) / 2) * 0.01,
+    p_Ba_mcg_per_l
+  ))
+
+# view(SalmonR_Ba)
+```
+
+```{r}
+SalmonR_MS_Ba_area <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Ba_mcg_per_l, u_Ba_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Ba_mcg_per_l, u_Ba_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Ba_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+MS_f_Ba_area <- SalmonR_MS_Ba_area %>% filter(Metal_type == "f")
+MS_u_Ba_area <- SalmonR_MS_Ba_area %>% filter(Metal_type == "u")
+
+```
+
+```{r}
+SalmonR_trib_Ba_area <- SalmonR_filtered_Trib %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Ba_mcg_per_l, u_Ba_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Ba_mcg_per_l, u_Ba_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Ba_mcg_per_l",   # fixed from Fe → Cu
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+trib_f_Ba_area <- SalmonR_trib_Ba_area %>% filter(Metal_type == "f")
+trib_u_Ba_area <- SalmonR_trib_Ba_area %>% filter(Metal_type == "u")
+
+```
+
+## Trib heat plots
+```{r}
+# Step 1: map tributary sample to nearest upstream MS reference
+ref_map <- tibble(
+  SamplingEventID = c(
+    "SalmonR_Trib1_20230722_1745","SalmonR_Trib2_20230722_1911","SheepC_1_20230719_0923",
+    "Anaktok_1_20230723_1945","SalmonR_Trib3_20230724_1140","SalmonR_Trib4_20230724_1155",
+    "SalmonR_Trib5_20230724_1311","SalmonR_Trib6_20230724_1428","SalmonR_Trib7_20230724_1453"
+  ),
+  RefID = c(
+    "SalmonR_MS_above_Trib1_20230722_1753","SalmonR_MS_above_Trib2_20230722_1915",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_above_Trib6_20230724_1439",
+    "SalmonR_MS_above_Trib6_20230724_1439"
+  )
+)
+
+# Step 2: compute tributary:mainstem ratios
+Ba_rel_data <- SalmonR_Ba %>%
+  inner_join(ref_map, by = "SamplingEventID") %>%
+  relocate(RefID, .after = SamplingEventID) %>%
+  left_join(
+    SalmonR_Ba %>%
+      dplyr::select(RefID = SamplingEventID,
+                    ref_u_Ba = u_Ba_mcg_per_l,
+                    ref_f_Ba = f_Ba_mcg_per_l,
+                    ref_p_Ba = p_Ba_mcg_per_l),
+    by = "RefID"
+  ) %>%
+  mutate(
+    rel_u_Ba = u_Ba_mcg_per_l / ref_u_Ba,
+    rel_f_Ba = f_Ba_mcg_per_l / ref_f_Ba,
+    rel_p_Ba = p_Ba_mcg_per_l / ref_p_Ba
+  )
+
+view(Ba_rel_data)
+
+#should have 9 rows
+
+```
+
+Join back to main df
+```{r}
+Ba_rel_data_to_join <- Ba_rel_data %>%
+  dplyr::select(SamplingEventID, rel_u_Ba, rel_f_Ba, rel_p_Ba)
+
+SalmonR_Ba_with_rel <- SalmonR_Ba %>%
+  left_join(Ba_rel_data_to_join, by = "SamplingEventID")
+
+view(SalmonR_Ba_with_rel)
+
+# should have 19 rows
+```
+
+```{r}
+full_sequence <- data.frame(Rel_Water_Area_plotting = seq(0, 22.5, by = 0.05))
+
+Ba_df_expanded <- full_sequence %>%
+  left_join(Ba_rel_data, by = "Rel_Water_Area_plotting")
+
+Ba_rel_data_to_plot <- Ba_df_expanded %>%
+  dplyr::select(-c(u_Ba_mcg_per_l, f_Ba_mcg_per_l, p_Ba_mcg_per_l,
+                   ref_u_Ba, ref_f_Ba, ref_p_Ba)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+Ba_Anaktok_salmon <- Ba_rel_data %>%
+  filter(Rel_Water_Area_plotting == 6.35) %>%
+  dplyr::select(-c(u_Ba_mcg_per_l, f_Ba_mcg_per_l, p_Ba_mcg_per_l,
+                   ref_u_Ba, ref_f_Ba, ref_p_Ba)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+Ba_rel_data_to_plot <- Ba_rel_data_to_plot %>%
+  rows_update(Ba_Anaktok_salmon, by = "Rel_Water_Area_plotting")
+
+view(Ba_rel_data_to_plot)
+
+```
+
+```{r}
+Ba_mod_data <- data.frame(
+  Rel_Water_Area_plotting = c(4.35, 4.7, 5.6, 6.2, 6.3, 7.2, 7.95, 8.05, 8.6, 8.95, 9.9, 10.75, 10.95, 12),
+  rel_u_Ba = 0, rel_f_Ba = 0, rel_p_Ba = 0
+) %>% mutate(across(everything(), as.numeric))
+
+Ba_rel_data_mod <- Ba_rel_data_to_plot %>%
+  rows_update(Ba_mod_data, by = "Rel_Water_Area_plotting")
+
+Ba_rel_data_mod2 <- Ba_rel_data_mod %>%
+  mutate(rel_p_Ba = dplyr::case_when(
+    Rel_Water_Area_plotting == 3.75 ~ 25,
+    TRUE ~ rel_p_Ba
+  ))
+ 
+# f_Ba_val_4.75 <- Ba_rel_data_to_plot %>%
+#   filter(Rel_Water_Area_plotting == 4.75) %>%
+#   pull(rel_f_Ba)
+# 
+# p_Ba_high_val <- Ba_rel_data_to_plot %>%
+#   filter(Rel_Water_Area_plotting == 11.00) %>%
+#   pull(rel_p_Ba)
+# 
+# print(f_Ba_val_4.75)
+# print(p_Ba_high_val)
+
+```
+
+```{r}
+Ba_rel_data_to_plot_interp <- Ba_rel_data_mod2 %>%
+  mutate(across(
+    .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
+    .fns = ~ na.approx(., x = Rel_Water_Area_plotting, na.rm = FALSE, rule = 2)
+  ))
+
+Ba_rel_data_to_plot_interp[1:75, 6:8] <- 0
+
+f_Ba_rel_data_to_plot_interp <- Ba_rel_data_to_plot_interp %>% filter(rel_f_Ba >= 1.01)
+p_Ba_rel_data_to_plot_interp <- Ba_rel_data_to_plot_interp %>% filter(rel_p_Ba >= 1.01)
+
+```
+
+```{r}
+f_Ba_heat <- ggplot(f_Ba_rel_data_to_plot_interp,
+                     aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Ba)) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "white", high = "darkred") +
+  labs(title = NULL, x = NULL, y = NULL, fill = "Tributary:Mainstem") +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
+                     expand = expansion(mult = c(0.035, 0.015))) +
+  theme_minimal() + DA_theme +
+  theme(axis.text.y = element_blank(),
+        legend.position = "top",
+        axis.ticks.y = element_blank(),
+        panel.grid = element_blank(),
+        axis.text.x = element_blank(),
+        legend.title = element_blank(),
+        axis.ticks.length.x = unit(0.1, "cm"))
+
+p_Ba_heat <- ggplot(p_Ba_rel_data_to_plot_interp,
+                     aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_p_Ba)) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "white", high = "#301934") +
+  labs(title = NULL, x = NULL, y = NULL, fill = "Tributary:Mainstem") +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
+                     expand = expansion(mult = c(0.035, 0.015))) +
+  theme_minimal() + DA_theme +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.ticks.x = element_blank(),
+        panel.grid = element_blank(),
+        axis.text.x = element_blank(),
+        legend.position = "top",
+        legend.margin = margin(2, 2, 0, 2),
+        plot.margin = margin(0, 1, 1, 1),
+        legend.title = element_blank(),
+        axis.ticks.length.x = unit(0.1, "cm"))
+
+Salmon_Ba_combined <- p_Ba_heat / f_Ba_heat
+Salmon_Ba_combined
+
+```
+
+## Area plot
+```{r}
+SalmonR_Ba_area <- ggplot() +
+  geom_area(data = MS_u_Ba_area,
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "grey30") +
+  geom_line(data = MS_u_Ba_area,
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            color = "grey28", linewidth = 0.5) +
+  geom_area(data = MS_f_Ba_area,
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#2daa9e") +
+  geom_line(data = MS_f_Ba_area,
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            color = "#1d6e66", linewidth = 0.4) +
+  geom_point(data = MS_f_Ba_area,
+             aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+             pch = 19, color = "black", size = 2) +
+  geom_point(data = MS_u_Ba_area,
+             aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+             pch = 19, color = "black", size = 2) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "grey15", linewidth = 0.5) +
+    coord_cartesian(x = c(1,22.5), y = c(0,37)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
+                     expand = expansion(mult = c(0.035, 0.015))) +
+  scale_y_continuous(breaks = c(0,5,10,15,20,25,30,35), labels = c(0,"",10,"",20,"",30,""), sec.axis = dup_axis(), expand = expansion(mult = c(0.02, 0.02))) +
+  # scale_y_log10(
+  #   breaks = breaks,
+  #   labels = parse(text = labels),
+  #   expand = expansion(mult = c(0.02, 0.02)),
+  #   sec.axis = dup_axis()
+  # ) +
+  # annotation_logticks(sides = "lr") +
+  labs(x = NULL, y = NULL, title = NULL) +
+  theme_minimal() +
+  theme(axis.text.y.right = element_blank(),
+        axis.text.y.left = element_blank()) +
+  DA_theme
+
+SalmonR_Ba_area
+
+```
+
+## Combo
+```{r}
+SalmonR_Ba_area_combo <- (
+  Salmon_Ba_combined / SalmonR_Ba_area +
+  plot_layout(ncol = 1, nrow = 3, heights = c(1, 1, 6), guides = "collect")
+) &
+  theme(
+    plot.margin = margin(1, 1, 1, 1),
+    panel.background = element_rect(fill = NA, color = NA),
+    plot.background = element_rect(fill = NA, color = NA),
+    legend.position = "none",
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 9),
+    legend.key.size = unit(0.4, "cm"),
+    legend.margin = margin(2, 2, 0, 2),
+    legend.spacing = unit(0.1, "cm")
+  )
+
+SalmonR_Ba_area_combo
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Ba area plus heat plot_without labels.png", SalmonR_Ba_area_combo, width = 3.6, height = 2.1, dpi = 300)
+```
+
+# Se
+## Data frames
+```{r}
+SalmonR_Se <- SalmonR_2023_river_data %>%
+  dplyr::select(SamplingEventID, New_Grouping, Hyd_Classification, Rel_Water_Area_plotting,
+                u_Se_mcg_per_l, f_Se_mcg_per_l, p_Se_mcg_per_l) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+
+SalmonR_Se <- SalmonR_Se %>%
+  mutate(p_Se_mcg_per_l = if_else(
+    p_Se_mcg_per_l == 0.000,
+    (sqrt(2) / 2) * 0.01,
+    p_Se_mcg_per_l
+  ))
+
+# view(SalmonR_Se)
+
+```
+
+```{r}
+SalmonR_MS_Se_area <- SalmonR_filtered_MS %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Se_mcg_per_l, u_Se_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Se_mcg_per_l, u_Se_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Se_mcg_per_l",
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+MS_f_Se_area <- SalmonR_MS_Se_area %>% filter(Metal_type == "f")
+MS_u_Se_area <- SalmonR_MS_Se_area %>% filter(Metal_type == "u")
+
+```
+
+```{r}
+SalmonR_trib_Se_area <- SalmonR_filtered_Trib %>%
+  dplyr::select(SamplingEventID, Rel_Water_Area_plotting, f_Se_mcg_per_l, u_Se_mcg_per_l) %>%
+  pivot_longer(
+    cols = c(f_Se_mcg_per_l, u_Se_mcg_per_l),
+    names_to = "Metal_type",
+    names_pattern = "^(.)_Se_mcg_per_l",   # fixed from Fe → Cu
+    values_to = "Metal_conc"
+  ) %>%
+  filter(!is.na(Metal_conc))
+
+trib_f_Se_area <- SalmonR_trib_Se_area %>% filter(Metal_type == "f")
+trib_u_Se_area <- SalmonR_trib_Se_area %>% filter(Metal_type == "u")
+
+```
+
+## Trib heat plots
+```{r}
+# Step 1: map tributary sample to nearest upstream MS reference
+ref_map <- tibble(
+  SamplingEventID = c(
+    "SalmonR_Trib1_20230722_1745","SalmonR_Trib2_20230722_1911","SheepC_1_20230719_0923",
+    "Anaktok_1_20230723_1945","SalmonR_Trib3_20230724_1140","SalmonR_Trib4_20230724_1155",
+    "SalmonR_Trib5_20230724_1311","SalmonR_Trib6_20230724_1428","SalmonR_Trib7_20230724_1453"
+  ),
+  RefID = c(
+    "SalmonR_MS_above_Trib1_20230722_1753","SalmonR_MS_above_Trib2_20230722_1915",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_above_Trib6_20230724_1439",
+    "SalmonR_MS_above_Trib6_20230724_1439"
+  )
+)
+
+# Step 2: compute tributary:mainstem ratios
+Se_rel_data <- SalmonR_Se %>%
+  inner_join(ref_map, by = "SamplingEventID") %>%
+  relocate(RefID, .after = SamplingEventID) %>%
+  left_join(
+    SalmonR_Se %>%
+      dplyr::select(RefID = SamplingEventID,
+                    ref_u_Se = u_Se_mcg_per_l,
+                    ref_f_Se = f_Se_mcg_per_l,
+                    ref_p_Se = p_Se_mcg_per_l),
+    by = "RefID"
+  ) %>%
+  mutate(
+    rel_u_Se = u_Se_mcg_per_l / ref_u_Se,
+    rel_f_Se = f_Se_mcg_per_l / ref_f_Se,
+    rel_p_Se = p_Se_mcg_per_l / ref_p_Se
+  )
+
+view(Se_rel_data)
+
+#should have 9 rows
+
+```
+
+```{r}
+Se_rel_data_to_join <- Se_rel_data %>%
+  dplyr::select(SamplingEventID, rel_u_Se, rel_f_Se, rel_p_Se)
+
+SalmonR_Se_with_rel <- SalmonR_Se %>%
+  left_join(Se_rel_data_to_join, by = "SamplingEventID")
+
+view(SalmonR_Se_with_rel)
+
+# should have 19 rows
+
+```
+
+```{r}
+full_sequence <- data.frame(Rel_Water_Area_plotting = seq(0, 22.5, by = 0.05))
+
+Se_df_expanded <- full_sequence %>%
+  left_join(Se_rel_data, by = "Rel_Water_Area_plotting")
+
+Se_rel_data_to_plot <- Se_df_expanded %>%
+  dplyr::select(-c(u_Se_mcg_per_l, f_Se_mcg_per_l, p_Se_mcg_per_l,
+                   ref_u_Se, ref_f_Se, ref_p_Se)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+Se_Anaktok_salmon <- Se_rel_data %>%
+  filter(Rel_Water_Area_plotting == 6.35) %>%
+  dplyr::select(-c(u_Se_mcg_per_l, f_Se_mcg_per_l, p_Se_mcg_per_l,
+                   ref_u_Se, ref_f_Se, ref_p_Se)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+Se_rel_data_to_plot <- Se_rel_data_to_plot %>%
+  rows_update(Se_Anaktok_salmon, by = "Rel_Water_Area_plotting")
+
+view(Se_rel_data_to_plot)
+
+```
+
+```{r}
+Se_mod_data <- data.frame(
+  Rel_Water_Area_plotting = c(4.35, 4.7, 5.6, 6.2, 6.3, 7.2, 7.95, 8.05, 8.6, 8.95, 9.9, 10.75, 10.95, 12),
+  rel_u_Se = 0, rel_f_Se = 0, rel_p_Se = 0
+) %>% mutate(across(everything(), as.numeric))
+
+Se_rel_data_mod <- Se_rel_data_to_plot %>%
+  rows_update(Se_mod_data, by = "Rel_Water_Area_plotting")
+
+Se_rel_data_mod2 <- Se_rel_data_mod %>%
+  mutate(rel_f_Se = dplyr::case_when(
+    Rel_Water_Area_plotting == 4.75 ~ 10,
+    TRUE ~ rel_f_Se
+  ))
+
+# f_Se_val_4.75 <- Se_rel_data_to_plot %>%
+#   filter(Rel_Water_Area_plotting == 4.75) %>%
+#   pull(rel_f_Se)
+# 
+# p_Se_high_val <- Se_rel_data_to_plot %>%
+#   filter(Rel_Water_Area_plotting == 11.00) %>%
+#   pull(rel_p_Se)
+# 
+# print(f_Se_val_4.75)
+# print(p_Se_high_val)
+
+```
+
+```{r}
+Se_rel_data_to_plot_interp <- Se_rel_data_mod2 %>%
+  mutate(across(
+    .cols = where(is.numeric) & !matches("Rel_Water_Area_plotting"),
+    .fns = ~ na.approx(., x = Rel_Water_Area_plotting, na.rm = FALSE, rule = 2)
+  ))
+
+Se_rel_data_to_plot_interp[1:75, 6:8] <- 0
+
+f_Se_rel_data_to_plot_interp <- Se_rel_data_to_plot_interp %>% filter(rel_f_Se >= 1.01)
+p_Se_rel_data_to_plot_interp <- Se_rel_data_to_plot_interp %>% filter(rel_p_Se >= 1.01)
+
+```
+
+```{r}
+f_Se_heat <- ggplot(f_Se_rel_data_to_plot_interp,
+                     aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_f_Se)) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "white", high = "darkred") +
+  labs(title = NULL, x = NULL, y = NULL, fill = "Tributary:Mainstem") +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
+                     expand = expansion(mult = c(0.035, 0.015))) +
+  theme_minimal() + DA_theme +
+  theme(axis.text.y = element_blank(),
+        legend.position = "top",
+        axis.ticks.y = element_blank(),
+        panel.grid = element_blank(),
+        axis.text.x = element_blank(),
+        legend.title = element_blank(),
+        axis.ticks.length.x = unit(0.1, "cm"))
+
+p_Se_heat <- ggplot(p_Se_rel_data_to_plot_interp,
+                     aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_p_Se)) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_fill_gradient(low = "white", high = "#301934") +
+  labs(title = NULL, x = NULL, y = NULL, fill = "Tributary:Mainstem") +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
+                     expand = expansion(mult = c(0.035, 0.015))) +
+  theme_minimal() + DA_theme +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.ticks.x = element_blank(),
+        panel.grid = element_blank(),
+        axis.text.x = element_blank(),
+        legend.position = "top",
+        legend.margin = margin(2, 2, 0, 2),
+        plot.margin = margin(0, 1, 1, 1),
+        legend.title = element_blank(),
+        axis.ticks.length.x = unit(0.1, "cm"))
+
+Salmon_Se_combined <- p_Se_heat / f_Se_heat
+Salmon_Se_combined
+```
+
+## Area plot
+```{r}
+SalmonR_Se_area <- ggplot() +
+  geom_area(data = MS_u_Se_area,
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "grey30") +
+  geom_line(data = MS_u_Se_area,
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            color = "grey28", linewidth = 0.5) +
+  geom_area(data = MS_f_Se_area,
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            fill = "#2daa9e") +
+  geom_line(data = MS_f_Se_area,
+            aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+            color = "#1d6e66", linewidth = 0.4) +
+  geom_point(data = MS_f_Se_area,
+             aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+             pch = 19, color = "black", size = 2) +
+  geom_point(data = MS_u_Se_area,
+             aes(x = Rel_Water_Area_plotting, y = Metal_conc),
+             pch = 19, color = "black", size = 2) +
+  geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+             linetype = "dashed", color = "grey15", linewidth = 0.5) +
+    coord_cartesian(x = c(1,22.5), y = c(0,18)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
+                     expand = expansion(mult = c(0.035, 0.015))) +
+  scale_y_continuous(breaks = c(0,2.5,5,7.5,10,12.5,15,17.5), labels = c(0,"",5,"",10,"",15,""), sec.axis = dup_axis(), expand = expansion(mult = c(0.02, 0.02))) +
+  # scale_y_log10(
+  #   breaks = breaks,
+  #   labels = parse(text = labels),
+  #   expand = expansion(mult = c(0.02, 0.02)),
+  #   sec.axis = dup_axis()
+  # ) +
+  # annotation_logticks(sides = "lr") +
+  labs(x = NULL, y = NULL, title = NULL) +
+  theme_minimal() +
+  theme(axis.text.y.right = element_blank(),
+        axis.text.y.left = element_blank()) +
+  DA_theme
+
+SalmonR_Se_area
+
+```
+
+## combo
+```{r}
+SalmonR_Se_area_combo <- (
+  Salmon_Se_combined / SalmonR_Se_area +
+  plot_layout(ncol = 1, nrow = 3, heights = c(1, 1, 6), guides = "collect")
+) &
+  theme(
+    plot.margin = margin(1, 1, 1, 1),
+    panel.background = element_rect(fill = NA, color = NA),
+    plot.background = element_rect(fill = NA, color = NA),
+    legend.position = "none",
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 9),
+    legend.key.size = unit(0.4, "cm"),
+    legend.margin = margin(2, 2, 0, 2),
+    legend.spacing = unit(0.1, "cm")
+  )
+
+SalmonR_Se_area_combo
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Se area plus heat plot_without labels.png", SalmonR_Se_area_combo, width = 3.6, height = 2.1, dpi = 300)
+```
+
+
+# Alkalinity
+## Data frames
+```{r}
+SalmonR_Alk <- SalmonR_2023_river_data %>%
+  dplyr::select(
+    SamplingEventID, New_Grouping, Hyd_Classification, Rel_Water_Area_plotting,
+    Alk_mgCaCO3_per_l
+  ) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+
+# view(SalmonR_Alk)
+
+```
+
+```{r}
+SalmonR_MS_Alk_area <- SalmonR_filtered_MS %>%
+  dplyr::select(
+    SamplingEventID,
+    Rel_Water_Area_plotting,
+    Alk_mgCaCO3_per_l
+  ) %>%
+  pivot_longer(
+    cols = Alk_mgCaCO3_per_l,
+    names_to = "type",
+    values_to = "conc"
+  ) %>%
+  filter(!is.na(conc))
+```
+
+```{r}
+SalmonR_trib_Alk_area <- SalmonR_filtered_Trib %>%
+  dplyr::select(
+    SamplingEventID,
+    Rel_Water_Area_plotting,
+    Alk_mgCaCO3_per_l
+  ) %>%
+  pivot_longer(
+    cols = Alk_mgCaCO3_per_l,
+    names_to = "type",
+    values_to = "conc"
+  ) %>%
+  filter(!is.na(conc))
+```
+
+```{r}
+ref_map <- tibble(
+  SamplingEventID = c(
+    "SalmonR_Trib1_20230722_1745","SalmonR_Trib2_20230722_1911","SheepC_1_20230719_0923",
+    "Anaktok_1_20230723_1945","SalmonR_Trib3_20230724_1140","SalmonR_Trib4_20230724_1155",
+    "SalmonR_Trib5_20230724_1311","SalmonR_Trib6_20230724_1428","SalmonR_Trib7_20230724_1453"
+  ),
+  RefID = c(
+    "SalmonR_MS_above_Trib1_20230722_1753","SalmonR_MS_above_Trib2_20230722_1915",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_above_Trib6_20230724_1439",
+    "SalmonR_MS_above_Trib6_20230724_1439"
+  )
+)
+
+Alk_rel_data <- SalmonR_Alk %>%
+  inner_join(ref_map, by = "SamplingEventID") %>%
+  relocate(RefID, .after = SamplingEventID) %>%
+  left_join(
+    SalmonR_Alk %>%
+      dplyr::select(
+        RefID = SamplingEventID,
+        ref_Alk = Alk_mgCaCO3_per_l
+      ),
+    by = "RefID"
+  ) %>%
+  mutate(
+    rel_Alk = Alk_mgCaCO3_per_l / ref_Alk
+  )
+
+view(Alk_rel_data)
+# should have 9 rows
+
+```
+
+```{r}
+Alk_rel_data_to_join <- Alk_rel_data %>%
+  dplyr::select(SamplingEventID, rel_Alk)
+
+SalmonR_Alk_with_rel <- SalmonR_Alk %>%
+  left_join(Alk_rel_data_to_join, by = "SamplingEventID")
+
+view(SalmonR_Alk_with_rel)
+# should have 19 rows
+
+```
+
+```{r}
+full_sequence <- data.frame(Rel_Water_Area_plotting = seq(0, 22.5, by = 0.05))
+
+Alk_df_expanded <- full_sequence %>%
+  left_join(Alk_rel_data, by = "Rel_Water_Area_plotting")
+
+Alk_rel_data_to_plot <- Alk_df_expanded %>%
+  dplyr::select(-c(Alk_mgCaCO3_per_l, ref_Alk)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+Alk_Anaktok_salmon <- Alk_rel_data %>%
+  filter(Rel_Water_Area_plotting == 6.35) %>%
+  dplyr::select(-c(Alk_mgCaCO3_per_l, ref_Alk)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+Alk_rel_data_to_plot <- Alk_rel_data_to_plot %>%
+  rows_update(Alk_Anaktok_salmon, by = "Rel_Water_Area_plotting")
+
+view(Alk_rel_data_to_plot)
+
+```
+
+```{r}
+Alk_mod_data <- data.frame(
+  Rel_Water_Area_plotting = c(
+    4.35, 4.7, 5.6, 6.2, 6.3, 7.2,
+    7.95, 8.05, 8.6, 8.95, 9.9, 10.75, 10.95, 12
+  ),
+  rel_Alk = 0
+) %>% mutate(across(everything(), as.numeric))
+
+Alk_rel_data_mod <- Alk_rel_data_to_plot %>%
+  rows_update(Alk_mod_data, by = "Rel_Water_Area_plotting")
+
+# Alk_rel_data_mod2 <- Alk_rel_data_mod %>%
+#   mutate(rel_Alk = dplyr::case_when(
+#     Rel_Water_Area_plotting == 4.75 ~ 10,
+#     TRUE ~ rel_Alk
+#   ))
+
+```
+
+```{r}
+Alk_rel_data_to_plot_interp <- Alk_rel_data_mod %>%
+  mutate(rel_Alk = na.approx(
+    rel_Alk,
+    x = Rel_Water_Area_plotting,
+    na.rm = FALSE,
+    rule = 2
+  ))
+
+Alk_rel_data_to_plot_interp[1:75, "rel_Alk"] <- 0
+
+f_Alk_rel_data_to_plot_interp <- Alk_rel_data_to_plot_interp %>%
+  filter(rel_Alk >= 1.01)
+
+```
+
+## Trib heat plot
+```{r}
+trib_Alk_heat <- ggplot(
+  f_Alk_rel_data_to_plot_interp,
+  aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_Alk)
+) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(
+    xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+    linetype = "dashed", color = "black", linewidth = 0.5
+  ) +
+  scale_fill_gradient(low = "white", high = "darkred") +
+  labs(title = NULL, x = NULL, y = NULL, fill = "Tributary:Mainstem") +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(
+    breaks = DA_x_breaks,
+    labels = DA_x_labels,
+    expand = expansion(mult = c(0.035, 0.015))
+  ) +
+  theme_minimal() + DA_theme +
+  theme(
+    axis.text.y = element_blank(),
+    legend.position = "top",
+    axis.ticks.y = element_blank(),
+    panel.grid = element_blank(),
+    axis.text.x = element_blank(),
+    legend.title = element_blank(),
+    axis.ticks.length.x = unit(0.1, "cm")
+  )
+
+trib_Alk_heat
+
+```
+
+## Area plot
+```{r}
+SalmonR_Alk_area <- ggplot() +
+  geom_area(data = SalmonR_MS_Alk_area,
+            aes(x = Rel_Water_Area_plotting, y = conc),
+            fill = "#2daa9e") +
+  geom_line(data = SalmonR_MS_Alk_area,
+            aes(x = Rel_Water_Area_plotting, y = conc),
+            color = "#1d6e66", linewidth = 0.4) +
+  geom_point(data = SalmonR_MS_Alk_area,
+             aes(x = Rel_Water_Area_plotting, y = conc),
+             pch = 19, color = "black", size = 2) +
+  geom_vline(
+    xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+    linetype = "dashed", color = "grey15", linewidth = 0.5
+  ) +
+  coord_cartesian(x = c(1,22.5), y = c(0,190)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
+                     expand = expansion(mult = c(0.035, 0.015))) +
+  scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200), labels = c(0,"",50,"",100,"",150,"",200), sec.axis = dup_axis(), expand = expansion(mult = c(0.02, 0.02))) +
+  labs(x = NULL, y = NULL, title = NULL) +
+  theme_minimal() +
+  theme(axis.text.y.right = element_blank(),
+        axis.text.y.left = element_blank()) +
+  DA_theme
+
+SalmonR_Alk_area
+
+```
+
+## Combo
+```{r}
+SalmonR_Alk_area_combo <- (
+  trib_Alk_heat / SalmonR_Alk_area +
+  plot_layout(ncol = 1, nrow = 2, heights = c(1, 6), guides = "collect")
+) &
+  theme(
+    plot.margin = margin(1, 1, 1, 1),
+    legend.position = "none",
+    legend.text = element_text(size = 8),       # smaller legend labels
+    legend.title = element_text(size = 9),      # smaller legend title
+    legend.key.size = unit(0.4, "cm"),
+    legend.margin = margin(2, 2, 0, 2),
+  legend.spacing = unit(0.1, "cm"), # smaller boxes
+    panel.background = element_rect(fill = NA, color = NA),
+    plot.background = element_rect(fill = NA, color = NA)
+  )
+
+SalmonR_Alk_area_combo
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Alk area plus heat plot_without labels.png", SalmonR_Alk_area_combo, width = 3.6, height = 1.8, dpi = 300)
+```
+
+# DIC
+## Data frames
+```{r}
+SalmonR_DIC <- SalmonR_2023_river_data %>%
+  dplyr::select(
+    SamplingEventID, New_Grouping, Hyd_Classification, Rel_Water_Area_plotting,
+    DIC_mgC_per_l
+  ) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+
+# view(SalmonR_DIC)
+```
+
+```{r}
+SalmonR_MS_DIC_area <- SalmonR_filtered_MS %>%
+  dplyr::select(
+    SamplingEventID,
+    Rel_Water_Area_plotting,
+    DIC_mgC_per_l
+  ) %>%
+  pivot_longer(
+    cols = DIC_mgC_per_l,
+    names_to = "type",
+    values_to = "conc"
+  ) %>%
+  filter(!is.na(conc))
+
+```
+
+```{r}
+SalmonR_trib_DIC_area <- SalmonR_filtered_Trib %>%
+  dplyr::select(
+    SamplingEventID,
+    Rel_Water_Area_plotting,
+    DIC_mgC_per_l
+  ) %>%
+  pivot_longer(
+    cols = DIC_mgC_per_l,
+    names_to = "type",
+    values_to = "conc"
+  ) %>%
+  filter(!is.na(conc))
+```
+
+```{r}
+ref_map <- tibble(
+  SamplingEventID = c(
+    "SalmonR_Trib1_20230722_1745","SalmonR_Trib2_20230722_1911","SheepC_1_20230719_0923",
+    "Anaktok_1_20230723_1945","SalmonR_Trib3_20230724_1140","SalmonR_Trib4_20230724_1155",
+    "SalmonR_Trib5_20230724_1311","SalmonR_Trib6_20230724_1428","SalmonR_Trib7_20230724_1453"
+  ),
+  RefID = c(
+    "SalmonR_MS_above_Trib1_20230722_1753","SalmonR_MS_above_Trib2_20230722_1915",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_above_Trib6_20230724_1439",
+    "SalmonR_MS_above_Trib6_20230724_1439"
+  )
+)
+```
+
+```{r}
+DIC_rel_data <- SalmonR_DIC %>%
+  inner_join(ref_map, by = "SamplingEventID") %>%
+  relocate(RefID, .after = SamplingEventID) %>%
+  left_join(
+    SalmonR_DIC %>%
+      dplyr::select(
+        RefID = SamplingEventID,
+        ref_DIC = DIC_mgC_per_l
+      ),
+    by = "RefID"
+  ) %>%
+  mutate(
+    rel_DIC = DIC_mgC_per_l / ref_DIC
+  )
+
+view(DIC_rel_data)
+# should have 9 rows
+
+```
+
+```{r}
+DIC_rel_data_to_join <- DIC_rel_data %>%
+  dplyr::select(SamplingEventID, rel_DIC)
+
+SalmonR_DIC_with_rel <- SalmonR_DIC %>%
+  left_join(DIC_rel_data_to_join, by = "SamplingEventID")
+
+view(SalmonR_DIC_with_rel)
+# should have 19 rows
+
+```
+
+```{r}
+full_sequence <- data.frame(Rel_Water_Area_plotting = seq(0, 22.5, by = 0.05))
+
+DIC_df_expanded <- full_sequence %>%
+  left_join(DIC_rel_data, by = "Rel_Water_Area_plotting")
+
+DIC_rel_data_to_plot <- DIC_df_expanded %>%
+  dplyr::select(-c(DIC_mgC_per_l, ref_DIC)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+DIC_Anaktok_salmon <- DIC_rel_data %>%
+  filter(Rel_Water_Area_plotting == 6.35) %>%
+  dplyr::select(-c(DIC_mgC_per_l, ref_DIC)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+DIC_rel_data_to_plot <- DIC_rel_data_to_plot %>%
+  rows_update(DIC_Anaktok_salmon, by = "Rel_Water_Area_plotting")
+
+view(DIC_rel_data_to_plot)
+
+```
+
+```{r}
+DIC_mod_data <- data.frame(
+  Rel_Water_Area_plotting = c(
+    4.35, 4.7, 5.6, 6.2, 6.3, 7.2,
+    7.95, 8.05, 8.6, 8.95, 9.9, 10.75, 10.95, 12
+  ),
+  rel_DIC = 0
+) %>% mutate(across(everything(), as.numeric))
+
+DIC_rel_data_mod <- DIC_rel_data_to_plot %>%
+  rows_update(DIC_mod_data, by = "Rel_Water_Area_plotting")
+
+```
+
+```{r}
+DIC_rel_data_to_plot_interp <- DIC_rel_data_mod %>%
+  mutate(rel_DIC = na.approx(
+    rel_DIC,
+    x = Rel_Water_Area_plotting,
+    na.rm = FALSE,
+    rule = 2
+  ))
+
+DIC_rel_data_to_plot_interp[1:75, "rel_DIC"] <- 0
+
+f_DIC_rel_data_to_plot_interp <- DIC_rel_data_to_plot_interp %>%
+  filter(rel_DIC >= 1.01)
+
+```
+
+```{r}
+trib_DIC_heat <- ggplot(
+  f_DIC_rel_data_to_plot_interp,
+  aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_DIC)
+) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(
+    xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+    linetype = "dashed", color = "black", linewidth = 0.5
+  ) +
+  scale_fill_gradient(low = "white", high = "darkred") +
+  labs(title = NULL, x = NULL, y = NULL, fill = "Tributary:Mainstem") +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(
+    breaks = DA_x_breaks,
+    labels = DA_x_labels,
+    expand = expansion(mult = c(0.035, 0.015))
+  ) +
+  theme_minimal() + DA_theme +
+  theme(
+    axis.text.y = element_blank(),
+    legend.position = "top",
+    axis.ticks.y = element_blank(),
+    panel.grid = element_blank(),
+    axis.text.x = element_blank(),
+    legend.title = element_blank(),
+    axis.ticks.length.x = unit(0.1, "cm")
+  )
+
+trib_DIC_heat
+
+```
+
+```{r}
+SalmonR_DIC_area <- ggplot() +
+  geom_area(data = SalmonR_MS_DIC_area,
+            aes(x = Rel_Water_Area_plotting, y = conc),
+            fill = "#2daa9e") +
+  geom_line(data = SalmonR_MS_DIC_area,
+            aes(x = Rel_Water_Area_plotting, y = conc),
+            color = "#1d6e66", linewidth = 0.4) +
+  geom_point(data = SalmonR_MS_DIC_area,
+             aes(x = Rel_Water_Area_plotting, y = conc),
+             pch = 19, color = "black", size = 2) +
+  geom_vline(
+    xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+    linetype = "dashed", color = "grey15", linewidth = 0.5
+  ) +
+  coord_cartesian(x = c(1,22.5), y = c(0,45)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
+                     expand = expansion(mult = c(0.035, 0.015))) +
+  scale_y_continuous(
+    breaks = c(0,5,10,15,20,25,30,35,40,45),
+    labels = c(0,"",10,"",20,"",30,"",40,""),
+    sec.axis = dup_axis(),
+    expand = expansion(mult = c(0.02, 0.02))
+  ) +
+  labs(x = NULL, y = NULL, title = NULL) +
+  theme_minimal() +
+  theme(axis.text.y.right = element_blank()
+        #axis.text.y.left = element_blank()
+        ) +
+  DA_theme
+
+SalmonR_DIC_area
+
+```
+
+## Combo
+```{r}
+SalmonR_DIC_area_combo <- (
+  trib_DIC_heat / SalmonR_DIC_area +
+  plot_layout(ncol = 1, nrow = 2, heights = c(1, 6), guides = "collect")
+) &
+  theme(
+    plot.margin = margin(1, 1, 1, 1),
+    legend.position = "none",
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 9),
+    legend.key.size = unit(0.4, "cm"),
+    legend.margin = margin(2, 2, 0, 2),
+    legend.spacing = unit(0.1, "cm"),
+    panel.background = element_rect(fill = NA, color = NA),
+    plot.background = element_rect(fill = NA, color = NA)
+  )
+
+SalmonR_DIC_area_combo
+
+ggsave(
+  "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/DIC area plus heat plot_with labels.png",
+  SalmonR_DIC_area_combo,
+  width = 3.6,
+  height = 1.8,
+  dpi = 300
+)
+```

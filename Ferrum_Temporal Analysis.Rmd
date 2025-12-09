@@ -85,7 +85,7 @@ start_date <- "2015-01-01"
 end_date <- "2024-12-31"
 
 # Retrieve daily discharge data for all sites
-discharge_data <- readNWISdv(
+discharge_data_raw <- readNWISdv(
   siteNumbers = site_numbers, 
   parameterCd = "00060", 
   startDate = start_date, 
@@ -96,19 +96,91 @@ discharge_data <- readNWISdv(
 site_names <- sites %>% 
   dplyr::select(site_no, station_nm)
 
-discharge_data <- left_join(discharge_data, site_names, by = join_by(site_no))
+discharge_data_mod <- left_join(discharge_data_raw, site_names, by = join_by(site_no))
 
-discharge_data <- discharge_data %>%
+discharge_data <- discharge_data_mod %>%
   mutate(Year = year(Date)) %>%
-  dplyr::rename(discharge_cfs = X_00060_00003)
+  mutate(Month = month(as.Date(Date), label = TRUE, abbr = FALSE)) %>%
+  mutate(
+    Season = case_when(
+      Month %in% c("May", "June") ~ "early",
+      Month %in% c("August", "September") ~ "late",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  dplyr::rename(discharge_cfs = X_00060_00003) %>%
+  mutate(Onset_timing = case_when(
+    Year %in% c("2015", "2016", "2017", "2018") ~ "pre",
+    Year %in% c("2019", "2020", "2021", "2022", "2023", "2024") ~ "post",
+    TRUE ~ NA_character_
+  ))
 
-cumulative_discharge_by_year <- discharge_data %>%
+yearly_discharge <- discharge_data %>%
   group_by(station_nm, Year) %>%
   summarise(
     total_discharge_cfs = sum(discharge_cfs, na.rm = TRUE),
+    average_discharge_cfs = mean(discharge_cfs, na.rm = TRUE),
     .groups = "drop"
-  )
+  ) %>%
+  mutate(Onset_timing = case_when(
+    Year %in% c("2015", "2016", "2017", "2018") ~ "pre",
+    Year %in% c("2019", "2020", "2021", "2022", "2023", "2024") ~ "post",
+    TRUE ~ NA_character_
+  ))
 
+monthly_average <- discharge_data %>%
+  group_by(station_nm, Year, Month) %>%
+  summarise(
+    total_discharge_cfs = sum(discharge_cfs, na.rm = TRUE),
+    average_discharge_cfs = mean(discharge_cfs, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(Onset_timing = case_when(
+    Year %in% c("2015", "2016", "2017", "2018") ~ "pre",
+    Year %in% c("2019", "2020", "2021", "2022", "2023", "2024") ~ "post",
+    TRUE ~ NA_character_
+  ))
+
+seasonal_average <- discharge_data %>%
+  group_by(station_nm, Year, Season) %>%
+  summarise(
+    total_discharge_cfs = sum(discharge_cfs, na.rm = TRUE),
+    average_discharge_cfs = mean(discharge_cfs, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(!is.na(Season)) %>%
+  mutate(Onset_timing = case_when(
+    Year %in% c("2015", "2016", "2017", "2018") ~ "pre",
+    Year %in% c("2019", "2020", "2021", "2022", "2023", "2024") ~ "post",
+    TRUE ~ NA_character_
+  ))
+
+onset_average <- discharge_data %>%
+  group_by(station_nm, Onset_timing) %>%
+  summarise(
+    total_discharge_cfs = sum(discharge_cfs, na.rm = TRUE),
+    average_discharge_cfs = mean(discharge_cfs, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(!is.na(Onset_timing))
+
+discharge_onset_data <- discharge_data %>%
+  filter(!is.na(Onset_timing))
+```
+
+```{r}
+library(writexl)
+
+discharge_data_list <- list(discharge_data, yearly_discharge, monthly_average, seasonal_average, onset_average)
+
+write_xlsx(discharge_data_list,
+  "C:/Users/tevinger/Downloads/discharge data.xlsx"
+)
+
+```
+
+
+```{r}
 # plot the Q data
 library(ggplot2)
 
@@ -120,18 +192,37 @@ q.p <- ggplot(discharge_data, aes(x = Date, y = discharge_cfs, color = station_n
   theme_minimal() +
   theme(
     legend.position = "none"
-  )
+  ) +
+  DA_theme
 
 q.p
+```
 
-q.p_2 <- ggplot(cumulative_discharge_by_year, aes(x = Year, y = total_discharge_cfs, color = station_nm)) +
+```{r}
+cumulative_discharge_by_year <- cumulative_discharge_by_year %>%
+  arrange(station_nm, Year)
+
+q.p_2 <- ggplot(cumulative_discharge_by_year, 
+                aes(x = as.factor(Year), y = total_discharge_cfs, color = station_nm)) +
   geom_point() +
-  geom_line() +
-  facet_wrap(station_nm~., scales = "free", ncol = 2)+
-  labs(x = "Date",
-       y = "Discharge (cfs)") +
+  geom_line(aes(group = 1)) +   # ✅ THIS restores the line
+  facet_wrap(station_nm~., scales = "free", ncol = 2) +
+  labs(x = NULL, y = "Discharge (cfs)") +
   theme_minimal() +
   theme(
+    axis.text.y = element_text(size = 12, color = "black", face = "bold"),
+    axis.text.x = element_text(size = 12, color = "black", face = "bold", 
+                               angle = 45, hjust = 0.5, vjust = 0.8),
+    axis.ticks.y = element_line(linewidth = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    axis.ticks.x = element_line(linewidth = 0.9, color = "black"),
+    axis.ticks.length.x = unit(0.15, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    panel.background = element_rect(fill = "transparent"),
+    plot.background = element_rect(fill = "transparent", color = NA),
     legend.position = "none"
   )
 
@@ -141,6 +232,38 @@ ggsave("C:/Users/tevinger/Downloads/Total Discharge.png", q.p_2, width = 11, hei
 
 # ggsave(q.p, filename = "02_Hydrographs_Available_Data_2015to2025.png",
 #        width = 11, height = 7)
+```
+
+```{r}
+yearly_discharge <- yearly_discharge %>%
+  mutate(Onset_timing = factor(Onset_timing, levels = c("pre", "post")))
+
+discharge_bps <- ggplot(yearly_discharge, 
+                aes(x = Onset_timing, y = average_discharge_cfs, color = station_nm)) +
+  geom_boxplot() +
+  facet_wrap(station_nm~., scales = "free", ncol = 2) +
+  labs(x = NULL, y = "Discharge (cfs)") +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 12, color = "black", face = "bold"),
+    axis.text.x = element_text(size = 12, color = "black", face = "bold", 
+                               angle = 45, hjust = 0.5, vjust = 0.8),
+    axis.ticks.y = element_line(linewidth = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    axis.ticks.x = element_line(linewidth = 0.9, color = "black"),
+    axis.ticks.length.x = unit(0.15, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    panel.background = element_rect(fill = "transparent"),
+    plot.background = element_rect(fill = "transparent", color = NA),
+    legend.position = "none"
+  )
+
+discharge_bps
+
+ggsave("C:/Users/tevinger/Downloads/Onset timing Discharge.png", discharge_bps, width = 11, height = 7)
 ```
 
 ## cumulative discharge per year
@@ -849,6 +972,62 @@ RD_Alkalinity_temporal_bp
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Alkalinity seasonal temporal bp_V2.png", Alkalinity_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
 
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Alkalinity with all years.png", RD_Alkalinity_temporal_bp, width = 7, height = 5, dpi = 300, bg = "transparent")
+```
+
+## SO4 vs Alk
+```{r}
+RD_SO4_alk <- Red_Dog_stn_9 %>%
+  filter(chemical_name %in% c("Alkalinity (As CaC03)", "Sulfate")) %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) 
+
+RD_SO4_alk_ALL <- Red_Dog_stn_9_ALL %>%
+  filter(chemical_name %in% c("Alkalinity (As CaC03)", "Sulfate")) %>%
+  dplyr::select(sample_date, chemical_name, report_result_value) 
+  # mutate(year_season = paste(sample_collection_year,
+  #                            sample_collection_season,
+  #                            sep = "_")) %>%
+  # arrange(chemical_name)
+
+RD_SO4_alk_ALL_wide <- RD_SO4_alk_ALL %>%
+  add_count(sample_date, chemical_name) %>%
+  filter(n == 1) %>%        # keeps only non-duplicated combos
+  dplyr::select(-n) %>%
+  pivot_wider(
+    names_from = chemical_name,     # column that becomes new column headers
+    values_from = report_result_value     # column that fills the values
+  ) %>%
+  filter(!is.na("Alalinity (As CaCO3)"))
+
+names(RD_SO4_alk_ALL_wide)[3] <- "Alk"
+
+dups <- RD_SO4_alk_ALL %>%
+  #filter(unique_ID == "2024-06-03_2024-06-03 11:57:00")
+  group_by(across(9)) %>%   # columns 1–7 (ID cols) and column 8 (names_from)
+  summarise(n = n(), .groups = "drop") %>%
+  filter(n > 1)
+
+#write_xlsx(RD_SO4_alk_ALL, "C:/Users/tevinger/Downloads/RD_SO4_alk data.xlsx")
+```
+
+```{r}
+SO4_alk <- ggplot(RD_SO4_alk_ALL_wide,
+       aes(x = Alk, y = Sulfate, color = sample_date)) +
+  geom_point(size = 2) +
+  coord_cartesian(ylim = c(5,1100), xlim = c(15,200)) +
+  labs(
+    x = "Alkalinity (mg CaCO₃/L)",
+    y = "Filtered SO₄ (mg/L)",
+    title = "SO₄ vs Alkalinity"
+  ) +
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
+  theme_minimal()
+
+
+SO4_alk
 ```
 
 ## pH

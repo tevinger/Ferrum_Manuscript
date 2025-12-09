@@ -1047,13 +1047,15 @@ SpC_plot <- ggplot(SpC_long, aes(x = New_Groups, y = Conc)) +
   labs(
     title = NULL,
     x = NULL,
-    y = ylab_SpC
+    y = NULL
+    #y = ylab_SpC
   ) +
   theme_minimal() +
   boxplot_theme +
   theme(
     legend.position = "none",
     axis.title.y = element_text(margin = margin(r = 6)),
+    axis.text.y = element_blank(),
     #axis.ticks.length = unit(1, "cm"),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels
@@ -1063,6 +1065,64 @@ SpC_plot <- ggplot(SpC_long, aes(x = New_Groups, y = Conc)) +
 
 SpC_plot
 
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/SpC_no labels.png", SpC_plot, width = 1.5, height = 3.5, dpi = 300)
+```
+
+## DO
+```{r}
+# Select DOC data
+DO_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, Diss_oxy_mg_per_l)
+
+# Filter NA values in the grouping variable and make long format
+DO_long <- DO_df %>%
+  filter(!(New_Groups == "NA")) %>%
+  pivot_longer(
+    cols = c(Diss_oxy_mg_per_l),
+    names_to = "Variable",
+    #names_pattern = "^(.)_mgC_per_l",
+    values_to = "Conc"
+  ) %>%
+  filter(!is.na(Conc))
+
+# Factor the grouping variable to set plotting order
+DO_long <- DO_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+```
+
+```{r}
+DO_plot <- ggplot(DO_long, aes(x = New_Groups, y = Conc)) +
+  geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = 16,
+               outlier.color = "black",
+               outlier.size = 2, alpha = 0.85) +
+  #geom_jitter(aes(fill = Watershed), 
+              #shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.5) +
+  scale_fill_manual(values = boxplot_colors) +
+  # scale_y_continuous(
+  #   breaks = DIC_breaks,
+  #   labels = DIC_labels
+  # ) +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = ylab_DIC
+  ) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_blank(),
+    #axis.text.y = element_blank(),
+    #axis.ticks.length = unit(1, "cm"),
+    legend.title = element_text(size = 14),   # legend title size
+    legend.text = element_text(size = 12),    # legend item labels
+    legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.2, 0.15)))
+
+DO_plot
+
+# ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/DIC_V2 labels.png", DIC_plot, width = 1.5, height = 3.5, dpi = 300)
 ```
 
 
@@ -1101,6 +1161,7 @@ Cl_plot <- ggplot(Cl_long, aes(x = New_Groups, y = Conc)) +
               #shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.5) +
   scale_fill_manual(values = boxplot_colors) +
   #scale_y_continuous(breaks = Cl_breaks, labels = Cl_labels) +
+  scale_y_log10() +
   labs(
     title = NULL,
     x = NULL,
@@ -1170,7 +1231,7 @@ DIC_plot <- ggplot(DIC_long, aes(x = New_Groups, y = Conc)) +
   theme(
     legend.position = "none",
     axis.title.y = element_blank(),
-    axis.text.y = element_blank(),
+    #axis.text.y = element_blank(),
     #axis.ticks.length = unit(1, "cm"),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels
@@ -1180,7 +1241,7 @@ DIC_plot <- ggplot(DIC_long, aes(x = New_Groups, y = Conc)) +
 
 DIC_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/DIC_V2 no labels.png", DIC_plot, width = 1.75, height = 3.25, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/DIC_V2 labels.png", DIC_plot, width = 1.5, height = 3.5, dpi = 300)
 ```
 
 ## Alkalinity

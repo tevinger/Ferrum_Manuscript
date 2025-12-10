@@ -1240,11 +1240,265 @@ ggsave("C:/Users/tevinger/Downloads/SalmonR SO4.png", SalmonR_SO4_combo, width =
 # SO4:Cl
 ## Data frames
 ```{r}
-SO4_MS <- SalmonR_filtered_MS %>%
+SalmonR_SO4_Cl <- SalmonR_2023_river_data %>%
   dplyr::select(SamplingEventID, New_Grouping, Hyd_Classification,Rel_Water_Area_plotting, f_SO4_mg_per_l, f_Cl_mg_per_l) %>%
-  filter(!is.na(Rel_Water_Area_plotting))
+  filter(!is.na(Rel_Water_Area_plotting)) %>%
+  mutate(
+    # 1. Convert mg/L → mmol/L  (divide by molecular weight in g/mol = mg/mmol)
+
+    Chloride_mol_L  = f_Cl_mg_per_l  / (35.45*1000),  # Cl⁻
+    Sulfate_mol_L = f_SO4_mg_per_l / (96.06*1000),  # SO₄²⁻ (as sulfate)
+
+    # 2. Molar SO4:Cl ratio
+    SO4_Cl_molar  = Sulfate_mol_L / Chloride_mol_L
+  )
 ```
 
+```{r}
+SalmonR_MS_SO4_Cl_area <- SalmonR_SO4_Cl %>%
+  dplyr::select(
+    SamplingEventID,
+    Rel_Water_Area_plotting,
+    SO4_Cl_molar,
+    Hyd_Classification
+  ) %>%
+  filter(Hyd_Classification == "Mainstem") %>%
+  pivot_longer(
+    cols = SO4_Cl_molar,
+    names_to = "type",
+    values_to = "conc"
+  ) %>%
+  filter(!is.na(conc))
+
+```
+
+```{r}
+SalmonR_trib_SO4_Cl_area <- SalmonR_SO4_Cl %>%
+  dplyr::select(
+    SamplingEventID,
+    Rel_Water_Area_plotting,
+    SO4_Cl_molar,
+    Hyd_Classification
+  ) %>%
+  filter(Hyd_Classification == "Tributary") %>%
+  pivot_longer(
+    cols = SO4_Cl_molar,
+    names_to = "type",
+    values_to = "conc"
+  ) %>%
+  filter(!is.na(conc))
+```
+
+```{r}
+ref_map <- tibble(
+  SamplingEventID = c(
+    "SalmonR_Trib1_20230722_1745","SalmonR_Trib2_20230722_1911","SheepC_1_20230719_0923",
+    "Anaktok_1_20230723_1945","SalmonR_Trib3_20230724_1140","SalmonR_Trib4_20230724_1155",
+    "SalmonR_Trib5_20230724_1311","SalmonR_Trib6_20230724_1428","SalmonR_Trib7_20230724_1453"
+  ),
+  RefID = c(
+    "SalmonR_MS_above_Trib1_20230722_1753","SalmonR_MS_above_Trib2_20230722_1915",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_above_Trib6_20230724_1439",
+    "SalmonR_MS_above_Trib6_20230724_1439"
+  )
+)
+
+```
+
+```{r}
+SO4_Cl_rel_data <- SalmonR_SO4_Cl %>%
+  inner_join(ref_map, by = "SamplingEventID") %>%
+  relocate(RefID, .after = SamplingEventID) %>%
+  left_join(
+    SalmonR_SO4_Cl %>%
+      dplyr::select(
+        RefID = SamplingEventID,
+        ref_SO4_Cl = SO4_Cl_molar
+      ),
+    by = "RefID"
+  ) %>%
+  mutate(
+    rel_SO4_Cl = SO4_Cl_molar / ref_SO4_Cl
+  )
+
+view(SO4_Cl_rel_data)
+# should have 9 rows
+```
+
+```{r}
+SO4_Cl_rel_data_to_join <- SO4_Cl_rel_data %>%
+  dplyr::select(SamplingEventID, rel_SO4_Cl)
+
+SalmonR_SO4_Cl_with_rel <- SalmonR_SO4_Cl %>%
+  left_join(SO4_Cl_rel_data_to_join, by = "SamplingEventID")
+
+view(SalmonR_SO4_Cl_with_rel)
+# should have 19 rows
+
+```
+
+```{r}
+full_sequence <- data.frame(Rel_Water_Area_plotting = seq(0, 22.5, by = 0.05))
+
+SO4_Cl_df_expanded <- full_sequence %>%
+  left_join(SO4_Cl_rel_data, by = "Rel_Water_Area_plotting")
+
+SO4_Cl_rel_data_to_plot <- SO4_Cl_df_expanded %>%
+  dplyr::select(-c(SO4_Cl_molar, ref_SO4_Cl)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+SO4_Cl_Anaktok_salmon <- SO4_Cl_rel_data %>%
+  filter(Rel_Water_Area_plotting == 6.35) %>%
+  dplyr::select(-c(SO4_Cl_molar, ref_SO4_Cl)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+SO4_Cl_rel_data_to_plot <- SO4_Cl_rel_data_to_plot %>%
+  rows_update(SO4_Cl_Anaktok_salmon, by = "Rel_Water_Area_plotting")
+
+view(SO4_Cl_rel_data_to_plot)
+
+```
+
+```{r}
+SO4_Cl_mod_data <- data.frame(
+  Rel_Water_Area_plotting = c(
+    4.35, 4.7, 5.6, 6.2, 6.3, 7.2,
+    7.95, 8.05, 8.6, 8.95, 9.9, 10.75, 10.95, 12
+  ),
+  rel_SO4_Cl = 0
+) %>% mutate(across(everything(), as.numeric))
+
+SO4_Cl_rel_data_mod <- SO4_Cl_rel_data_to_plot %>%
+  rows_update(SO4_Cl_mod_data, by = "Rel_Water_Area_plotting")
+
+```
+
+```{r}
+SO4_Cl_rel_data_to_plot_interp <- SO4_Cl_rel_data_mod %>%
+  mutate(rel_SO4_Cl = na.approx(
+    rel_SO4_Cl,
+    x = Rel_Water_Area_plotting,
+    na.rm = FALSE,
+    rule = 2
+  ))
+
+SO4_Cl_rel_data_to_plot_interp[1:75, "rel_SO4_Cl"] <- 0
+
+f_SO4_Cl_rel_data_to_plot_interp <- SO4_Cl_rel_data_to_plot_interp %>%
+  filter(rel_SO4_Cl >= 1.01)
+
+```
+
+## Trib heat plot
+```{r}
+trib_SO4_Cl_heat <- ggplot(
+  f_SO4_Cl_rel_data_to_plot_interp,
+  aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_SO4_Cl)
+) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(
+    xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+    linetype = "dashed", color = "black", linewidth = 0.5
+  ) +
+  scale_fill_gradient(low = "white", high = "darkred") +
+  labs(title = NULL, x = NULL, y = NULL, fill = "Tributary:Mainstem") +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(
+    breaks = DA_x_breaks,
+    labels = DA_x_labels,
+    expand = expansion(mult = c(0.035, 0.015))
+  ) +
+  theme_minimal() + DA_theme +
+  theme(
+    axis.text.y = element_blank(),
+    legend.position = "top",
+    axis.ticks.y = element_blank(),
+    panel.grid = element_blank(),
+    axis.text.x = element_blank(),
+    legend.title = element_blank(),
+    axis.ticks.length.x = unit(0.1, "cm")
+  )
+
+trib_SO4_Cl_heat
+```
+
+## MS area plot
+```{r}
+SalmonR_SO4_Cl_area <- ggplot() +
+  geom_area(data = SalmonR_MS_SO4_Cl_area,
+            aes(x = Rel_Water_Area_plotting, y = conc),
+            fill = "#2daa9e") +
+  geom_line(data = SalmonR_MS_SO4_Cl_area,
+            aes(x = Rel_Water_Area_plotting, y = conc),
+            color = "#1d6e66", linewidth = 0.4) +
+  geom_point(data = SalmonR_MS_SO4_Cl_area,
+             aes(x = Rel_Water_Area_plotting, y = conc),
+             pch = 19, color = "black", size = 2) +
+  geom_vline(
+    xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+    linetype = "dashed", color = "grey15", linewidth = 0.5
+  ) +
+  coord_cartesian(x = c(1,22.5)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
+                     expand = expansion(mult = c(0.035, 0.015))) +
+  labs(x = NULL, y = NULL, title = NULL) +
+  theme_minimal() +
+  theme(axis.text.y.right = element_blank()
+        #axis.text.y.left = element_blank()
+        ) +
+  DA_theme
+
+SalmonR_SO4_Cl_area
+
+ggsave(
+  "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SO4_Cl area plot with labels.png",
+  SalmonR_SO4_Cl_area,
+  width = 3.6,
+  height = 1.8,
+  dpi = 300
+)
+```
+
+## Combo
+```{r}
+SalmonR_SO4_Cl_area_combo <- (
+  trib_SO4_Cl_heat / SalmonR_SO4_Cl_area +
+  plot_layout(ncol = 1, nrow = 2, heights = c(1, 6), guides = "collect")
+) &
+  theme(
+    plot.margin = margin(1, 1, 1, 1),
+    legend.position = "none",
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 9),
+    legend.key.size = unit(0.4, "cm"),
+    legend.margin = margin(2, 2, 0, 2),
+    legend.spacing = unit(0.1, "cm"),
+    panel.background = element_rect(fill = NA, color = NA),
+    plot.background = element_rect(fill = NA, color = NA)
+  )
+
+SalmonR_SO4_Cl_area_combo
+
+ggsave(
+  "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SO4_Cl area plus heat plot_without labels.png",
+  SalmonR_SO4_Cl_area_combo,
+  width = 3.6,
+  height = 1.8,
+  dpi = 300
+)
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+
+```
 
 # Mg
 ## Data frames
@@ -1467,7 +1721,8 @@ SalmonR_Mg_area <- ggplot() +
   ) +
   labs(x = NULL, y = NULL, title = NULL) +
   theme_minimal() +
-  theme(axis.text.y.right = element_blank()) +
+  theme(axis.text.y.right = element_blank(),
+        axis.text.y.left = element_blank()) +
   DA_theme
 
 SalmonR_Mg_area
@@ -1494,13 +1749,267 @@ SalmonR_Mg_area_combo <- (
 SalmonR_Mg_area_combo
 
 ggsave(
-  "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Mg area plus heat plot_with labels.png",
+  "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Mg area plus heat plot_without labels.png",
   SalmonR_Mg_area_combo,
   width = 3.6,
   height = 1.8,
   dpi = 300
 )
 
+```
+
+# Ca
+```{r}
+SalmonR_Ca <- SalmonR_2023_river_data %>%
+  dplyr::select(
+    SamplingEventID, New_Grouping, Hyd_Classification, Rel_Water_Area_plotting,
+    f_Ca_mg_l
+  ) %>%
+  filter(!is.na(Rel_Water_Area_plotting))
+
+# view(SalmonR_Ca)
+
+DA_x_breaks <- seq(0,25, by = 2.5)
+DA_x_labels <- c(0,"",5,"",10,"",15,"",20,"",25)
+DA_labels
+
+Ca_breaks <- seq(0,130, by = 5)
+Ca_labels <- c("0", "", "", "", "20", "", "", "", "40", "", "", "", "60", "", "", "", "80", "", "", "", "100", "", "", "", "120", "125", "")
+
+Ca_bottom_breaks <- seq(0,80, by = 10)
+Ca_bottom_labels <- c(0,"",20,"",40,"",60, "", 80)
+
+print(Ca_labels)
+```
+
+```{r}
+SalmonR_MS_Ca_area <- SalmonR_filtered_MS %>%
+  dplyr::select(
+    SamplingEventID,
+    Rel_Water_Area_plotting,
+    f_Ca_mg_l
+  ) %>%
+  pivot_longer(
+    cols = f_Ca_mg_l,
+    names_to = "type",
+    values_to = "conc"
+  ) %>%
+  filter(!is.na(conc))
+
+```
+
+```{r}
+SalmonR_trib_Ca_area <- SalmonR_filtered_Trib %>%
+  dplyr::select(
+    SamplingEventID,
+    Rel_Water_Area_plotting,
+    f_Ca_mg_l
+  ) %>%
+  pivot_longer(
+    cols = f_Ca_mg_l,
+    names_to = "type",
+    values_to = "conc"
+  ) %>%
+  filter(!is.na(conc))
+
+```
+
+```{r}
+ref_map <- tibble(
+  SamplingEventID = c(
+    "SalmonR_Trib1_20230722_1745","SalmonR_Trib2_20230722_1911","SheepC_1_20230719_0923",
+    "Anaktok_1_20230723_1945","SalmonR_Trib3_20230724_1140","SalmonR_Trib4_20230724_1155",
+    "SalmonR_Trib5_20230724_1311","SalmonR_Trib6_20230724_1428","SalmonR_Trib7_20230724_1453"
+  ),
+  RefID = c(
+    "SalmonR_MS_above_Trib1_20230722_1753","SalmonR_MS_above_Trib2_20230722_1915",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_at_SheepC_20230719_0927",
+    "SalmonR_MS_at_SheepC_20230719_0927","SalmonR_MS_above_Trib6_20230724_1439",
+    "SalmonR_MS_above_Trib6_20230724_1439"
+  )
+)
+
+```
+
+```{r}
+Ca_rel_data <- SalmonR_Ca %>%
+  inner_join(ref_map, by = "SamplingEventID") %>%
+  relocate(RefID, .after = SamplingEventID) %>%
+  left_join(
+    SalmonR_Ca %>%
+      dplyr::select(
+        RefID = SamplingEventID,
+        ref_Ca = f_Ca_mg_l
+      ),
+    by = "RefID"
+  ) %>%
+  mutate(
+    rel_Ca = f_Ca_mg_l / ref_Ca
+  )
+
+view(Ca_rel_data)
+# should have 9 rows
+
+```
+
+```{r}
+Ca_rel_data_to_join <- Ca_rel_data %>%
+  dplyr::select(SamplingEventID, rel_Ca)
+
+SalmonR_Ca_with_rel <- SalmonR_Ca %>%
+  left_join(Ca_rel_data_to_join, by = "SamplingEventID")
+
+view(SalmonR_Ca_with_rel)
+# should have 19 rows
+
+```
+
+```{r}
+full_sequence <- data.frame(Rel_Water_Area_plotting = seq(0, 22.5, by = 0.05))
+
+Ca_df_expanded <- full_sequence %>%
+  left_join(Ca_rel_data, by = "Rel_Water_Area_plotting")
+
+Ca_rel_data_to_plot <- Ca_df_expanded %>%
+  dplyr::select(-c(f_Ca_mg_l, ref_Ca)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+Ca_Anaktok_salmon <- Ca_rel_data %>%
+  filter(Rel_Water_Area_plotting == 6.35) %>%
+  dplyr::select(-c(f_Ca_mg_l, ref_Ca)) %>%
+  mutate(Rel_Water_Area_plotting = round(as.numeric(Rel_Water_Area_plotting), 2))
+
+Ca_rel_data_to_plot <- Ca_rel_data_to_plot %>%
+  rows_update(Ca_Anaktok_salmon, by = "Rel_Water_Area_plotting")
+
+view(Ca_rel_data_to_plot)
+
+```
+
+```{r}
+Ca_mod_data <- data.frame(
+  Rel_Water_Area_plotting = c(
+    4.35, 4.7, 5.6, 6.2, 6.3, 7.2,
+    7.95, 8.05, 8.6, 8.95, 9.9, 10.75, 10.95, 12
+  ),
+  rel_Ca = 0
+) %>% mutate(across(everything(), as.numeric))
+
+Ca_rel_data_mod <- Ca_rel_data_to_plot %>%
+  rows_update(Ca_mod_data, by = "Rel_Water_Area_plotting")
+
+```
+
+```{r}
+Ca_rel_data_to_plot_interp <- Ca_rel_data_mod %>%
+  mutate(rel_Ca = na.approx(
+    rel_Ca,
+    x = Rel_Water_Area_plotting,
+    na.rm = FALSE,
+    rule = 2
+  ))
+
+Ca_rel_data_to_plot_interp[1:75, "rel_Ca"] <- 0
+
+f_Ca_rel_data_to_plot_interp <- Ca_rel_data_to_plot_interp %>%
+  filter(rel_Ca >= 1.01)
+
+```
+
+```{r}
+trib_Ca_heat <- ggplot(
+  f_Ca_rel_data_to_plot_interp,
+  aes(x = Rel_Water_Area_plotting, y = 1, fill = rel_Ca)
+) +
+  geom_tile(color = NA, width = 0.05) +
+  geom_vline(
+    xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+    linetype = "dashed", color = "black", linewidth = 0.5
+  ) +
+  scale_fill_gradient(low = "white", high = "darkred") +
+  labs(title = NULL, x = NULL, y = NULL, fill = "Tributary:Mainstem") +
+  coord_cartesian(x = c(1, 22.5)) +
+  scale_x_continuous(
+    breaks = DA_x_breaks,
+    labels = DA_x_labels,
+    expand = expansion(mult = c(0.035, 0.015))
+  ) +
+  theme_minimal() + DA_theme +
+  theme(
+    axis.text.y = element_blank(),
+    legend.position = "top",
+    axis.ticks.y = element_blank(),
+    panel.grid = element_blank(),
+    axis.text.x = element_blank(),
+    legend.title = element_blank(),
+    axis.ticks.length.x = unit(0.1, "cm")
+  )
+
+trib_Ca_heat
+
+```
+
+```{r}
+SalmonR_Ca_area <- ggplot() +
+  geom_area(data = SalmonR_MS_Ca_area,
+            aes(x = Rel_Water_Area_plotting, y = conc),
+            fill = "#2daa9e") +
+  geom_line(data = SalmonR_MS_Ca_area,
+            aes(x = Rel_Water_Area_plotting, y = conc),
+            color = "#1d6e66", linewidth = 0.4) +
+  geom_point(data = SalmonR_MS_Ca_area,
+             aes(x = Rel_Water_Area_plotting, y = conc),
+             pch = 19, color = "black", size = 2) +
+  geom_vline(
+    xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
+    linetype = "dashed", color = "grey15", linewidth = 0.5
+  ) +
+  coord_cartesian(x = c(1,22.5), y = c(0,80)) +
+  scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
+                     expand = expansion(mult = c(0.035, 0.015))) +
+  scale_y_continuous(
+    breaks = c(0,10,20,30,40,50,60,70,80),
+    labels = c(0,"",20,"",40,"",60,"",80),
+    sec.axis = dup_axis(),
+    expand = expansion(mult = c(0.02, 0.02))
+  ) +
+  labs(x = NULL, y = NULL, title = NULL) +
+  theme_minimal() +
+  theme(axis.text.y.right = element_blank(),
+        axis.text.y.left = element_blank()
+        ) +
+  DA_theme
+
+SalmonR_Ca_area
+
+```
+
+```{r}
+SalmonR_Ca_area_combo <- (
+  trib_Ca_heat / SalmonR_Ca_area +
+  plot_layout(ncol = 1, nrow = 2, heights = c(1, 6), guides = "collect")
+) &
+  theme(
+    plot.margin = margin(1, 1, 1, 1),
+    legend.position = "none",
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 9),
+    legend.key.size = unit(0.4, "cm"),
+    legend.margin = margin(2, 2, 0, 2),
+    legend.spacing = unit(0.1, "cm"),
+    panel.background = element_rect(fill = NA, color = NA),
+    plot.background = element_rect(fill = NA, color = NA)
+  )
+
+SalmonR_Ca_area_combo
+
+ggsave(
+  "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Ca area plus heat plot_without labels.png",
+  SalmonR_Ca_area_combo,
+  width = 3.6,
+  height = 1.8,
+  dpi = 300)
 ```
 
 # Fe

@@ -1363,6 +1363,9 @@ columns_2 <- c(
 "f_Zn_mcg_per_l", "p_Zn_mcg_per_l",
 "f_REE", "p_REE"
 )
+
+DO_name <- c("DO_mg_L", "DO_percent")
+DO_column <- c("Diss_oxy_mg_per_l", "Diss_oxy_percent_sat")
 ```
 
 ## Loop model residuals and shapiro test
@@ -1403,14 +1406,16 @@ columns_to_model <- c("pH", "Spec_Cond_microS_per_cm",
 "f_Y_mcg_per_l", "p_Y_mcg_per_l",
 "f_Zn_mcg_per_l", "p_Zn_mcg_per_l",
 "f_REE", "p_REE")
+```
 
+```{r}
 pdf("residuals_plots.pdf")  # Start a new PDF file
 
 # Initialize a results list
 model_results <- list()
 
 # Loop through each variable
-for (col in columns_to_model) {
+for (col in DO_column) {
   
   # Fit the model (example: linear model with New_Grouping as predictor)
   model <- lm(Grouped_Ferrum_2022_2023_data[[col]] ~ Grouped_Ferrum_2022_2023_data$New_Grouping, data = Grouped_Ferrum_2022_2023_data)
@@ -1551,13 +1556,14 @@ nonparametric_columns <- c("pH", "Spec_Cond_microS_per_cm",
 "f_Y_mcg_per_l", "p_Y_mcg_per_l",
 "f_Zn_mcg_per_l", "p_Zn_mcg_per_l",
 "f_REE", "p_REE")
+```
 
-
+```{r}
 # Initialize a results list
 kruskal_results_list <- list()
 
 # Loop through each variable in your list
-for (col in nonparametric_columns) {
+for (col in DO_column) {
   
   # Filter out NAs for the current variable
   df_filtered <- Grouped_Ferrum_2022_2023_data %>%
@@ -1600,7 +1606,7 @@ kruskal_results_df <- bind_rows(kruskal_results_list)
 # Print the results
 view(kruskal_results_df)
 
-write_xlsx(kruskal_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Kruskal Wallis results.xlsx")
+#write_xlsx(kruskal_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Kruskal Wallis results.xlsx")
 ```
 
 ### function
@@ -1608,11 +1614,11 @@ write_xlsx(kruskal_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Fo
 library(dplyr)
 library(rstatix)
 
-run_kruskal_analysis <- function(data, columns_to_model, grouping_var = "New_Grouping") {
+run_kruskal_analysis <- function(data, DO_column, grouping_var = "New_Grouping") {
   
   results_list <- list()
   
-  for (col in columns_to_model) {
+  for (col in DO_column) {
     # Filter out NAs for the current variable
     df_filtered <- data %>%
       filter(!is.na(.data[[col]]))
@@ -1682,8 +1688,8 @@ run_kruskal_analysis <- function(data, columns_to_model, grouping_var = "New_Gro
 }
 
 # Usage example:
-# my_results <- run_kruskal_analysis(df, columns_to_model)
-# print(my_results)
+my_results <- run_kruskal_analysis(Grouped_Ferrum_2022_2023_data, DO_column)
+view(my_results)
 
 ```
 
@@ -1765,6 +1771,8 @@ columns_for_dunn <- c("pH", "Spec_Cond_microS_per_cm",
 "f_REE",
 "p_REE"
 )
+
+columns_for_dunn <- DO_column
 ```
 
 ```{r}
@@ -1848,9 +1856,9 @@ cld_results_df <- bind_rows(cld_results_list)
 view(dunn_results_df)
 view(cld_results_df)
 
-write_xlsx(dunn_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Dunns Test results.xlsx")
-
-write_xlsx(cld_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/CLD results.xlsx")
+# write_xlsx(dunn_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Dunns Test results.xlsx")
+# 
+# write_xlsx(cld_results_df, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/CLD results.xlsx")
 ```
 
 ```{r}
@@ -1873,7 +1881,7 @@ dunn_results_df_2 <- dunn_results_df %>%
 # Print the updated Dunn’s test results
 view(dunn_results_df_2)
 
-write_xlsx(dunn_results_df_2, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Dunns Test results with CLD.xlsx")
+write_xlsx(dunn_results_df_2, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Group Comparisons/Dunns Test results with CLD_Dissolved Oxygen.xlsx")
 ```
 
 old code

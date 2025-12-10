@@ -2409,7 +2409,7 @@ Seep_ficklin_plot <-
   #            aes(x = pH, y = Ficklin_metals, fill = Watershed),
   #            size = 3.2, shape = 22, color = "black", stroke = 1.5, alpha = .65) +
   
-  scale_x_continuous(limits = c(2.1, 8.33),
+  scale_x_continuous(limits = c(2, 8.33),
                      breaks = c(2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8),
                      labels = c(2, "","","", 4,"", "","", 6,"","", "", 8),
                      expand = expansion(mult = 0, add = 0)) +
@@ -2434,7 +2434,7 @@ Seep_ficklin_plot <-
   # annotate("text", x = 2.8, y = 430000, label = "Extreme-metal",    size = 4, hjust = 0.5) +
   
   scale_y_log10(
-    limits = c(1.5, 900000),
+    limits = c(1.5, 1000000),
     labels = scales::comma,
     breaks = c(1, 10, 100, 1000, 10000, 100000, 1000000),
     minor_breaks = NULL,
@@ -2457,7 +2457,7 @@ Seep_ficklin_plot <-
 
 Seep_ficklin_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Ficklin Diagram/Seeps Ficklin Diagram_v3_with lit values.png", Seep_ficklin_plot, width = 5, height = 5, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Ficklin Diagram/Seeps Ficklin Diagram_v4_with lit values.png", Seep_ficklin_plot, width = 5, height = 5, dpi = 300, bg = "transparent")
 
 #Seep_ficklin_plotly <- ggplotly(Seep_ficklin_plot)
 #Seep_ficklin_plotly
@@ -2481,23 +2481,116 @@ ggsave('C:/Users/tevinger/Downloads/Seep_ficklin_plot_legend.png',
 ### pie charts for metal composition
 ```{r}
 Seep_ficklin_percent <- Seep_ficklin %>%
+  dplyr::select(-c(3,4,5,9)) %>%
+  mutate(total = rowSums(across(6:11))) %>%
+  mutate(across(
+    6:11,
+    ~ .x / total * 100,
+    .names = "{.col}_pct"
+  ))
+```
+
+```{r}
+Seep_ficklin_percent_long <- Seep_ficklin_percent %>%
   pivot_longer(
-    cols = matches("Co|Zn|Ni|Cu|Cd|Pb"),   # all metal columns
-    names_to = "metal",        # name of new column with metal names
-    values_to = "concentration"   # name of new column with values
+    cols = ends_with("_pct"),
+    names_to = "Component",
+    values_to = "Percent"
   ) %>%
-  mutate
+  filter(!Field_label %in% c("ANF_Tseep", "ANF_Tseep_source4", "ANF_Tseep_source5")) %>%
+  mutate(
+    Component = factor(Component,
+                       levels = c("f_Pb_mcg_per_l_pct",
+        "f_Cd_mcg_per_l_pct",
+        "f_Cu_mcg_per_l_pct",
+        "f_Co_mcg_per_l_pct",
+        "f_Ni_mcg_per_l_pct",
+        "f_Zn_mcg_per_l_pct"))
+  )
 
+write_xlsx(Seep_ficklin_percent_long, "C:/Users/tevinger/Downloads/Ficklin Diagram percent composition.xlsx")
+```
 
-Seep_ficklin_pies <- ggplot(sub, aes(y=sdw.perc, x=2, fill=substrate, color=substrate)) +
-  geom_bar(position="stack", stat="identity", colour="black")+
-  scale_fill_brewer(palette="YlOrBr") +
-  coord_polar(theta="y") + # Try to remove that to understand how the chart is built initially
-  xlim(c(1, 3))+
-  facet_grid(.~watershed)+
-  theme(legend.position = "none")+
-  theme_void()+
-  theme(legend.position="bottom")
+```{r}
+cb_palette_metals_pct <- c(
+  #"#D55E00", "#ffce96", "#5d455e", 
+  "#003f5c", "#752c48", "#ffca67", "#80acff", "#fdb5e1","#3a5e9b"
+  #"#53B0AE", "#bc5090", "#ff6361", "#01796f",  "#bac4c8",
+  #"#bc5259", "#c5e6a1", "#ab694e","#8dbfcb",  "#4eab69", "#6d7a6b"
+  
+)
+
+metals_ordered_pct <- c(
+  "f_Pb_mcg_per_l_pct" = "#752c48",
+  "f_Cd_mcg_per_l_pct" = "#003f5c", 
+  "f_Cu_mcg_per_l_pct" = "#ffca67", 
+  "f_Co_mcg_per_l_pct" = "#fdb5e1", 
+  "f_Ni_mcg_per_l_pct" = "#80acff", 
+  "f_Zn_mcg_per_l_pct" = "#3a5e9b")
+
+metal_colors_pct <- cb_palette_metals_pct
+#names(metal_colors) <- metals_ordered
+```
+
+```{r}
+stacked_pct_plot <- ggplot(Seep_ficklin_percent_long,
+                           aes(x = Field_label,
+                               y = Percent,
+                               fill = Component)) +
+  scale_fill_manual(values= metals_ordered_pct) +
+  geom_col(width = 0.8) +
+  labs(
+    x = NULL,
+    y = "Percent of Total (%)",
+    fill = "Component"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1)
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.03))) +
+  scale_x_discrete(expand = expansion(mult = c(0.13, 0.13))) +
+  theme(
+    panel.grid.minor = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.background = element_rect(fill = "white"),
+  panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+  axis.text.x = element_text(color = "white", size = 1),
+  axis.title.x = element_blank(),
+  axis.ticks.x = element_blank(),
+  #axis.text.y = element_text(size = 16, color = "black", face = "bold"),
+  axis.title.y = element_blank(),
+  axis.text.y = element_blank(),
+  #axis.title.y = element_text(size = 18, color = "black", face = "bold", vjust = 1.25, margin = margin(r = 10)),
+  legend.position = "none",
+  legend.title = element_blank(),
+  legend.background = element_rect(fill = NA),
+  legend.text = element_text(size = 12, color = "black", face = "bold"),
+  legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+  axis.ticks.y = element_line(size = 0.9, color = "black"),  # Thicker y-axis ticks
+    axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
+  plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold")
+  ) 
+
+stacked_pct_plot
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Ficklin Diagram metal composition no labels wide.png", stacked_pct_plot, width = 4, height = 4, dpi = 300)
+```
+
+```{r}
+pie_plot <- Seep_ficklin_percent_long %>%
+  filter(Field_label == "ANF_Tseep") %>%
+  ggplot(aes(x = Field_label, y = Percent, fill = Component)) +
+  geom_col(position = "fill", width = 1, color = "black") +
+  coord_polar(theta = "y") +
+  labs(
+    x = NULL,
+    y = NULL,
+    fill = "Component"
+  ) +
+  theme_void()
+
+pie_plot
 ```
 
 ### versions for Brett
@@ -2748,8 +2841,9 @@ Na.meq = conc2meq(f_Na_mg_l, "sodium"),
 Cl.meq = conc2meq(f_Cl_mg_per_l, "chloride"),
 SO4.meq = conc2meq(f_SO4_mg_per_l, "sulfate"),
 HCO3.meq = conc2meq(HCO3_mg_per_l, "bicarb"))
+```
 
-
+```{r}
 # set the SS value based on the Watershed
 PD_all$SS <- as.numeric(factor(PD_all$New_Grouping))
 
@@ -2773,7 +2867,7 @@ AA.pl_2 <- with(PD_all, piperPlot(Ca.meq, Mg.meq, Na.meq,
 unique_sites <- unique(PD$SS)
 site_colors <- setColor(unique_sites)  # same color function as above
 
-legend("topright",
+legend("none",
        legend = names(group_colors),
        col = group_colors,
        pch = 16,            # same point shape as Piper plot
@@ -2827,7 +2921,9 @@ df_for_piper <- meq_L_df %>% # this currently doesn't include CO3 but can be add
   )
 
 rownames(df_for_piper) <- make.unique(as.character(meq_L_df$Watershed))
+```
 
+```{r}
 # Make a Piper object
 # color by Group
 pal <- c(
@@ -2835,15 +2931,19 @@ pal <- c(
   "Upstream" = "#72D9FF",
   "Seep" = "#c81600",
   "Impaired Tributary" = "indianred2",
-  "Downstream MS" = "#f5a678",
-  "NA" = "grey50"
+  "Downstream MS" = "#f5a678"
 )
 
+df_for_piper <- df_for_piper %>%
+  filter(!(New_Grouping == "NA"))
+```
+
+```{r}
 df_for_piper$pt.col <- pal[ meq_L_df$New_Grouping ]
 df_for_piper$pt.bg <- pal[ meq_L_df$New_Grouping ]
 
 df_for_piper$pt.col[is.na(df_for_piper$pt.col)] <- "grey50"  # fallback
-df_for_piper$pt.pch <- 21
+df_for_piper$pt.pch <- 16
 p_obj <- piper(df_for_piper)
 
 # 5. Plot it
@@ -3247,7 +3347,8 @@ Na_Cl_interactive
 ## Dataframe
 ```{r}
 Ferrum_metal_data <- working_Ferrum_data %>%
-  filter(New_Grouping %in% c("Impaired Tributary", "Seep")) %>%
+  filter(!is.na(New_Grouping)) %>%
+  #filter(New_Grouping %in% c("Impaired Tributary", "Seep")) %>%
   mutate(u_REE = ifelse(
       rowSums(is.na(dplyr::select(., 
                            u_Ce_mcg_per_l, 
@@ -3276,23 +3377,23 @@ f_As_mcg_per_l, p_As_mcg_per_l,
 f_Ba_mcg_per_l, p_Ba_mcg_per_l,
 #f_Be_mcg_per_l, p_Be_mcg_per_l,
 f_Cd_mcg_per_l, p_Cd_mcg_per_l,
-#f_Ce_mcg_per_l, p_Ce_mcg_per_l,
+f_Ce_mcg_per_l, p_Ce_mcg_per_l,
 f_Co_mcg_per_l, p_Co_mcg_per_l,
 f_Cr_mcg_per_l, p_Cr_mcg_per_l,
 f_Cu_mcg_per_l, p_Cu_mcg_per_l,
-#f_Dy_mcg_per_l, p_Dy_mcg_per_l,
+f_Dy_mcg_per_l, p_Dy_mcg_per_l,
 f_Fe_mcg_per_l, p_Fe_mcg_per_l,
-#f_La_mcg_per_l, p_La_mcg_per_l,
+f_La_mcg_per_l, p_La_mcg_per_l,
 f_Mn_mcg_per_l, p_Mn_mcg_per_l,
-#f_Nd_mcg_per_l, p_Nd_mcg_per_l,
+f_Nd_mcg_per_l, p_Nd_mcg_per_l,
 f_Ni_mcg_per_l, p_Ni_mcg_per_l,
-#f_Pr_mcg_per_l, p_Pr_mcg_per_l,
+f_Pr_mcg_per_l, p_Pr_mcg_per_l,
 f_Se_mcg_per_l, p_Se_mcg_per_l,
 #f_Th_mcg_per_l, p_Th_mcg_per_l,
 f_Tl_mcg_per_l, p_Tl_mcg_per_l,
 f_U_mcg_per_l, p_U_mcg_per_l,
 #f_V_mcg_per_l, p_V_mcg_per_l,
-#f_Y_mcg_per_l, p_Y_mcg_per_l,
+f_Y_mcg_per_l, p_Y_mcg_per_l,
 f_Zn_mcg_per_l, p_Zn_mcg_per_l,
 f_REE, p_REE,
 u_REE,
@@ -3303,23 +3404,23 @@ u_As_mcg_per_l,
 u_Ba_mcg_per_l,
 # u_Be_mcg_per_l,
 u_Cd_mcg_per_l,
-#u_Ce_mcg_per_l,
+u_Ce_mcg_per_l,
 u_Co_mcg_per_l,
 u_Cr_mcg_per_l,
 u_Cu_mcg_per_l,
-#u_Dy_mcg_per_l,
+u_Dy_mcg_per_l,
 u_Fe_mcg_per_l,
-#u_La_mcg_per_l,
+u_La_mcg_per_l,
 u_Mn_mcg_per_l,
-#u_Nd_mcg_per_l,
+u_Nd_mcg_per_l,
 u_Ni_mcg_per_l,
-#u_Pr_mcg_per_l,
+u_Pr_mcg_per_l,
 u_Se_mcg_per_l,
 # u_Th_mcg_per_l,
 u_Tl_mcg_per_l,
 u_U_mcg_per_l,
 #u_V_mcg_per_l,
-#u_Y_mcg_per_l,
+u_Y_mcg_per_l,
 u_Zn_mcg_per_l)
 ```
 
@@ -3374,31 +3475,46 @@ pct_df_long <- Ferrum_metal_data_long %>%
       fraction,
       pct_filtered_of_unfiltered   = "Filtered",
       pct_particulate_of_unfiltered = "Particulate"
-    ),
-    # optional: set New_Grouping order
-    New_Grouping = factor(New_Grouping,
-                          levels = c("Seep", "Impaired Tributary"))
-  ) %>%
-  # manually change REE for KR_Trib2 
-  mutate(
-    pct_of_unfiltered = case_when(
-      SamplingEventID == "KR_Trib2_20230608_1540" &
-        metal == "REE" &
-        fraction == "Filtered" ~ 100,
-      
-      SamplingEventID == "KR_Trib2_20230608_1540" &
-        metal == "REE" &
-        fraction == "Particulate" ~ 0,
-
-      TRUE ~ pct_of_unfiltered
     )
+    # optional: set New_Grouping order
+    # New_Grouping = factor(New_Grouping,
+    #                       levels = c("Seep", "Impaired Tributary"))
+  ) %>%
+  # manually change REE 
+  mutate(
+  pct_of_unfiltered = case_when(
+    SamplingEventID %in% c(
+      "KR_Trib2_20230608_1540",
+      "AMS_Trib2_20230823_1530",
+      "SalmonR_Trib6_20230724_1428",
+      "AMS_Trib3_20230823_1400",
+      "SheepC_1_20230719_0923",
+      "SalmonR_MS_above_Trib6_20230724_1439"
+    ) &
+      metal == "REE" &
+      fraction == "Filtered" ~ 100,
+    
+    SamplingEventID %in% c(
+      "KR_Trib2_20230608_1540",
+      "AMS_Trib2_20230823_1530",
+      "SalmonR_Trib6_20230724_1428",
+      "AMS_Trib3_20230823_1400",
+      "SheepC_1_20230719_0923",
+      "SalmonR_MS_above_Trib6_20230724_1439"
+    ) &
+      metal == "REE" &
+      fraction == "Particulate" ~ 0,
+
+    TRUE ~ pct_of_unfiltered
   )
+)
 ```
 
 ##Calculate summary stats to use for reporting in paper
 ```{r}
 f_and_p_summary_stats <- pct_df_long %>%
 dplyr::select(New_Grouping, fraction, pct_of_unfiltered, metal) %>%
+  filter(!metal == "REE") %>% # exclude REE because the individual REEs are in the dataset
 #filter(Temporal_status %in% c("pre", "post")) %>%   # keep only the two groups
   group_by(New_Grouping, fraction
            #, metal
@@ -3503,16 +3619,16 @@ metal_fraction_bp <- ggplot(
 
 metal_fraction_bp
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase.png", metal_fraction_bp, width = 3, height = 5, dpi = 300)
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase.png", metal_fraction_bp, width = 3, height = 5, dpi = 300)
 ```
 
 Indivdual Metal distributions Faceted by Sample Type
 ```{r}
-f_vs_p_by_metal_bp <- pct_df_long %>%
+f_vs_p_by_metal_bp_seep <- pct_df_long %>%
   filter(New_Grouping == "Seep") %>%
   ggplot(aes(x = fraction,
            y = pct_of_unfiltered,
-           fill = New_Grouping
+           fill = New_Grouping,
             pattern = fraction,
      pattern_fill = fraction)
     ) +
@@ -3525,26 +3641,201 @@ f_vs_p_by_metal_bp <- pct_df_long %>%
     alpha = 0.85,
     size = 0.5,
     width = 0.6,
-    pattern_density = 0.3,
-    pattern_spacing = 0.015,
+    pattern_density = 0.2,
+    pattern_spacing = 0.055,
     pattern_angle = 45
   ) +
   scale_fill_manual(values = group_colors) +
-   scale_pattern_manual(values = c("Filtered" = "none", "Particulate" = "stripe"), name = "Metal Phase") +
+   scale_pattern_manual(values = c("Filtered" = "none", "Particulate" = "stripe")) +
   scale_pattern_fill_manual(values = c("Filtered" = NA, "Particulate" = "grey20")) +
   facet_grid(~ metal, scales = "free_y") +
   labs(
-    x = "Grouping",
-    y = "% of unfiltered total",
+    x = NULL,
+    y = "% of Total Concentration",
     fill = "Grouping"
   ) +
   theme_classic() +
   theme(
+    legend.position = "none",
     axis.text.x = element_text(angle = 30, hjust = 1),
-    strip.text.x = element_text(size = 7)  # metals on top
+    strip.text.x = element_text(size = 5)  # metals on top
   )
 
-f_vs_p_by_metal_bp
+#f_vs_p_by_metal_bp_seep
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase/Seep.png", f_vs_p_by_metal_bp_seep, width = 12.5, height = 6, dpi = 300)
+```
+
+```{r}
+f_vs_p_by_metal_bp_impaired_trib <- pct_df_long %>%
+  filter(New_Grouping == "Impaired Tributary") %>%
+  ggplot(aes(x = fraction,
+           y = pct_of_unfiltered,
+           fill = New_Grouping,
+            pattern = fraction,
+     pattern_fill = fraction)
+    ) +
+  #geom_boxplot() +
+  geom_boxplot_pattern(
+    position = position_dodge(width = 0.8),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2,
+    alpha = 0.85,
+    size = 0.5,
+    width = 0.6,
+    pattern_density = 0.2,
+    pattern_spacing = 0.055,
+    pattern_angle = 45
+  ) +
+  scale_fill_manual(values = group_colors) +
+   scale_pattern_manual(values = c("Filtered" = "none", "Particulate" = "stripe")) +
+  scale_pattern_fill_manual(values = c("Filtered" = NA, "Particulate" = "grey20")) +
+  facet_grid(~ metal, scales = "free_y") +
+  labs(
+    x = NULL,
+    y = "% of Total Concentration",
+    fill = "Grouping"
+  ) +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    strip.text.x = element_text(size = 5)  # metals on top
+  )
+
+#f_vs_p_by_metal_bp_impaired_trib
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase/Impaired Trib.png", f_vs_p_by_metal_bp_impaired_trib, width = 12.5, height = 6, dpi = 300)
+```
+
+```{r}
+f_vs_p_by_metal_bp_unimpaired_trib <- pct_df_long %>%
+  filter(New_Grouping == "Unimpaired Tributary") %>%
+  ggplot(aes(x = fraction,
+           y = pct_of_unfiltered,
+           fill = New_Grouping,
+            pattern = fraction,
+     pattern_fill = fraction)
+    ) +
+  #geom_boxplot() +
+  geom_boxplot_pattern(
+    position = position_dodge(width = 0.8),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2,
+    alpha = 0.85,
+    size = 0.5,
+    width = 0.6,
+    pattern_density = 0.2,
+    pattern_spacing = 0.055,
+    pattern_angle = 45
+  ) +
+  scale_fill_manual(values = group_colors) +
+   scale_pattern_manual(values = c("Filtered" = "none", "Particulate" = "stripe")) +
+  scale_pattern_fill_manual(values = c("Filtered" = NA, "Particulate" = "grey20")) +
+  facet_grid(~ metal, scales = "free_y") +
+  labs(
+    x = NULL,
+    y = "% of Total Concentration",
+    fill = "Grouping"
+  ) +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    strip.text.x = element_text(size = 5)  # metals on top
+  )
+
+#f_vs_p_by_metal_bp_unimpaired_trib
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase/Unimpaired Trib.png", f_vs_p_by_metal_bp_unimpaired_trib, width = 12.5, height = 6, dpi = 300)
+```
+
+```{r}
+f_vs_p_by_metal_bp_upstream <- pct_df_long %>%
+  filter(New_Grouping == "Upstream") %>%
+  ggplot(aes(x = fraction,
+           y = pct_of_unfiltered,
+           fill = New_Grouping,
+            pattern = fraction,
+     pattern_fill = fraction)
+    ) +
+  #geom_boxplot() +
+  geom_boxplot_pattern(
+    position = position_dodge(width = 0.8),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2,
+    alpha = 0.85,
+    size = 0.5,
+    width = 0.6,
+    pattern_density = 0.2,
+    pattern_spacing = 0.055,
+    pattern_angle = 45
+  ) +
+  scale_fill_manual(values = group_colors) +
+   scale_pattern_manual(values = c("Filtered" = "none", "Particulate" = "stripe")) +
+  scale_pattern_fill_manual(values = c("Filtered" = NA, "Particulate" = "grey20")) +
+  facet_grid(~ metal, scales = "free_y") +
+  labs(
+    x = NULL,
+    y = "% of Total Concentration",
+    fill = "Grouping"
+  ) +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    strip.text.x = element_text(size = 5)  # metals on top
+  )
+
+#f_vs_p_by_metal_bp_upstream
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase/Upstream.png", f_vs_p_by_metal_bp_upstream, width = 12.5, height = 6, dpi = 300)
+```
+
+```{r}
+f_vs_p_by_metal_bp_downstream <- pct_df_long %>%
+  filter(New_Grouping == "Downstream MS") %>%
+  ggplot(aes(x = fraction,
+           y = pct_of_unfiltered,
+           fill = New_Grouping,
+            pattern = fraction,
+     pattern_fill = fraction)
+    ) +
+  #geom_boxplot() +
+  geom_boxplot_pattern(
+    position = position_dodge(width = 0.8),
+    outlier.shape = 16,
+    outlier.color = "black",
+    outlier.size = 2,
+    alpha = 0.85,
+    size = 0.5,
+    width = 0.6,
+    pattern_density = 0.2,
+    pattern_spacing = 0.055,
+    pattern_angle = 45
+  ) +
+  scale_fill_manual(values = group_colors) +
+   scale_pattern_manual(values = c("Filtered" = "none", "Particulate" = "stripe")) +
+  scale_pattern_fill_manual(values = c("Filtered" = NA, "Particulate" = "grey20")) +
+  facet_grid(~ metal, scales = "free_y") +
+  labs(
+    x = NULL,
+    y = "% of Total Concentration",
+    fill = "Grouping"
+  ) +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    strip.text.x = element_text(size = 5)  # metals on top
+  )
+
+#f_vs_p_by_metal_bp_downstream
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase/Downstream.png", f_vs_p_by_metal_bp_downstream, width = 12.5, height = 6, dpi = 300)
 ```
 
 ##Averages for each metal
@@ -3583,10 +3874,28 @@ fraction_patterns <- c(
 ```
 
 ```{r}
+f_and_p_summary_stats_metal_specific <- f_and_p_summary_stats_metal_specific %>%
+  mutate(
+    x_group = factor(
+      interaction(New_Grouping, fraction, sep = "_"),
+      levels = c("Unimpaired Tributary_Filtered", "Unimpaired Tributary_Particulate", "Upstream_Filtered", "Upstream_Particulate", "Seep_Filtered", "Seep_Particulate", "Impaired Tributary_Filtered", "Impaired_Particulate", "Downstream MS_Filtered", "Downstream MS_Particulate")
+    )
+  )
+
+pct_df_long <- pct_df_long %>%
+  mutate(
+    x_group = factor(
+      interaction(New_Grouping, fraction, sep = "_"),
+      levels = c("Unimpaired Tributary_Filtered", "Unimpaired Tributary_Particulate", "Upstream_Filtered", "Upstream_Particulate", "Seep_Filtered", "Seep_Particulate", "Impaired Tributary_Filtered", "Impaired_Particulate", "Downstream MS_Filtered", "Downstream MS_Particulate")
+    )
+  )
+```
+
+```{r}
 metal_fraction_bp <- ggplot(
   f_and_p_summary_stats_metal_specific,
   aes(
-    x = New_Grouping,
+    x = x_group,
     y = mean,
     fill = New_Grouping,          # color by grouping
     pattern = fraction,           # pattern by fraction (filtered / particulate)
@@ -3606,21 +3915,21 @@ metal_fraction_bp <- ggplot(
     alpha = 0.85,
     size = 0.9
   ) + 
-  geom_point(
-    data = mean_df,
-    aes(x = New_Grouping,
-        y = mean_pct,
-        group = fraction),
-    color = "black",
-    #fill = "white",
-    size = 3,
-    #shape = 5,
-    position = position_dodge(width = 0.8)
-  ) +
+  # geom_point(
+  #   data = mean_df,
+  #   aes(x = New_Grouping,
+  #       y = mean_pct,
+  #       group = fraction),
+  #   color = "black",
+  #   #fill = "white",
+  #   size = 3,
+  #   #shape = 5,
+  #   position = position_dodge(width = 0.8)
+  # ) +
   coord_cartesian(ylim = c(0, 100)) +
   scale_fill_manual(values = group_colors) +
   # adjust to match your actual fraction labels exactly
-  scale_pattern_manual(values = c("Filtered" = "none", "Particulate" = "stripe"), name = "Metal Phase") +
+  scale_pattern_manual(values = c("Filtered" = "none", "Particulate" = "stripe")) +
   scale_pattern_fill_manual(values = c("Filtered" = NA, "Particulate" = "grey20")) +
   labs(
     x = NULL,
@@ -3653,7 +3962,7 @@ metal_fraction_bp <- ggplot(
 
 metal_fraction_bp
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase by average per metal.png", metal_fraction_bp, width = 3, height = 5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase/Site classification group_means.png", metal_fraction_bp, width = 6.5, height = 6, dpi = 300)
 ```
 
 ##Stacked Barplots
@@ -3687,6 +3996,28 @@ stacked_bar <- ggplot(
 stacked_bar
 ```
 
+```{r}
+stacked_bar <- ggplot(
+  bar_df,
+  aes(x = New_Grouping,
+      y = mean_pct,
+      fill = fraction)
+) +
+  geom_col(position = "stack", colour = "black") +
+  facet_wrap(~ New_Grouping, nrow = 3) +   # tweak rows/cols as you like
+  coord_cartesian(ylim = c(0, 100)) +
+  labs(
+    x   = NULL,
+    y   = "Mean % of unfiltered total",
+    fill = "Metal phase"
+  ) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1)
+  )
+
+stacked_bar
+```
 
 
 # Frey et al., 2007 Data

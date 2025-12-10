@@ -199,15 +199,18 @@ q.p
 ```
 
 ```{r}
-cumulative_discharge_by_year <- cumulative_discharge_by_year %>%
+yearly_discharge <- yearly_discharge %>%
   arrange(station_nm, Year)
 
-q.p_2 <- ggplot(cumulative_discharge_by_year, 
+q.p_2 <- ggplot(yearly_discharge, 
                 aes(x = as.factor(Year), y = total_discharge_cfs, color = station_nm)) +
-  geom_point() +
-  geom_line(aes(group = 1)) +   # ✅ THIS restores the line
+  geom_point(size = 2.5) +
+  geom_line(aes(group = 1), linewidth = 1) +   # ✅ THIS restores the line
   facet_wrap(station_nm~., scales = "free", ncol = 2) +
-  labs(x = NULL, y = "Discharge (cfs)") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = NULL, 
+       #y = "Discharge (cfs)"
+       y = NULL) +
   theme_minimal() +
   theme(
     axis.text.y = element_text(size = 12, color = "black", face = "bold"),
@@ -223,12 +226,15 @@ q.p_2 <- ggplot(cumulative_discharge_by_year,
     panel.border = element_rect(fill = NA, color = "black", size = 1.25),
     panel.background = element_rect(fill = "transparent"),
     plot.background = element_rect(fill = "transparent", color = NA),
-    legend.position = "none"
+    legend.position = "none",
+    strip.text = element_blank(),
+    panel.spacing.x = unit(1.5, "lines"),
+    panel.spacing.y = unit(1.75, "lines")
   )
 
 q.p_2
 
-ggsave("C:/Users/tevinger/Downloads/Total Discharge.png", q.p_2, width = 11, height = 7)
+ggsave("C:/Users/tevinger/Downloads/Total Discharge draft.png", q.p_2, width = 11, height = 7)
 
 # ggsave(q.p, filename = "02_Hydrographs_Available_Data_2015to2025.png",
 #        width = 11, height = 7)
@@ -239,10 +245,10 @@ yearly_discharge <- yearly_discharge %>%
   mutate(Onset_timing = factor(Onset_timing, levels = c("pre", "post")))
 
 discharge_bps <- ggplot(yearly_discharge, 
-                aes(x = Onset_timing, y = average_discharge_cfs, color = station_nm)) +
+                aes(x = Onset_timing, y = average_discharge_cfs, fill = station_nm)) +
   geom_boxplot() +
-  facet_wrap(station_nm~., scales = "free", ncol = 2) +
-  labs(x = NULL, y = "Discharge (cfs)") +
+  facet_wrap(station_nm~., scales = "free", ncol = 4) +
+  labs(x = NULL, y = NULL) +
   theme_minimal() +
   theme(
     axis.text.y = element_text(size = 12, color = "black", face = "bold"),
@@ -258,12 +264,15 @@ discharge_bps <- ggplot(yearly_discharge,
     panel.border = element_rect(fill = NA, color = "black", size = 1.25),
     panel.background = element_rect(fill = "transparent"),
     plot.background = element_rect(fill = "transparent", color = NA),
-    legend.position = "none"
+    legend.position = "none",
+    strip.text = element_blank(),
+    panel.spacing.x = unit(1.5, "lines"),
+    panel.spacing.y = unit(1.75, "lines")
   )
 
 discharge_bps
 
-ggsave("C:/Users/tevinger/Downloads/Onset timing Discharge.png", discharge_bps, width = 11, height = 7)
+ggsave("C:/Users/tevinger/Downloads/Onset timing Discharge V2.png", discharge_bps, width = 10, height = 5)
 ```
 
 ## cumulative discharge per year
@@ -870,7 +879,7 @@ RD_Sulfate_temporal_bp <- RD_sulfate %>%
   scale_y_continuous(breaks = c(0,100,200,300,400,500,600,700,800,900,1000,1100), labels = c(0,"",200,"",400,"",600,"",800,"",1000,"")) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_fill_manual(
-    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+    values = c("early" = "#e6bed6", "late" = "#bc5090")
   ) +
   coord_cartesian(ylim = c(10, 1200)) +
   geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
@@ -899,7 +908,7 @@ RD_Sulfate_temporal_bp
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V1.png", Sulfate_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/SO4_2015 to 2024.png", RD_Sulfate_temporal_bp, width = 3.25, height = 4, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/SO4_2015 to 2024.png", RD_Sulfate_temporal_bp, width = 3.5, height = 4.25, dpi = 300, bg = "transparent")
 ```
 
 ## Alkalinity
@@ -1064,7 +1073,7 @@ RD_pH_temporal_bp <- RD_pH_ALL %>%
   #scale_y_continuous(breaks = c(7.5, 7.75, 8.0, 8.25, 8.5), labels = c("7.50", 7.75, "8.00", 8.25, "8.50")) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_fill_manual(
-    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+    values = c("early" = "#e6bed6", "late" = "#bc5090")
   ) +
   # Add counts as text
   # geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.9, alpha = 0.7) +
@@ -1295,7 +1304,7 @@ RD_zinc_ALL <- Red_Dog_stn_9_ALL %>%
   )
   #filter(lubridate::year(sample_date) >= 2011)
 
-write_xlsx(RD_zinc, "C:/Users/tevinger/Downloads/WulikR Station 9 Zinc 2015 to 2024.xlsx")
+#write_xlsx(RD_zinc, "C:/Users/tevinger/Downloads/WulikR Station 9 Zinc 2015 to 2024.xlsx")
 
 ```
 
@@ -1317,10 +1326,11 @@ RD_Zinc_temporal_bp <- RD_zinc %>%
   #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_y_log10() +
+  annotation_logticks(sides = "l") +
   scale_fill_manual(
-    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+    values = c("early" = "#e6bed6", "late" = "#bc5090")
   ) +
-  #coord_cartesian(ylim = c(5, 110000)) +
+  coord_cartesian(ylim = c(50, 60000)) +
   # Add counts as text
   geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
   #geom_vline(xintercept = 21.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
@@ -1336,7 +1346,7 @@ RD_Zinc_temporal_bp <- RD_zinc %>%
   theme_minimal() +
   temporal_theme +
   theme(legend.position = "none",
-        #axis.text.y = element_blank(),
+        axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
         plot.background = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA))
@@ -1345,7 +1355,7 @@ RD_Zinc_temporal_bp
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Zinc_2015 to 2024.png", RD_Zinc_temporal_bp, width = 3.25, height = 4, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Zinc_2015 to 2024.png", RD_Zinc_temporal_bp, width = 3.5, height = 4.25, dpi = 300, bg = "transparent")
 ```
 
 ## Chloride
@@ -2652,7 +2662,7 @@ Sulfate_temporal_bp
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V1.png", Sulfate_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V3_smaller.png", Sulfate_temporal_bp, width = 3.25, height = 4, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V3_smaller.png", Sulfate_temporal_bp, width = 3.5, height = 4.25, dpi = 300, bg = "transparent")
 ```
 
 ## Alkalinity

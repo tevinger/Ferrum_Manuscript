@@ -1012,7 +1012,7 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 ## SpC
 ```{r}
 # Select DOC data
-SpC_df <- working_Ferrum_data %>%
+SpC_df <- Final_groups_df %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, Spec_Cond_microS_per_cm)
 
 # Filter NA values in the grouping variable and make long format
@@ -1043,7 +1043,8 @@ SpC_plot <- ggplot(SpC_long, aes(x = New_Groups, y = Conc)) +
   #geom_jitter(aes(fill = Watershed), 
               #shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.5) +
   scale_fill_manual(values = boxplot_colors) +
-  scale_y_continuous(breaks = SpC_breaks, labels = SpC_labels) +
+  #scale_y_continuous(breaks = SpC_breaks, labels = SpC_labels) +
+  scale_y_log10() +
   labs(
     title = NULL,
     x = NULL,
@@ -1055,7 +1056,7 @@ SpC_plot <- ggplot(SpC_long, aes(x = New_Groups, y = Conc)) +
   theme(
     legend.position = "none",
     axis.title.y = element_text(margin = margin(r = 6)),
-    axis.text.y = element_blank(),
+    #axis.text.y = element_blank(),
     #axis.ticks.length = unit(1, "cm"),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels
@@ -1065,13 +1066,13 @@ SpC_plot <- ggplot(SpC_long, aes(x = New_Groups, y = Conc)) +
 
 SpC_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/SpC_no labels.png", SpC_plot, width = 1.5, height = 3.5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/SpC_log labels.png", SpC_plot, width = 1.5, height = 3.5, dpi = 300)
 ```
 
 ## DO
 ```{r}
 # Select DOC data
-DO_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+DO_df <- Final_groups_df %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, Diss_oxy_mg_per_l)
 
 # Filter NA values in the grouping variable and make long format
@@ -1122,14 +1123,14 @@ DO_plot <- ggplot(DO_long, aes(x = New_Groups, y = Conc)) +
 
 DO_plot
 
-# ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/DIC_V2 labels.png", DIC_plot, width = 1.5, height = 3.5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/DO_with labels.png", DO_plot, width = 1.5, height = 3.5, dpi = 300)
 ```
 
 
 ## Chloride
 ```{r}
 # Select DOC data
-Cl_df <- working_Ferrum_data %>%
+Cl_df <- Final_groups_df %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Cl_mg_per_l)
 
 # Filter NA values in the grouping variable and make long format
@@ -1171,7 +1172,9 @@ Cl_plot <- ggplot(Cl_long, aes(x = New_Groups, y = Conc)) +
   boxplot_theme +
   theme(
     legend.position = "none",
-    axis.title.y = element_text(margin = margin(r = 6)),
+    #axis.title.y = element_text(margin = margin(r = 6)),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
     #axis.ticks.length = unit(1, "cm"),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels
@@ -1181,12 +1184,13 @@ Cl_plot <- ggplot(Cl_long, aes(x = New_Groups, y = Conc)) +
 
 Cl_plot
 
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Cl_no labels.png", Cl_plot, width = 1.5, height = 3.5, dpi = 300)
 ```
 
 ## DIC
 ```{r}
 # Select DOC data
-DIC_df <- Alaska_DataRelease_2022_2023_Ferrum_V9 %>%
+DIC_df <- Final_groups_df %>%
   dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, DIC_mgC_per_l)
 
 # Filter NA values in the grouping variable and make long format
@@ -1231,7 +1235,7 @@ DIC_plot <- ggplot(DIC_long, aes(x = New_Groups, y = Conc)) +
   theme(
     legend.position = "none",
     axis.title.y = element_blank(),
-    #axis.text.y = element_blank(),
+    axis.text.y = element_blank(),
     #axis.ticks.length = unit(1, "cm"),
     legend.title = element_text(size = 14),   # legend title size
     legend.text = element_text(size = 12),    # legend item labels
@@ -1241,7 +1245,7 @@ DIC_plot <- ggplot(DIC_long, aes(x = New_Groups, y = Conc)) +
 
 DIC_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/DIC_V2 labels.png", DIC_plot, width = 1.5, height = 3.5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/DIC_no labels.png", DIC_plot, width = 1.5, height = 3.5, dpi = 300)
 ```
 
 ## Alkalinity
@@ -1544,6 +1548,132 @@ Mg_plot
 
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Mg_no labels.png", Mg_plot, width = 1.5, height = 3.5, dpi = 300)
 ```
+
+##K
+```{r}
+# Select potassium data
+K_df <- Final_groups_df %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_K_mg_l)
+
+# Filter NA values in the grouping variable and make long format
+K_long <- K_df %>%
+  filter(!(New_Groups == "NA")) %>%
+  pivot_longer(
+    cols = c(f_K_mg_l),
+    names_to = "Variable",
+    #names_pattern = "^(.)_mgC_per_l",
+    values_to = "Conc"
+  ) %>%
+  filter(!is.na(Conc))
+
+# Factor the grouping variable to set plotting order
+K_long <- K_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+
+K_breaks <- seq(0, 1000, by = 100)
+K_labels <- c(0,"",200,"",400,"",600,"",800,"",1000)
+K_labels
+
+```
+
+```{r}
+K_plot <- ggplot(K_long, aes(x = New_Groups, y = Conc)) +
+  geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = 16,
+               outlier.color = "black",
+               outlier.size = 2, alpha = 0.85) +
+  scale_fill_manual(values = boxplot_colors) +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = NULL
+  ) +
+  # scale_y_log10(limits = c(5, 1000),
+  #               breaks = c(5, 10, 100, 1000)) +
+  # annotation_logticks(sides = "l") +
+  #scale_y_continuous(breaks = K_breaks, labels = K_labels) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    #axis.title.y = element_text(margin = margin(r = 6)),
+    #axis.ticks.length = unit(1, "cm"),
+    legend.title = element_text(size = 14),   # legend title size
+    legend.text = element_text(size = 12),    # legend item labels
+    legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.28, 0.15)))
+
+K_plot
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/K no labels.png", K_plot, width = 1.5, height = 3.5, dpi = 300)
+```
+
+##Na
+```{r}
+# Select Na data
+Na_df <- Final_groups_df %>%
+  dplyr::select(SamplingEventID, Watershed, New_Groups, New_Grouping, f_Na_mg_l)
+
+# Filter NA values in the grouping variable and make long format
+Na_long <- Na_df %>%
+  filter(!(New_Groups == "NA")) %>%
+  pivot_longer(
+    cols = c(f_Na_mg_l),
+    names_to = "Variable",
+    #names_pattern = "^(.)_mgC_per_l",
+    values_to = "Conc"
+  ) %>%
+  filter(!is.na(Conc))
+
+# Factor the grouping variable to set plotting order
+Na_long <- Na_long %>%
+  mutate(New_Groups = factor(New_Groups, levels = c("4", "1", "2", "3", "6")))
+
+```
+
+```{r}
+Na_plot <- ggplot(Na_long, aes(x = New_Groups, y = Conc)) +
+  geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = 16,
+               outlier.color = "black",
+               outlier.size = 2, alpha = 0.85) +
+  #geom_jitter(aes(fill = Watershed), 
+  #            shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.5) +
+  scale_fill_manual(values = boxplot_colors) +
+  # scale_y_continuous(
+  #   breaks = Na_breaks,
+  #   labels = Na_labels
+  # ) +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = NULL
+  ) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    #axis.ticks.length = unit(1, "cm"),
+    legend.title = element_text(size = 14),   # legend title size
+    legend.text = element_text(size = 12),    # legend item labels
+    legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.2, 0.15)))
+
+Na_plot
+
+ggsave(
+  "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Na_no labels.png",
+  Na_plot,
+  width = 1.5,
+  height = 3.5,
+  dpi = 300
+)
+```
+
 
 ## Other variables all together for now
 ```{r}

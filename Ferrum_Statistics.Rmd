@@ -520,3 +520,101 @@ Up_to_Downstream_differences <- summary_df_filtered_wide %>%
 ```{r}
 write_xlsx(Up_to_Downstream_differences, "C:/Users/tevinger/Downloads/Differences from Upstream to downstream.xlsx")
 ```
+
+# Temporal Dataset Statistics
+## Summary Stats
+```{r}
+#summary stats
+library(dplyr)
+
+# Define the elements and corresponding column names
+elements <- c("pH", "SpC", "SO4", "DIC", "Alk", "DOC", "Ca", "Mg", "Na", "K", "Cl", "DO")
+
+columns <- c("pH", "Spec_Cond_microS_per_cm", "f_SO4_mg_per_l", "DIC_mgC_per_l", "Alk_mgCaCO3_per_l", "DOC_mgC_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l", "f_Cl_mg_per_l", "Diss_oxy_mg_per_l")
+```
+
+## rstatix summary stats
+```{r}
+
+library(dplyr)
+library(rstatix)
+
+# Initialize an empty list to store results
+summary_stats_list <- list()
+quartiles_list <- list()
+
+# Loop through elements and columns
+for (i in seq_along(elements)) {
+  element <- elements[i]
+  column <- columns[i]
+  
+  # Perform summary operation with a default empty tibble if an error occurs
+  summary <- 
+    temporal_stats %>% # to group by New Grouping (seeps included)
+    dplyr::select(9,12, columns) %>% # New Grouping
+    filter(!is.na(.data[[column]])) %>%
+     group_by(Temporal_status, sample_collection_season) %>% #This is where you can change what variable you want to group the data by
+      get_summary_stats(vars = column, type = "common")
+
+  
+  # Calculate Q1 and Q3
+  q1_q3 <- 
+    temporal_stats %>% # to group by New Grouping (seeps included)
+    dplyr::select(9,12, columns) %>% # New Grouping
+    filter(!is.na(.data[[column]])) %>%
+     group_by(Temporal_status, sample_collection_season) %>% #This is where you can change what variable you want to group the data by
+      summarise(
+        variable = column,
+        Q1 = round(quantile(.data[[column]], probs = 0.25, na.rm = TRUE), 2),
+        Q3 = round(quantile(.data[[column]], probs = 0.75, na.rm = TRUE), 2),
+        .groups = "drop"
+      )
+  
+  # Store result
+  summary_stats_list[[i]] <- summary
+  quartiles_list[[i]] <- q1_q3
+}
+
+# Combine into one dataframe
+summary_df_2 <- do.call(rbind, summary_stats_list)
+quartiles_df <- do.call(rbind, quartiles_list)
+
+quartiles_df <- quartiles_df %>%
+  dplyr::rename(Variable = variable) %>%
+  mutate(joining = paste(
+    Temporal_status, 
+    sample_collection_season,
+    Variable, 
+    sep = "_"))
+
+summary_df_2 <- summary_df_2 %>%
+  dplyr::rename(Variable = variable) %>%
+  mutate(joining = paste(
+    Temporal_status, 
+    sample_collection_season,
+    Variable, 
+    sep = "_"))
+
+view(summary_df_2) # Grouped by New_Grouping
+view(quartiles_df)
+
+summary_combined <- summary_df_2 %>%
+  left_join(quartiles_df, by = "joining") %>%
+  dplyr::select(-joining,
+                -Temporal_status.y, -Variable.y, -sample_collection_season.y) %>%
+  dplyr::rename(Temporal_status = Temporal_status.x) %>%
+  dplyr::rename(Variable = Variable.x) %>%
+  dplyr::rename(sample_collection_season = sample_collection_season.x)
+
+view(summary_combined)
+
+summary_combined <- summary_combined %>%
+  arrange(sample_collection_season, Variable)
+#view(summary_df) # grouped by New_Grouping only
+
+write_xlsx(summary_combined, "C:/Users/tevinger/Downloads/Aggie Temporal status_sample season summary stats.xlsx")
+```
+
+```{r}
+
+```

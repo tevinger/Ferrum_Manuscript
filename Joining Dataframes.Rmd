@@ -232,7 +232,7 @@ write_xlsx(Alaska_DataRelease_2022_2023_Ferrum_V2,"C:/Users/tevinger/OneDrive - 
 ####percent of data that is <DL
 ```{r}
 # Calculate the percentage of data that is below DL for each variable
-columns_to_check <- c(
+columns_to_check_qa <- c(
   "Alk_mgCaCO3_per_l_qa",
   "f_NH3_mgN_per_l_qa",
   "f_PO4_mgP_per_l_qa",
@@ -284,25 +284,99 @@ columns_to_check <- c(
 "p_Pb_mcg_per_l_qa"
 )
 
+columns_to_check <- c(
+  "Alk_mgCaCO3_per_l",
+  "f_NH3_mgN_per_l",
+  "f_PO4_mgP_per_l",
+  "TDP_mgP_per_l",
+  "UTP_mgP_per_l",
+  "f_Cl_mg_per_l",
+  "f_NO3_mgN_per_l",
+  "f_SO4_mg_per_l",
+  "f_K_mg_l",
+  "f_Na_mg_l",
+  "f_Ca_mg_l",
+  "f_Mg_mg_l",
+  "f_SiO2_mg_per_l",
+  "f_Al_mcg_per_l", "f_V_mcg_per_l", 
+  "f_Cr_mcg_per_l", "f_Mn_mcg_per_l", 
+  "f_Fe_mcg_per_l", "f_Co_mcg_per_l", 
+  "f_Ni_mcg_per_l", "f_Cu_mcg_per_l", 
+  "f_Zn_mcg_per_l", "f_As_mcg_per_l", 
+  "f_Se_mcg_per_l", "f_Y_mcg_per_l", 
+  "f_Ag_mcg_per_l", "f_Cd_mcg_per_l", 
+  "f_Ba_mcg_per_l", "f_La_mcg_per_l", 
+  "f_Ce_mcg_per_l", "f_Pr_mcg_per_l", 
+  "f_Nd_mcg_per_l", "f_Dy_mcg_per_l", 
+  "f_Tl_mcg_per_l", "f_U_mcg_per_l",
+  "f_Pb_mcg_per_l",
+  
+  "u_Al_mcg_per_l", "u_V_mcg_per_l", 
+  "u_Cr_mcg_per_l", "u_Mn_mcg_per_l", 
+  "u_Fe_mcg_per_l", "u_Co_mcg_per_l", 
+  "u_Ni_mcg_per_l", "u_Cu_mcg_per_l", 
+  "u_Zn_mcg_per_l", "u_As_mcg_per_l", 
+  "u_Se_mcg_per_l", "u_Y_mcg_per_l", 
+  "u_Ag_mcg_per_l", "u_Cd_mcg_per_l", 
+  "u_Ba_mcg_per_l", "u_La_mcg_per_l", 
+  "u_Ce_mcg_per_l", "u_Pr_mcg_per_l", 
+  "u_Nd_mcg_per_l", "u_Dy_mcg_per_l", 
+  "u_Tl_mcg_per_l", "u_U_mcg_per_l", 
+  "u_Pb_mcg_per_l",
+  
+  "p_Al_mcg_per_l", "p_V_mcg_per_l", 
+  "p_Cr_mcg_per_l", "p_Mn_mcg_per_l", 
+  "p_Fe_mcg_per_l", "p_Co_mcg_per_l", 
+  "p_Ni_mcg_per_l", "p_Cu_mcg_per_l", 
+  "p_Zn_mcg_per_l", "p_As_mcg_per_l", 
+  "p_Se_mcg_per_l", "p_Y_mcg_per_l", 
+  "p_Ag_mcg_per_l", "p_Cd_mcg_per_l", 
+  "p_Ba_mcg_per_l", "p_La_mcg_per_l", 
+  "p_Ce_mcg_per_l", "p_Pr_mcg_per_l", 
+  "p_Nd_mcg_per_l", "p_Dy_mcg_per_l", 
+  "p_Tl_mcg_per_l", "p_U_mcg_per_l", 
+  "p_Pb_mcg_per_l"
+)
+
+
 # count the number of cells in each qa column that is <DL to calculate the percent of total data
-DL_counts <- sapply(columns_to_check, function(col) {
-  sum(grepl("DL", Alaska_DataRelease_2022_2023_Ferrum_V8[[col]], ignore.case = TRUE), na.rm = TRUE)
+DL_counts <- sapply(columns_to_check_qa, function(col) {
+  sum(grepl("DL", Alaska_DataRelease_2022_2023_Ferrum_V10[[col]], ignore.case = TRUE), na.rm = TRUE)
 })
 
-print(DL_counts_df)
+# print(DL_counts_df)
+
+numeric_counts <- sapply(columns_to_check, function(col) {
+  vals <- Alaska_DataRelease_2022_2023_Ferrum_V10[[col]]
+  # safely coerce to numeric
+  nums <- suppressWarnings(as.numeric(vals))
+  sum(!is.na(nums))
+})
 
 #Convert to dataframe
+DL_summary <- data.frame(
+  qa_column        = columns_to_check_qa,
+  data_column      = columns_to_check,
+  DL_count         = DL_counts,
+  numeric_cell_count = numeric_counts,
+  row.names = NULL
+)
+
+view(DL_summary)
+
+
 DL_counts_df <- data.frame(Column = names(DL_counts), DL_Count = DL_counts)
 
 # Add percent_DL column
-DL_counts_df$percent_DL <- (DL_counts_df$DL_Count / 133) * 100
-
-#view(DL_counts_df)
+DL_summary <- DL_summary %>%
+  mutate(
+    percent_DL = (DL_count / numeric_cell_count) *100
+  )
 
 # f_V and f_Ag had high censoring but these metals aren't going to be used in any analysis anyways
 
 # Save the percentage data frame
-write_xlsx(DL_counts_df, "C:/Users/tevinger/OneDrive - University of California, Davis/Lab/Alaska Projects/percent of data below DL for V8.xlsx")
+write_xlsx(DL_summary, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/left-censored data assessment.xlsx")
 ```
 
 

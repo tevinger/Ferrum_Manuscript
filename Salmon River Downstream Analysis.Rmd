@@ -1440,13 +1440,15 @@ SalmonR_SO4_Cl_area <- ggplot() +
     xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
     linetype = "dashed", color = "grey15", linewidth = 0.5
   ) +
-  coord_cartesian(x = c(1,22.5)) +
+  coord_cartesian(x = c(1,22.5), y = c(0,225)) +
   scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
                      expand = expansion(mult = c(0.035, 0.015))) +
+  scale_y_continuous(sec.axis = dup_axis(),
+    expand = expansion(mult = c(0.02, 0.02))) +
   labs(x = NULL, y = NULL, title = NULL) +
   theme_minimal() +
-  theme(axis.text.y.right = element_blank()
-        #axis.text.y.left = element_blank()
+  theme(axis.text.y.right = element_blank(),
+        axis.text.y.left = element_blank()
         ) +
   DA_theme
 
@@ -1484,7 +1486,7 @@ SalmonR_SO4_Cl_area_combo
 ggsave(
   "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/SO4_Cl area plus heat plot_without labels.png",
   SalmonR_SO4_Cl_area_combo,
-  width = 3.6,
+  width = 3.55,
   height = 1.8,
   dpi = 300
 )
@@ -5020,17 +5022,16 @@ SalmonR_REE_area <- ggplot() +
              pch = 19, color = "black", size = 2) +
   geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
              linetype = "dashed", color = "grey15", linewidth = 0.5) +
-  coord_cartesian(x = c(1,22.5), y = c(0,125)) +
+  coord_cartesian(x = c(1,22.5), y = c(0.01,190)) +
   scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
                      expand = expansion(mult = c(0.035, 0.015))) +
-  scale_y_continuous(breaks = c(0,12.5,25,37.5,50,62.5,75,87.5,100,112.5,125), labels = c(0,"","", "",50,"","","",100,"",""), sec.axis = dup_axis(), expand = expansion(mult = c(0.02, 0.02))) +
-  # scale_y_log10(
-  #   breaks = breaks,
-  #   labels = parse(text = labels),
-  #   expand = expansion(mult = c(0.02, 0.02)),
-  #   sec.axis = dup_axis()
-  # ) +
-  # annotation_logticks(sides = "lr") +
+  # scale_y_continuous(breaks = c(0,25,50,75,100,125), labels = c(0,"",50,"",100,""), sec.axis = dup_axis(), expand = expansion(mult = c(0.02, 0.02))) +
+  scale_y_continuous(
+    trans = pseudo_log_trans(base = 10),
+    breaks = c(0,1,10,100),
+    labels = c(0,1,10,100),
+    expand = expansion(mult = c(0.02,0.02))) +
+  annotation_logticks(sides = "l") +
   labs(x = NULL, y = NULL, title = NULL) +
   theme_minimal() +
   theme(axis.text.y.right = element_blank()
@@ -5063,7 +5064,7 @@ SalmonR_REE_area_combo <- (
   )
 
 SalmonR_REE_area_combo
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/REE area plus heat plot_without labels.png",SalmonR_REE_area_combo, width = 3.6, height = 2.1, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/REE area plus heat plot_without labels.png",SalmonR_REE_area_combo, width = 3.55, height = 2.1, dpi = 300)
 
 ```
 
@@ -5268,11 +5269,12 @@ f_Co_heat <- ggplot(f_Co_rel_data_to_plot_interp,
                      expand = expansion(mult = c(0.035, 0.015))) +
   theme_minimal() + DA_theme +
   theme(axis.text.y = element_blank(),
-        legend.position = "top",
+        legend.position = "none",
         axis.ticks.y = element_blank(),
         panel.grid = element_blank(),
         axis.text.x = element_blank(),
         legend.title = element_blank(),
+        legend.text = element_text(angle = 45, hjust = 1),
         axis.ticks.length.x = unit(0.1, "cm"))
 
 # Particulate Co heat
@@ -5292,16 +5294,26 @@ p_Co_heat <- ggplot(p_Co_rel_data_to_plot_interp,
         axis.ticks.x = element_blank(),
         panel.grid = element_blank(),
         axis.text.x = element_blank(),
-        legend.position = "top",
+        legend.position = "none",
         legend.margin = margin(2, 2, 0, 2),
         plot.margin = margin(0, 1, 1, 1),
         legend.title = element_blank(),
+        legend.text = element_text(angle = 45, hjust = 1),
         axis.ticks.length.x = unit(0.1, "cm"))
 
 # Combine Co heatmaps
 Salmon_Co_combined <- p_Co_heat / f_Co_heat
 Salmon_Co_combined
+```
 
+```{r}
+f_Co_heat_legend <- ggpubr::get_legend(f_Co_heat)
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/f_Co_heat_legend.png",cowplot::ggdraw(f_Co_heat_legend), width = 4, height = 2, dpi = 300)
+
+p_Co_heat_legend <- ggpubr::get_legend(p_Co_heat)
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/p_Co_heat_legend.png",cowplot::ggdraw(p_Co_heat_legend), width = 4, height = 2, dpi = 300)
 ```
 
 ## Area plot
@@ -5321,19 +5333,27 @@ SalmonR_Co_area <- ggplot() +
             color = "#1d6e66", linewidth = 0.4) +
   geom_point(data = MS_f_Co_area,
              aes(x = Rel_Water_Area_plotting, y = Metal_conc),
-             pch = 21, fill = "white", color = "black", size = 2) +
+             pch = 21, fill = "black", color = "black", size = 2) +
   geom_point(data = MS_u_Co_area,
              aes(x = Rel_Water_Area_plotting, y = Metal_conc),
              pch = 19, color = "black", size = 2) +
   geom_vline(xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
              linetype = "dashed", color = "grey15", linewidth = 0.5) +
-  coord_cartesian(x = c(1,22.5), y = c(0,200)) +
+  coord_cartesian(x = c(1,22.5), y = c(0,250)) +
   scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
                      expand = expansion(mult = c(0.035, 0.015))) +
-  scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200),
-                     labels = c(0,"",50,"",100,"",150,"",200),
-                     sec.axis = dup_axis(),
-                     expand = expansion(mult = c(0.02, 0.02))) +
+  scale_y_continuous(
+    trans = pseudo_log_trans(base = 10),
+    breaks = c(0,1,10,100),
+    labels = c(0,1,10,100),
+    expand = expansion(mult = c(0.02,0.02))) +
+  annotation_logticks(sides = "l") +
+  # scale_y_continuous(breaks = c(0,50,100,150,200),
+  #                    labels = c(0,50,100,150,200),
+  #                    sec.axis = dup_axis(),
+  #                    expand = expansion(mult = c(0.02, 0.02))) +
+  #scale_y_log10() +
+  #sec.axis = dup_axis(name = NULL, labels = NULL) +
   labs(x = NULL, y = NULL, title = NULL) +
   theme_minimal() +
   theme(
@@ -5368,7 +5388,7 @@ SalmonR_Co_area_combo <- (
 
 SalmonR_Co_area_combo
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Co area plus heat plot_without labels.png", SalmonR_Co_area_combo, width = 3.6, height = 2.1, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Co area plus heat plot_without labels.png", SalmonR_Co_area_combo, width = 3.5, height = 2.1, dpi = 300)
 
 ```
 
@@ -5905,7 +5925,7 @@ SalmonR_Se_area <- ggplot() +
     coord_cartesian(x = c(1,22.5), y = c(0,18)) +
   scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
                      expand = expansion(mult = c(0.035, 0.015))) +
-  scale_y_continuous(breaks = c(0,2.5,5,7.5,10,12.5,15,17.5), labels = c(0,"",5,"",10,"",15,""), sec.axis = dup_axis(), expand = expansion(mult = c(0.02, 0.02))) +
+  scale_y_continuous(breaks = c(0,5,10,15), labels = c(0,5,10,15), sec.axis = dup_axis(), expand = expansion(mult = c(0.02, 0.02))) +
   # scale_y_log10(
   #   breaks = breaks,
   #   labels = parse(text = labels),
@@ -5916,7 +5936,8 @@ SalmonR_Se_area <- ggplot() +
   labs(x = NULL, y = NULL, title = NULL) +
   theme_minimal() +
   theme(axis.text.y.right = element_blank(),
-        axis.text.y.left = element_blank()) +
+        axis.text.y.left = element_blank()
+        ) +
   DA_theme
 
 SalmonR_Se_area
@@ -5943,7 +5964,7 @@ SalmonR_Se_area_combo <- (
 
 SalmonR_Se_area_combo
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Se area plus heat plot_without labels.png", SalmonR_Se_area_combo, width = 3.6, height = 2.1, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Se area plus heat plot_without labels.png", SalmonR_Se_area_combo, width = 3.55, height = 2.1, dpi = 300)
 ```
 
 
@@ -6147,10 +6168,10 @@ SalmonR_Alk_area <- ggplot() +
     xintercept = c(3.75, 6.35, 4.75, 6.25, 8.00, 8.10, 9.0, 10.8, 11),
     linetype = "dashed", color = "grey15", linewidth = 0.5
   ) +
-  coord_cartesian(x = c(1,22.5), y = c(0,190)) +
+  coord_cartesian(x = c(1,22.5), y = c(0,200)) +
   scale_x_continuous(breaks = DA_x_breaks, labels = DA_x_labels,
                      expand = expansion(mult = c(0.035, 0.015))) +
-  scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200), labels = c(0,"",50,"",100,"",150,"",200), sec.axis = dup_axis(), expand = expansion(mult = c(0.02, 0.02))) +
+  scale_y_continuous(breaks = c(0,50,100,150,200), labels = c(0,50,100,150,200), sec.axis = dup_axis(), expand = expansion(mult = c(0.02, 0.02))) +
   labs(x = NULL, y = NULL, title = NULL) +
   theme_minimal() +
   theme(axis.text.y.right = element_blank(),
@@ -6181,7 +6202,7 @@ SalmonR_Alk_area_combo <- (
 
 SalmonR_Alk_area_combo
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Alk area plus heat plot_without labels.png", SalmonR_Alk_area_combo, width = 3.6, height = 1.8, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/03_Downstream Analysis/Alk area plus heat plot_without labels.png", SalmonR_Alk_area_combo, width = 3.55, height = 1.8, dpi = 300)
 ```
 
 # DIC

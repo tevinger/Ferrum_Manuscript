@@ -155,6 +155,22 @@ Grouped_Ferrum_2022_2023_data <- Grouped_Ferrum_2022_2023_data %>%
 view(Grouped_Ferrum_2022_2023_data)
 ```
 
+## 2023 data late season only
+```{r}
+Ferrum_upstream_to_downstream <- Grouped_Ferrum_2022_2023_data %>%
+  filter(New_Grouping %in% c("Upstream", "Downstream MS")) %>%
+ dplyr::filter(
+    (Watershed == "Agashashok River" & sample_collection_year == 2023 & sample_collection_season == "late") |
+    (Watershed == "Anaktok River"    & sample_collection_year == 2023 & sample_collection_season == "early") |
+    (Watershed == "Kugururok River"  & sample_collection_year == 2023 & sample_collection_season == "early") |
+    (Watershed == "Nakolikurok Creek"& sample_collection_year == 2023 & sample_collection_season == "early") |
+    (Watershed == "Salmon River"     & sample_collection_year == 2023 & sample_collection_season == "middle") |
+    (Watershed == "Tukpahlearik Creek"& sample_collection_year == 2023 & sample_collection_season == "middle")
+  )
+
+write_xlsx(Ferrum_upstream_to_downstream, "C:/Users/tevinger/Downloads/Ferrum_upstream_to_downstream.xlsx")
+```
+
 # Summary Statistics
 ## set elements and columns for summary stats loop
 ```{r}
@@ -281,7 +297,7 @@ for (i in seq_along(elements)) {
     dplyr::select(2,4,19:86) %>% # New Grouping
     filter(!is.na(.data[[column]])) %>%
     group_by(New_Grouping
-             #, Watershed
+             # , Watershed
              ) %>% #This is where you can change what variable you want to group the data by
     #group_by(New_Grouping) %>% #This is where you can change what variable you want to group the data by
       summarise(
@@ -303,14 +319,14 @@ quartiles_df <- do.call(rbind, quartiles_list)
 quartiles_df <- quartiles_df %>%
   dplyr::rename(Variable = variable) %>%
   mutate(joining = paste(
-    #Watershed, 
+    # Watershed, 
     New_Grouping, 
     Variable, sep = "_"))
 
 summary_df_2 <- summary_df_2 %>%
   dplyr::rename(Variable = variable) %>%
   mutate(joining = paste(
-    #Watershed, 
+    # Watershed, 
     New_Grouping, 
     Variable, sep = "_"))
 
@@ -320,11 +336,11 @@ view(quartiles_df)
 summary_combined <- summary_df_2 %>%
   left_join(quartiles_df, by = "joining") %>%
   dplyr::select(-joining, 
-                #-Watershed.y, 
+                # -Watershed.y, 
                 -New_Grouping.y, -Variable.y) %>%
   dplyr::rename(New_Grouping = New_Grouping.x) %>%
-  dplyr::rename(Variable = Variable.x)
-  #dplyr::rename(Watershed = Watershed.x)
+  dplyr::rename(Variable = Variable.x) 
+  # dplyr::rename(Watershed = Watershed.x)
 
 #arrange New_Grouping so it goes upstream to downstream
 summary_combined <- summary_combined %>%
@@ -339,7 +355,7 @@ view(summary_combined)
 
 summary_combined_watershed <- summary_combined
 
-#write_xlsx(summary_combined, "C:/Users/tevinger/Downloads/Group and watershed summary stats_rstatix_updated Nov 13_2025.xlsx")
+write_xlsx(summary_combined, "C:/Users/tevinger/Downloads/Group summary stats_rstatix_updated Dec 27_2025.xlsx")
 ```
 
 ```{r}
@@ -404,14 +420,20 @@ view(summary_df_filtered)
 
 summary_df_filtered_wide <- summary_df_filtered %>%
   # select median (6) or mean (8)
-  dplyr::select(1,2,8) %>%
+  dplyr::select(1,2,6) %>%
   pivot_wider(
   id_cols = Variable,
   names_from = New_Grouping,
-  values_from = mean
+  values_from = median
 )
 
+summary_df_filtered_wide <- summary_df_filtered_wide %>%
+  mutate(times_higher_in_seep = ifelse(Upstream == 0, NA, Seep / Upstream),
+         times_higher_downstream = ifelse(`Downstream MS` == 0, NA, `Downstream MS`/Upstream))
+
 view(summary_df_filtered_wide)
+
+write_xlsx(summary_df_filtered_wide, "C:/Users/tevinger/Downloads/times higher calcs_Dec 27 2025.xlsx")
 
 #write_xlsx(summary_df_filtered_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Ferrum Manuscript Summary Stats/Upstream, seep, downstream_means.xlsx")
 ```

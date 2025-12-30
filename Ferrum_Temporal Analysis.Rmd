@@ -72,7 +72,9 @@ library(ggpattern)
 # Download Discharge Data
 ```{r}
 # Set site numbers for the 4 water stations we want to pull data for
-site_numbers <- c("15564879", "15743850", "15744500", "15747000")
+site_numbers <- c("15564879", "15743850", "15744500", "15747000", "15746980")
+
+# IKALUKROK C AB RED DOG C NR KIVALINA AK Site Number = 15746980
 
 sites <- whatNWISsites(sites = site_numbers)
 
@@ -892,17 +894,17 @@ print(RD_sulfate_counts)
 ```{r}
 RD_Sulfate_temporal_bp <- RD_sulfate %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
-  ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
-  geom_boxplot(position = position_dodge(width = 0.75), width = 0.55) +
-  #scale_y_log10() +
-  # scale_y_continuous(breaks = c(0,50,100,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000,1050,1100), labels = c(0,"","","",200,"","","",400,"","","",600,"","","",800,"","","",1000,"","")) +
-  scale_y_continuous(breaks = c(0,100,200,300,400,500,600,700,800,900,1000,1100), labels = c(0,"",200,"",400,"",600,"",800,"",1000,"")) +
+  ggplot(aes(x = as.factor(year_season), y = report_result_value, fill = sample_collection_season)) +
+  geom_boxplot(
+    position = position_dodge2(width = 0.75), width = 0.55
+    ) +
+  scale_y_continuous(breaks = c(0,100,200,300,400,500,600,700,800,900,1000,1100,1200), labels = c(0,"",200,"",400,"",600,"",800,"",1000,"",1200)) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_fill_manual(
     values = c("early" = "#e6bed6", "late" = "#bc5090")
   ) +
-  coord_cartesian(ylim = c(10, 1200)) +
-  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  coord_cartesian(ylim = c(0, 1200)) +
+  geom_vline(xintercept = 9.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
   #geom_vline(xintercept = 21.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
   labs(
     title = NULL,
@@ -916,6 +918,7 @@ RD_Sulfate_temporal_bp <- RD_sulfate %>%
   temporal_theme +
   theme(legend.position = "none",
         axis.text.y = element_blank(),
+        axis.ticks.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
         plot.background = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA))
@@ -928,7 +931,9 @@ RD_Sulfate_temporal_bp
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V1.png", Sulfate_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/SO4_2015 to 2024.png", RD_Sulfate_temporal_bp, width = 3.5, height = 4.25, dpi = 300, bg = "transparent")
+## dimensions for V3_smaller: w = 3.5, h = 4.25
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Final_SO4 no labels.png", RD_Sulfate_temporal_bp, width = 4, height = 4.35, dpi = 300, bg = "transparent")
 ```
 
 ## Alkalinity
@@ -1167,16 +1172,17 @@ print(RD_iron_counts)
 RD_Iron_temporal_bp <- RD_iron_ALL %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
   ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
-  geom_boxplot(position = position_dodge(width = 0.95)) +
+  geom_boxplot(position = position_dodge(width = 0.75), width = 0.55) +
   #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_y_log10() +
   scale_fill_manual(
-    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+    values = c("early" = "#e6bed6", "late" = "#bc5090")
   ) +
   #coord_cartesian(ylim = c(0, 250)) +
   # Add counts as text
   #geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  geom_vline(xintercept = 21.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
   labs(
     title = NULL,
     #title = "Station 9 - Iron", 
@@ -1189,7 +1195,7 @@ RD_Iron_temporal_bp <- RD_iron_ALL %>%
   theme_minimal() +
   temporal_theme +
   theme(legend.position = "none",
-        #axis.text.y = element_blank(),
+        #axis.text.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
         plot.background = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA))
@@ -1198,7 +1204,7 @@ RD_Iron_temporal_bp
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Iron_1998 to 2024.png", RD_Iron_temporal_bp, width = 7, height = 5, dpi = 300, bg = "transparent")
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Iron_1998 to 2024.png", RD_Iron_temporal_bp, width = 7, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ## Nickel
@@ -1217,19 +1223,19 @@ RD_nickel_ALL <- Red_Dog_stn_9_ALL %>%
   #filter(fraction == "D") %>%
   mutate(year_season = paste(sample_collection_year,
                              sample_collection_season,
-                             sep = "_")) %>%
-  mutate(
-    report_result_value = if_else(
-      report_result_unit == "mg/L",
-      report_result_value * 1000,
-      report_result_value
-    ),
-    report_result_unit = if_else(
-      report_result_unit == "mg/L",
-      "ug/L",
-      report_result_unit
-    )
-  )
+                             sep = "_")) 
+  # mutate(
+  #   report_result_value = if_else(
+  #     report_result_unit == "mg/L",
+  #     report_result_value * 1000,
+  #     report_result_value
+  #   ),
+  #   report_result_unit = if_else(
+  #     report_result_unit == "mg/L",
+  #     "ug/L",
+  #     report_result_unit
+  #   )
+  # )
   #filter(lubridate::year(sample_date) >= 2011)
 ```
 
@@ -1244,6 +1250,7 @@ print(RD_iron_counts)
 ```
 
 ```{r}
+## Need to make this a continuous scale with the missing years
 RD_Nickel_temporal_bp <- RD_nickel_ALL %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
   ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
@@ -1252,7 +1259,7 @@ RD_Nickel_temporal_bp <- RD_nickel_ALL %>%
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_y_log10() +
   scale_fill_manual(
-    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+    values = c("early" = "#e6bed6", "late" = "#bc5090")
   ) +
   #coord_cartesian(ylim = c(0, 250)) +
   # Add counts as text
@@ -1305,31 +1312,18 @@ RD_zinc_ALL <- Red_Dog_stn_9_ALL %>%
 ```
 
 ```{r}
-# sample size of each year_season
-
-RD_iron_counts <- RD_iron %>%
-  filter(sample_collection_season %in% c("early", "late")) %>%
-  count(year_season)
-
-print(RD_iron_counts)
-```
-
-```{r}
 RD_Zinc_temporal_bp <- RD_zinc %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
-  ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
+  ggplot(aes(x = as.factor(year_season), y = report_result_value, fill = sample_collection_season)) +
   geom_boxplot(position = position_dodge(width = 0.75), width = 0.55) +
-  #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
-  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
-  scale_y_log10() +
-  annotation_logticks(sides = "l") +
+  #scale_y_log10() +
+  # annotation_logticks(sides = "l") +
   scale_fill_manual(
     values = c("early" = "#e6bed6", "late" = "#bc5090")
   ) +
-  coord_cartesian(ylim = c(50, 60000)) +
-  # Add counts as text
-  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
-  #geom_vline(xintercept = 21.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  coord_cartesian(ylim = c(50, 5000)) +
+  scale_y_continuous(breaks = c(0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000), labels = c(0,"",1000,"",2000,"",3000,"",4000,"",5000)) +
+  geom_vline(xintercept = 9.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
   labs(
     title = NULL,
     #title = "Station 9 - Zinc", 
@@ -1342,16 +1336,167 @@ RD_Zinc_temporal_bp <- RD_zinc %>%
   theme_minimal() +
   temporal_theme +
   theme(legend.position = "none",
+        #axis.text.x = element_blank(),
         axis.text.y = element_blank(),
+        axis.ticks.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
         plot.background = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA))
 
 RD_Zinc_temporal_bp
 
+# library(plotly)
+# RD_Zinc_temporal_bp_interactive <- ggplotly(RD_Zinc_temporal_bp)
+# RD_Zinc_temporal_bp_interactive
+
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Zinc_2015 to 2024.png", RD_Zinc_temporal_bp, width = 3.5, height = 4.25, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Final_Zn no ticks.png", RD_Zinc_temporal_bp, width = 4, height = 4.35, dpi = 300, bg = "transparent")
+```
+
+## Cadmium
+```{r}
+RD_Cd <- Red_Dog_stn_9 %>%
+  filter(chemical_name == "Cadmium") %>%
+  #filter(fraction == "T") %>%
+  # filter(fraction == "D") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_"))
+
+RD_Cd_ALL <- Red_Dog_stn_9_ALL %>%
+  filter(chemical_name == "Cadmium") %>%
+  #filter(fraction == "T") %>%
+  #filter(fraction == "D") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) 
+  #filter(lubridate::year(sample_date) >= 2011)
+
+#write_xlsx(RD_zinc, "C:/Users/tevinger/Downloads/WulikR Station 9 Zinc 2015 to 2024.xlsx")
+
+```
+
+```{r}
+RD_Cd_temporal_bp <- RD_Cd_ALL %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.75), width = 0.55) +
+  #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  scale_y_log10() +
+  annotation_logticks(sides = "l") +
+  scale_fill_manual(
+    values = c("early" = "#e6bed6", "late" = "#bc5090")
+  ) +
+  #coord_cartesian(ylim = c(50, 60000)) +
+  # Add counts as text
+  #geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  geom_vline(xintercept = 21.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  labs(
+    title = NULL,
+    #title = "Station 9 - Cadmium", 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    #y = NULL,
+    y = "Concentration (µg/L)",
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+RD_Cd_temporal_bp
+
+# library(plotly)
+# RD_Zinc_temporal_bp_interactive <- ggplotly(RD_Zinc_temporal_bp)
+# RD_Zinc_temporal_bp_interactive
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Zinc_2015 to 2024.png", RD_Zinc_temporal_bp, width = 3.5, height = 4.25, dpi = 300, bg = "transparent")
+```
+
+## Aluminum
+```{r}
+RD_Al <- Red_Dog_stn_9 %>%
+  filter(chemical_name == "Aluminum") %>%
+  #filter(fraction == "T") %>%
+  # filter(fraction == "D") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_"))
+
+RD_Al_ALL <- Red_Dog_stn_9_ALL %>%
+  filter(chemical_name == "Aluminum") %>%
+  #filter(fraction == "T") %>%
+  #filter(fraction == "D") %>%
+  mutate(year_season = paste(sample_collection_year,
+                             sample_collection_season,
+                             sep = "_")) 
+  #filter(lubridate::year(sample_date) >= 2011)
+
+#write_xlsx(RD_zinc, "C:/Users/tevinger/Downloads/WulikR Station 9 Zinc 2015 to 2024.xlsx")
+
+```
+
+```{r}
+RD_Al_temporal_bp <- RD_Al_ALL %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
+  geom_boxplot(position = position_dodge(width = 0.75), width = 0.55) +
+  #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  scale_y_log10() +
+  annotation_logticks(sides = "l") +
+  scale_fill_manual(
+    values = c("early" = "#e6bed6", "late" = "#bc5090")
+  ) +
+  #coord_cartesian(ylim = c(50, 60000)) +
+  # Add counts as text
+  #geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  geom_vline(xintercept = 21.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  labs(
+    title = NULL,
+    #title = "Station 9 - Cadmium", 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    #y = NULL,
+    y = "Concentration (µg/L)",
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        #axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+RD_Al_temporal_bp
+
+# library(plotly)
+# RD_Zinc_temporal_bp_interactive <- ggplotly(RD_Zinc_temporal_bp)
+# RD_Zinc_temporal_bp_interactive
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Zinc_2015 to 2024.png", RD_Zinc_temporal_bp, width = 3.5, height = 4.25, dpi = 300, bg = "transparent")
+```
+
+## SI - metals
+```{r}
+library(cowplot)
+
+SI_metals <- plot_grid(RD_Iron_temporal_bp, RD_Zinc_temporal_bp, RD_Cd_temporal_bp, RD_Al_temporal_bp, ncol = 2)
+
+SI_metals
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/SI metals_2015 to 2024.png", SI_metals, width = 12, height = 8, dpi = 300, bg = "transparent")
 ```
 
 ## Chloride
@@ -1579,7 +1724,7 @@ RD_SO4_Cl_temporal_bp
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/SO4_1998 to 2025.png", RD_SO4_Cl_temporal_bp, width = 6.5, height = 5, dpi = 300, bg = "transparent")
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/SO4_1998 to 2025.png", RD_SO4_Cl_temporal_bp, width = 6.5, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ## Ca:SO4
@@ -1739,15 +1884,46 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 ```
 
 # Station 9 stats
+
+```{r}
+RD_temporal_stats <- Red_Dog_stn_9 %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  dplyr::select(4,9,10,11,12,42,45,28) %>% # selecting the columns I want (28 is the analysis date that I'm hoping to use as a unique identifier for pivotting wider)
+  mutate(
+    year_season = paste(sample_collection_year, sample_collection_season, sep = "_") 
+  ) %>%
+   mutate(
+    Temporal_status = ifelse(year_season %in% c("2015_early", "2016_early", "2017_early", "2018_early", "2019_early", "2015_late", "2016_late", "2017_late", "2018_late"), 'pre',
+                      ifelse(year_season %in% c("2019_late", "2020_early", "2020_late", "2021_early", "2021_late", "2022_early", "2022_late", "2023_early", "2023_late", "2024_early", "2024_late"), 'post', NA))
+  ) %>%
+  mutate(
+    temporal_status_season = paste(Temporal_status, sample_collection_season, sep = "_")
+  ) %>%
+  relocate(temporal_status_season, Temporal_status, analysis_date, .after = sample_date) %>%
+  mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
+```
+
+
+```{r}
+RD_early_temporal_stats <- RD_temporal_stats %>%
+  filter(sample_collection_season == "early") %>%
+  mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
+
+RD_late_temporal_stats <- RD_temporal_stats %>%
+  filter(sample_collection_season == "late") %>%
+  mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
+```
+
 ```{r}
 RD_data_2018_2019 <- RD_temporal_stats %>%
-  filter(sample_collection_year %in% c("2018", "2019", "2020")) %>%
+  filter(sample_collection_year %in% c("2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024")) %>%
   dplyr::select(4,6,8,9,10)
 
 RD_data_2018_2019_summary <- RD_data_2018_2019 %>%
   filter(chemical_name %in% c("Alkalinity (As CaC03)", "Sulfate")) %>%
   #group_by(chemical_name, sample_collection_season, sample_collection_year) %>%
-   group_by(chemical_name, sample_collection_year) %>%
+   # group_by(chemical_name, sample_collection_year) %>%
+  group_by(chemical_name, sample_collection_season, Temporal_status) %>%
   summarise(
     n        = n(),                     # number of values
     mean     = mean(report_result_value, na.rm = TRUE),
@@ -1757,30 +1933,10 @@ RD_data_2018_2019_summary <- RD_data_2018_2019 %>%
     min      = min(report_result_value, na.rm = TRUE),
     max      = max(report_result_value, na.rm = TRUE),
     .groups = "drop"
-  )
-```
-
-```{r}
-RD_temporal_stats <- Red_Dog_stn_9 %>%
-  filter(sample_collection_season %in% c("early", "late")) %>%
-  dplyr::select(4,9,10,11,12,42,45,28) %>% # selecting the columns I want (28 is the analysis date that I'm hoping to use as a unique identifier for pivotting wider)
-   mutate(
-    Temporal_status = ifelse(sample_collection_year %in% c(2015, 2016, 2017, 2018), 'pre',
-                      ifelse(sample_collection_year %in% c(2019, 2020, 2021, 2022, 2023, 2024), 'post', NA))
   ) %>%
-  mutate(
-    temporal_status_season = paste(Temporal_status, sample_collection_season, sep = "_")
-  ) %>%
-  relocate(temporal_status_season, Temporal_status, analysis_date, .after = sample_date) %>%
-  mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
+  filter(sample_collection_season == "late")
 
-RD_early_temporal_stats <- RD_temporal_stats %>%
-  filter(sample_collection_season == "early") %>%
-  mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
-
-RD_late_temporal_stats <- RD_temporal_stats %>%
-  filter(sample_collection_season == "late") %>%
-  mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
+write_xlsx(RD_data_2018_2019_summary, "C:/Users/tevinger/Downloads/late season pre and post Station 9 alkalinity and sulfate.xlsx")
 ```
 
 ```{r}
@@ -1822,7 +1978,9 @@ RD_early_temporal_stats_wide <- RD_early_temporal_stats_no_dupes %>%
 ```{r}
 RD_temporal_stats_summary <- RD_temporal_stats %>%
   filter(Temporal_status %in% c("pre", "post")) %>%   # keep only the two groups
-  group_by(chemical_name, sample_collection_season, Temporal_status) %>%
+  #filter(!is.na(report_result_value)) %>%
+  group_by(chemical_name, Temporal_status) %>%
+  # group_by(chemical_name, temporal_status_season) %>%
   summarise(
     n        = n(),                     # number of values
     mean     = mean(report_result_value, na.rm = TRUE),
@@ -1834,9 +1992,18 @@ RD_temporal_stats_summary <- RD_temporal_stats %>%
     .groups = "drop"
   )
 
-#view(RD_temporal_stats_summary)
+view(RD_temporal_stats_summary)
 
-write_xlsx(RD_temporal_stats_summary, "C:/Users/tevinger/Downloads/Red Dog Station 9 summary stats with season_corrected for metals.xlsx")
+# RD_temporal_stats_summary <- RD_temporal_stats_summary %>%
+#   mutate(
+#     temporal_status_season = factor(
+#       temporal_status_season,
+#       levels = c("pre_early", "pre_late", "post_early", "post_late")
+#     )
+#   ) %>%
+#   arrange(chemical_name, temporal_status_season)
+
+write_xlsx(RD_temporal_stats_summary, "C:/Users/tevinger/Downloads/Station 9 summary stats.xlsx")
 ```
 
 ## Early season Comparison
@@ -3252,21 +3419,38 @@ temporal_filled$sample_collection_year <- factor(
     "2015", "2016", "2017", "2018", "2018.5", "2019", "2020", "2021", "2022", "2023", "2024"
   )
 )
+
+temporal_filled_2 <- temporal_filled %>%
+  mutate(
+    sample_collection_season = factor(sample_collection_season, levels = c("early", "late")),
+    year_season = interaction(sample_collection_year, sample_collection_season, sep = "_", drop = TRUE)
+  )
+
+temporal_filled_2$year_season <- factor(
+  temporal_filled_2$year_season,
+  levels = c(
+    "2015_early","2015_late", "2016_early", "2016_late", "2017_early", "2017_late", "2018_early", "2018_late", "2019_early", "2019_late", "2020_early", "2020_late", "2021_early", "2021_late", "2022_early", "2022_late", "2023_early", "2023_late", "2024_early", "2024_late"
+  )
+)
 ```
 
 ```{r}
-Sulfate_temporal_bp <- temporal_filled %>%
+Sulfate_temporal_bp <- temporal_filled_2 %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
-  ggplot(aes(x = as.factor(sample_collection_year), y = f_SO4_mg_per_l, fill = sample_collection_season)) +
-  geom_boxplot(position = position_dodge(width = 0.75), width = 0.55) +
-  scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
+  ggplot(aes(x = as.factor(year_season), y = f_SO4_mg_per_l, fill = sample_collection_season)) +
+  #ggplot(aes(x = as.factor(sample_collection_year), y = f_SO4_mg_per_l, fill = sample_collection_season)) +
+  geom_boxplot(
+    position = position_dodge2(width = 0.75), width = 0.55
+    ) +
+  scale_x_discrete(expand = expansion(add = 0.6)) +
+  scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250,275), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250, "")) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_fill_manual(
     values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
   ) +
-  coord_cartesian(ylim = c(0, 300)) +
+  coord_cartesian(ylim = c(0, 250)) +
   # Add counts as text
-  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  geom_vline(xintercept = 9.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
   labs(
     title = NULL,
     #title = "Aggie", 
@@ -3279,6 +3463,7 @@ Sulfate_temporal_bp <- temporal_filled %>%
   temporal_theme +
   theme(legend.position = "none",
         axis.text.y = element_blank(),
+        axis.ticks.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
         plot.background = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA))
@@ -3291,8 +3476,60 @@ Sulfate_temporal_bp
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V1.png", Sulfate_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V3_smaller.png", Sulfate_temporal_bp, width = 3.5, height = 4.25, dpi = 300, bg = "transparent")
+## dimensions for V3_smaller: w = 3.5, h = 4.25
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Final_SO4 no labels.png", Sulfate_temporal_bp, width = 4, height = 4.35, dpi = 300, bg = "transparent")
 ```
+
+```{r}
+Sulfate_temporal_bp <- temporal_filled %>%
+  dplyr::filter(sample_collection_season %in% c("early", "late")) %>%
+  dplyr::mutate(
+    year_num = as.numeric(sample_collection_year),
+    season_offset = dplyr::case_when(
+      sample_collection_season == "early" ~ -0.20,
+      sample_collection_season == "late"  ~  0.20,
+      TRUE ~ 0
+    ),
+    x_pos = year_num + season_offset
+  ) %>%
+  ggplot(aes(
+    x = x_pos,
+    y = f_SO4_mg_per_l,
+    fill = sample_collection_season,
+    group = interaction(sample_collection_year, sample_collection_season)
+  )) +
+  geom_boxplot(width = 0.30) +
+  geom_vline(xintercept = 5, linetype = "dashed", linewidth = 0.8, alpha = 0.7) +
+  scale_x_continuous(
+    breaks = sort(unique(as.numeric(temporal_filled$sample_collection_year))),
+    labels = sort(unique(temporal_filled$sample_collection_year)),
+    expand = expansion(add = 0.4)
+  ) +
+  scale_y_continuous(
+    breaks = c(0,25,50,75,100,125,150,175,200,225,250,275),
+    labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250,)
+  ) +
+  scale_fill_manual(values = c("early" = "#A1E3F9", "late" = "#0a7ea4")) +
+  coord_cartesian(ylim = c(0, 275)) +
+  labs(
+    x = "Year",
+    y = "Sulfate Concentration (mg/L)",
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.background = element_rect(fill = "transparent", color = NA),
+    panel.background = element_rect(fill = "transparent", color = NA)
+  )
+
+Sulfate_temporal_bp
+```
+
 
 ## Alkalinity
 
@@ -3635,9 +3872,12 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 ```{r}
 temporal_stats <- Agashashok_for_plots %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
+  mutate(
+    year_season = paste(sample_collection_year, sample_collection_season, sep = "_") 
+  ) %>%
    mutate(
-    Temporal_status = ifelse(sample_collection_year %in% c(2015, 2016, 2017, 2018), 'pre',
-                      ifelse(sample_collection_year %in% c(2019, 2022, 2023, 2024), 'post', NA))
+    Temporal_status = ifelse(year_season %in% c("2015_early", "2016_early", "2017_early", "2018_early", "2019_early", "2015_late", "2016_late", "2017_late", "2018_late"), 'pre',
+                      ifelse(year_season %in% c("2019_late", "2022_early", "2022_late", "2023_early", "2023_late", "2024_early", "2024_late"), 'post', NA))
   ) %>%
   mutate(
     temporal_status_season = paste(Temporal_status, sample_collection_season, sep = "_")
@@ -3645,6 +3885,13 @@ temporal_stats <- Agashashok_for_plots %>%
   relocate(temporal_status_season, Temporal_status, .after = SamplingEventID) %>%
   mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
 
+
+
+temporal_stats_long <- temporal_stats %>%
+  dplyr::select(7:15,17:27)
+```
+
+```{r}
 early_temporal_stats <- temporal_stats %>%
   filter(sample_collection_season == "early") %>%
   mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
@@ -3683,7 +3930,15 @@ data_2018_2019_summary <- data_2018_2019 %>%
 ```{r}
 Aggie_temporal_stats_summary <- temporal_stats %>%
   filter(Temporal_status %in% c("pre", "post")) %>%   # keep only the two groups
+  dplyr::select(7:15,17:27) %>%
+  pivot_longer(
+    cols = 7:20,
+    names_to  = "chemical_name",          # or whatever you want to call the old col names
+    values_to = "report_result_value"
+  ) %>%
+  filter(!is.na(report_result_value)) %>%
   group_by(chemical_name, Temporal_status) %>%
+  # group_by(chemical_name, temporal_status_season) %>%
   summarise(
     n        = n(),                     # number of values
     mean     = mean(report_result_value, na.rm = TRUE),
@@ -3695,9 +3950,18 @@ Aggie_temporal_stats_summary <- temporal_stats %>%
     .groups = "drop"
   )
 
-view(RD_temporal_stats_summary)
+view(Aggie_temporal_stats_summary)
 
-write_xlsx(RD_temporal_stats_summary, "C:/Users/tevinger/Downloads/Red Dog Station 9 summary stats.xlsx")
+# Aggie_temporal_stats_summary <- Aggie_temporal_stats_summary %>%
+#   mutate(
+#     temporal_status_season = factor(
+#       temporal_status_season,
+#       levels = c("pre_early", "pre_late", "post_early", "post_late")
+#     )
+#   ) %>%
+#   arrange(chemical_name, temporal_status_season)
+
+write_xlsx(Aggie_temporal_stats_summary, "C:/Users/tevinger/Downloads/Aggie temporal summary stats.xlsx")
 ```
 
 ## NEW - Early season

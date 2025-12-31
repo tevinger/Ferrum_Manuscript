@@ -72,9 +72,10 @@ library(ggpattern)
 # Download Discharge Data
 ```{r}
 # Set site numbers for the 4 water stations we want to pull data for
-site_numbers <- c("15564879", "15743850", "15744500", "15747000", "15746980")
+site_numbers <- c("15564879", "15743850", "15744500", "15747000")
 
 # IKALUKROK C AB RED DOG C NR KIVALINA AK Site Number = 15746980
+# site_numbers <- c("15564879", "15743850", "15744500", "15747000", "15746980")
 
 sites <- whatNWISsites(sites = site_numbers)
 
@@ -99,7 +100,10 @@ site_names <- sites %>%
   dplyr::select(site_no, station_nm)
 
 discharge_data_mod <- left_join(discharge_data_raw, site_names, by = join_by(site_no))
+```
 
+```{r}
+# modifications to use for plots
 discharge_data <- discharge_data_mod %>%
   mutate(Year = year(Date)) %>%
   mutate(Month = month(as.Date(Date), label = TRUE, abbr = FALSE)) %>%
@@ -110,61 +114,83 @@ discharge_data <- discharge_data_mod %>%
       TRUE ~ NA_character_
     )
   ) %>%
-  dplyr::rename(discharge_cfs = X_00060_00003) %>%
+  mutate(Year_Season = paste(Year,
+                             Season,
+                             sep = "_")) %>%
+  # add pre and post onset descriptions
   mutate(Onset_timing = case_when(
-    Year %in% c("2015", "2016", "2017", "2018") ~ "pre",
-    Year %in% c("2019", "2020", "2021", "2022", "2023", "2024") ~ "post",
+    Year_Season %in% c("2015_early", "2016_early", "2017_early", "2018_early", "2015_late", "2016_late", "2017_late", "2018_late", "2019_early", "2015_NA", "2016_NA", "2017_NA", "2018_NA") ~ "pre",
+    Year_Season %in% c("2019_late", "2020_early", "2021_early", "2022_early", "2023_early", "2024_early", "2020_late", "2021_late", "2022_late", "2023_late", "2024_late", "2020_NA", "2021_NA", "2022_NA", "2023_NA", "2024_NA") ~ "post",
     TRUE ~ NA_character_
-  ))
+  )) %>%
+  mutate(Year_onset_timing = paste(Year,
+                                   Onset_timing,
+                                   sep = "_")
+  ) %>%
+  dplyr::rename(discharge_cfs = X_00060_00003) %>% # remane discharge measurements column
+  mutate(discharge_cms = discharge_cfs * 0.0283168) # convert cfs to cms
+```
 
+```{r}
 yearly_discharge <- discharge_data %>%
   group_by(station_nm, Year) %>%
   summarise(
+    total_discharge_cms = sum(discharge_cms, na.rm = TRUE),
+    average_discharge_cms = mean(discharge_cms, na.rm = TRUE),
     total_discharge_cfs = sum(discharge_cfs, na.rm = TRUE),
     average_discharge_cfs = mean(discharge_cfs, na.rm = TRUE),
     .groups = "drop"
-  ) %>%
-  mutate(Onset_timing = case_when(
-    Year %in% c("2015", "2016", "2017", "2018") ~ "pre",
-    Year %in% c("2019", "2020", "2021", "2022", "2023", "2024") ~ "post",
-    TRUE ~ NA_character_
-  ))
+  )
+
+yearly_onset_discharge <- discharge_data %>%
+  filter(!Year_onset_timing == "2019_NA") %>%
+  group_by(station_nm, Year_onset_timing) %>%
+  summarise(
+    total_discharge_cms = sum(discharge_cms, na.rm = TRUE),
+    average_discharge_cms = mean(discharge_cms, na.rm = TRUE),
+    total_discharge_cfs = sum(discharge_cfs, na.rm = TRUE),
+    average_discharge_cfs = mean(discharge_cfs, na.rm = TRUE),
+    .groups = "drop"
+  ) %>% 
+  mutate(
+    onset_timing = case_when(
+      str_detect(Year_onset_timing, "pre")  ~ "pre",
+      str_detect(Year_onset_timing, "post") ~ "post",
+      TRUE ~ NA_character_
+    )
+  )
 
 monthly_average <- discharge_data %>%
   group_by(station_nm, Year, Month) %>%
   summarise(
+    total_discharge_cms = sum(discharge_cms, na.rm = TRUE),
+    average_discharge_cms = mean(discharge_cms, na.rm = TRUE),
     total_discharge_cfs = sum(discharge_cfs, na.rm = TRUE),
     average_discharge_cfs = mean(discharge_cfs, na.rm = TRUE),
     .groups = "drop"
-  ) %>%
-  mutate(Onset_timing = case_when(
-    Year %in% c("2015", "2016", "2017", "2018") ~ "pre",
-    Year %in% c("2019", "2020", "2021", "2022", "2023", "2024") ~ "post",
-    TRUE ~ NA_character_
-  ))
+  )
 
 seasonal_average <- discharge_data %>%
   group_by(station_nm, Year, Season) %>%
   summarise(
+    total_discharge_cms = sum(discharge_cms, na.rm = TRUE),
+    average_discharge_cms = mean(discharge_cms, na.rm = TRUE),
     total_discharge_cfs = sum(discharge_cfs, na.rm = TRUE),
     average_discharge_cfs = mean(discharge_cfs, na.rm = TRUE),
     .groups = "drop"
   ) %>%
-  filter(!is.na(Season)) %>%
-  mutate(Onset_timing = case_when(
-    Year %in% c("2015", "2016", "2017", "2018") ~ "pre",
-    Year %in% c("2019", "2020", "2021", "2022", "2023", "2024") ~ "post",
-    TRUE ~ NA_character_
-  ))
+  filter(!is.na(Season))
 
-onset_average <- discharge_data %>%
+onset_discharge <- discharge_data %>%
+  filter(!is.na(Onset_timing)) %>%
   group_by(station_nm, Onset_timing) %>%
   summarise(
+    total_discharge_cms = sum(discharge_cms, na.rm = TRUE),
+    average_discharge_cms = mean(discharge_cms, na.rm = TRUE),
     total_discharge_cfs = sum(discharge_cfs, na.rm = TRUE),
     average_discharge_cfs = mean(discharge_cfs, na.rm = TRUE),
     .groups = "drop"
-  ) %>%
-  filter(!is.na(Onset_timing))
+  )
 
 discharge_onset_data <- discharge_data %>%
   filter(!is.na(Onset_timing))
@@ -205,8 +231,8 @@ yearly_discharge <- yearly_discharge %>%
   arrange(station_nm, Year)
 
 q.p_2 <- ggplot(yearly_discharge, 
-                aes(x = as.factor(Year), y = total_discharge_cfs, color = station_nm)) +
-  geom_point(size = 2.5) +
+                aes(x = as.factor(Year), y = total_discharge_cms, color = station_nm)) +
+  geom_point(size = 2.8) +
   geom_line(aes(group = 1), linewidth = 1) +   # ✅ THIS restores the line
   facet_wrap(station_nm~., scales = "free", ncol = 2) +
   scale_y_continuous(labels = scales::comma) +
@@ -217,7 +243,7 @@ q.p_2 <- ggplot(yearly_discharge,
   theme(
     axis.text.y = element_text(size = 12, color = "black", face = "bold"),
     axis.text.x = element_text(size = 12, color = "black", face = "bold", 
-                               angle = 45, hjust = 0.5, vjust = 0.8),
+                               angle = 45, hjust = 1, vjust = 1),
     axis.ticks.y = element_line(linewidth = 0.9, color = "black"),
     axis.ticks.length.y = unit(0.1, "cm"),
     axis.ticks.x = element_line(linewidth = 0.9, color = "black"),
@@ -231,23 +257,24 @@ q.p_2 <- ggplot(yearly_discharge,
     legend.position = "none",
     strip.text = element_blank(),
     panel.spacing.x = unit(1.5, "lines"),
-    panel.spacing.y = unit(1.75, "lines")
+    panel.spacing.y = unit(2.75, "lines")
   )
 
 q.p_2
 
-ggsave("C:/Users/tevinger/Downloads/Total Discharge draft.png", q.p_2, width = 11, height = 7)
+ggsave("C:/Users/tevinger/Downloads/Total Discharge_cms.png", q.p_2, width = 11, height = 7)
 
 # ggsave(q.p, filename = "02_Hydrographs_Available_Data_2015to2025.png",
 #        width = 11, height = 7)
 ```
 
 ```{r}
-yearly_discharge <- yearly_discharge %>%
-  mutate(Onset_timing = factor(Onset_timing, levels = c("pre", "post")))
+discharge_data_onset <- yearly_onset_discharge %>%
+  filter(onset_timing %in% c("pre", "post")) %>%
+  mutate(onset_timing = factor(onset_timing, levels = c("pre", "post")))
 
-discharge_bps <- ggplot(yearly_discharge, 
-                aes(x = Onset_timing, y = average_discharge_cfs, fill = station_nm)) +
+discharge_bps <- discharge_data_onset %>%
+  ggplot(aes(x = onset_timing, y = total_discharge_cms, fill = station_nm)) +
   geom_boxplot() +
   facet_wrap(station_nm~., scales = "free", ncol = 4) +
   labs(x = NULL, y = NULL) +
@@ -274,26 +301,29 @@ discharge_bps <- ggplot(yearly_discharge,
 
 discharge_bps
 
-ggsave("C:/Users/tevinger/Downloads/Onset timing Discharge V2.png", discharge_bps, width = 10, height = 5)
+ggsave("C:/Users/tevinger/Downloads/Onset timing Total Discharge cms.png", discharge_bps, width = 10, height = 5)
 ```
 
 ## cumulative discharge per year
 ```{r}
-cumulative_discharge_by_year_stats <- cumulative_discharge_by_year %>%
-mutate(Temporal_status = ifelse(Year %in% c(2015, 2016, 2017, 2018), 'pre',
-                      ifelse(Year %in% c(2019, 2020, 2021, 2022, 2023, 2024), 'post', NA)))
+# cumulative_discharge_by_year_stats <- cumulative_discharge_by_year %>%
+# mutate(Temporal_status = ifelse(Year %in% c(2015, 2016, 2017, 2018), 'pre',
+#                       ifelse(Year %in% c(2019, 2020, 2021, 2022, 2023, 2024), 'post', NA)))
 
-cumulative_discharge_DahlCreek <- cumulative_discharge_by_year_stats %>%
+cumulative_discharge_DahlCreek <- discharge_data_onset %>%
   filter(station_nm == "DAHL C NR KOBUK AK")
 
-cumulative_discharge_KobukRiver <- cumulative_discharge_by_year_stats %>%
+cumulative_discharge_KobukRiver <- discharge_data_onset %>%
   filter(station_nm == "KOBUK R NR KIANA AK")
 
-cumulative_discharge_SlateCreek <- cumulative_discharge_by_year_stats %>%
+cumulative_discharge_SlateCreek <- discharge_data_onset %>%
   filter(station_nm == "SLATE C AT COLDFOOT AK")
 
-cumulative_discharge_WulikRiver <- cumulative_discharge_by_year_stats %>%
+cumulative_discharge_WulikRiver <- discharge_data_onset %>%
   filter(station_nm == "WULIK R BL TUTAK C NR KIVALINA AK")
+
+discharge_data_for_stats <- discharge_data %>%
+  filter(!is.na(Onset_timing))
 ```
 
 ## Shapiro
@@ -303,82 +333,98 @@ library(purrr)
 library(broom)
 library(rstatix)
 
-# List of columns to analyze
-columns_to_model <- c("total_discharge_cfs")
+## ~ 1 in the model means there is no predictor variable being fit to the model
 
-pdf("residuals_plots.pdf")  # Start a new PDF file
+shapiro_results <- discharge_data_for_stats %>%
+  group_by(station_nm) %>%
+  summarise(
+    n = sum(!is.na(discharge_cms)),
 
-# Initialize a results list
-model_results <- list()
+    test_result = list(
+      if (n >= 3) shapiro.test(resid(lm(discharge_cms ~ 1,
+                                       data = pick(discharge_cms),
+                                       na.action = na.omit)))
+      else NULL
+    ),
 
-# Loop through each variable
-for (col in columns_to_model) {
-  
-  # Fit the model (example: linear model with New_Grouping as predictor)
-  model <- lm(cumulative_discharge_by_year_stats[[col]] ~ cumulative_discharge_by_year_stats$Temporal_status, data = cumulative_discharge_by_year_stats)
-  
-  # Extract residuals
-  residuals <- resid(model)
-  
-  # Plot histogram
-  hist(residuals, main = paste("Residuals Histogram:", col), xlab = "Residuals")
-  
-  # Plot QQ plot
-  qqnorm(residuals, main = paste("QQ Plot of Residuals:", col))
-  qqline(residuals)
-  
-  # Perform Shapiro-Wilk test on residuals
-  test_result <- tryCatch(
-    shapiro.test(residuals),
-    error = function(e) NULL
+    W = if (!is.null(test_result[[1]])) unname(test_result[[1]]$statistic) else NA_real_,
+    p_value = if (!is.null(test_result[[1]])) test_result[[1]]$p.value else NA_real_,
+
+    Interpretation = if (!is.null(test_result[[1]]) && test_result[[1]]$p.value > 0.05) {
+      "The residuals are likely normally distributed (fail to reject H0)."
+    } else if (!is.null(test_result[[1]])) {
+      "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+    } else {
+      "Test could not be performed due to insufficient data or errors."
+    },
+
+    .groups = "drop"
   )
-  
-  # Create the interpretation
-  interpretation <- if (!is.null(test_result) && test_result$p.value > 0.05) {
-    "The residuals are likely normally distributed (fail to reject H0)."
-  } else if (!is.null(test_result)) {
-    "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
-  } else {
-    "Test could not be performed due to insufficient data or errors."
-  }
-  
-  # Store the results in a data frame
-  model_results[[col]] <- data.frame(
-    Variable = col,
-    W = if (!is.null(test_result)) test_result$statistic else NA,
-    p_value = if (!is.null(test_result)) test_result$p.value else NA,
-    Interpretation = interpretation
-  )
-}
-
-dev.off()  # Close the PDF device
-
-# Combine all results into a single data frame
-shapiro_results <- bind_rows(model_results)
 
 # Print results
 view(shapiro_results)
 ```
 
+## Wilcoxon 
+```{r}
+library(dplyr)
+library(rstatix)
+library(purrr)
+
+wilcox_by_station <- discharge_data_for_stats %>%
+  filter(!is.na(discharge_cms), Onset_timing %in% c("pre", "post")) %>%
+  group_by(station_nm) %>%
+  summarise(
+    n_pre  = sum(Onset_timing == "pre"),
+    n_post = sum(Onset_timing == "post"),
+
+    test_result = list(
+      if (n_pre >= 1 && n_post >= 1) {
+        wilcox.test(discharge_cms ~ Onset_timing, data = pick(discharge_cms, Onset_timing),
+                    exact = FALSE)
+      } else {
+        NULL
+      }
+    ),
+
+    W = if (!is.null(test_result[[1]])) unname(test_result[[1]]$statistic) else NA_real_,
+    p_value = if (!is.null(test_result[[1]])) test_result[[1]]$p.value else NA_real_,
+
+    Interpretation = if (!is.null(test_result[[1]]) && test_result[[1]]$p.value > 0.05) {
+      "No evidence of a difference between pre and post (fail to reject H0)."
+    } else if (!is.null(test_result[[1]])) {
+      "Evidence of a difference between pre and post (reject H0)."
+    } else {
+      "Test could not be performed (need at least one pre and one post value)."
+    },
+
+    .groups = "drop"
+  )
+
+view(wilcox_by_station)
+
+#write_xlsx(wilcox_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/early season wilcox_results.xlsx")
+```
+
 ##Emmeans
 ```{r}
-Dahl_Discharge_data_model <- lm(total_discharge_cfs ~ Temporal_status, data = cumulative_discharge_DahlCreek)
-Dahl_Discharge_data_emm <- emmeans(Dahl_Discharge_data_model, ~ Temporal_status)
+Dahl_Discharge_data_model <- lm(total_discharge_cms ~ onset_timing, data = cumulative_discharge_DahlCreek)
+Dahl_Discharge_data_emm <- emmeans(Dahl_Discharge_data_model, ~ onset_timing)
 Dahl_Discharge_data_contrast <- contrast(Dahl_Discharge_data_emm, method = "pairwise")
 print(Dahl_Discharge_data_contrast)
 
-Kobuk_Discharge_data_model <- lm(total_discharge_cfs ~ Temporal_status, data = cumulative_discharge_KobukRiver)
-Kobuk_Discharge_data_emm <- emmeans(Kobuk_Discharge_data_model, ~ Temporal_status)
+Kobuk_Discharge_data_model <- lm(total_discharge_cms ~ onset_timing, data = cumulative_discharge_KobukRiver)
+Kobuk_Discharge_data_emm <- emmeans(Kobuk_Discharge_data_model, ~ onset_timing)
 Kobuk_Discharge_data_contrast <- contrast(Kobuk_Discharge_data_emm, method = "pairwise")
 print(Kobuk_Discharge_data_contrast)
 
-Slate_Discharge_data_model <- lm(total_discharge_cfs ~ Temporal_status, data = cumulative_discharge_SlateCreek)
-Slate_Discharge_data_emm <- emmeans(Slate_Discharge_data_model, ~ Temporal_status)
+Slate_Discharge_data_model <- lm(total_discharge_cms ~ onset_timing, data = cumulative_discharge_SlateCreek)
+Slate_Discharge_data_emm <- emmeans(Slate_Discharge_data_model, ~ onset_timing)
 Slate_Discharge_data_contrast <- contrast(Slate_Discharge_data_emm, method = "pairwise")
 print(Slate_Discharge_data_contrast)
 
-Wulik_Discharge_data_model <- lm(total_discharge_cfs ~ Temporal_status, data = cumulative_discharge_WulikRiver)
-Wulik_Discharge_data_emm <- emmeans(Wulik_Discharge_data_model, ~ Temporal_status)
+Wulik_Discharge_data_model <- lm(total_discharge_cms ~ onset_timing, data = cumulative_discharge_WulikRiver)
+Wulik_Discharge_data_emm <- emmeans(Wulik_Discharge_data_model, ~ onset_timing)
 Wulik_Discharge_data_contrast <- contrast(Wulik_Discharge_data_emm, method = "pairwise")
 print(Wulik_Discharge_data_contrast)
 ```
@@ -389,7 +435,7 @@ library(dplyr)
 library(rstatix)
 
 # List of columns to analyze - alkalinity removed from the list because shapiro showed normality
-nonparametric_columns <- c("total_discharge_cfs")
+nonparametric_columns <- c("total_discharge_cms")
 
 # Initialize a results list
 kruskal_results_list <- list()
@@ -1011,19 +1057,24 @@ print(RD_alkalinity_counts)
 ```
 
 ```{r}
-RD_Alkalinity_temporal_bp <- RD_alkalinity_ALL %>%
+RD_Alkalinity_temporal_bp <- RD_alkalinity %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
   ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
-  geom_boxplot(position = position_dodge(width = 0.95)) +
-  #coord_cartesian(ylim = c(25,225)) +
-  #scale_y_continuous(breaks = c(25, 50,75,100,125,150,175,200,225), labels = c("", 50, "", 100, "", 150, "", 200, "")) +
-  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  geom_boxplot(
+    #position = position_dodge2(width = 0.95), 
+    width = 0.55
+    ) +
+  coord_cartesian(ylim = c(0,150)) +
+  scale_y_continuous(breaks = c(0,25, 50,75,100,125,150,175,200,225), labels = c(0,"", 50, "", 100, "",150, "", 200, ""),expand = expansion(mult = c(0.02, 0.01))) +
+  scale_x_discrete(
+    expand = expansion(mult = c(0.05, 0.05))
+  ) +
   scale_fill_manual(
-    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+    values = c("early" = "#e6bed6", "late" = "#bc5090")
   ) +
   # Add counts as text
   # geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.9, alpha = 0.7) +
-  geom_vline(xintercept = 19.5, linetype = "dashed", color = "black", size = 0.9, alpha = 0.7) +
+  geom_vline(xintercept = 9.5, linetype = "dashed", color = "black", size = 0.9, alpha = 0.7) +
   labs(
     title = NULL,
     #title = "Station 9 - Alkalinity", 
@@ -1034,17 +1085,20 @@ RD_Alkalinity_temporal_bp <- RD_alkalinity_ALL %>%
   ) +
   theme_minimal() +
   temporal_theme +
-  theme(legend.position = "none",
-        legend.text = element_text(size = 8),       # smaller legend labels
+  theme(
+    legend.position = "none",
+    legend.text = element_text(size = 8),       # smaller legend labels
     legend.title = element_text(size = 8),      # smaller legend title
     legend.key.size = unit(2, "cm"),
-        #axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        plot.background = element_rect(fill = "transparent", color = NA),
-        panel.background = element_rect(fill = "transparent", color = NA))
+    axis.text.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    #axis.text.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.background = element_rect(fill = "transparent", color = NA),
+    panel.background = element_rect(fill = "transparent", color = NA))
 
 RD_Alkalinity_temporal_bp
-# 
+
 # library(plotly)
 # Alkalinity_temporal_bp_interactive <- ggplotly(Alkalinity_temporal_bp)
 # Alkalinity_temporal_bp_interactive
@@ -1053,7 +1107,7 @@ RD_Alkalinity_temporal_bp
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Alkalinity seasonal temporal bp_V2.png", Alkalinity_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Alkalinity with all years.png", RD_Alkalinity_temporal_bp, width = 7, height = 5, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/smaller SI Final_Alk bottom labels.png", RD_Alkalinity_temporal_bp, width = 3.5, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ## SO4 vs Alk
@@ -1360,17 +1414,26 @@ RD_zinc_ALL <- Red_Dog_stn_9_ALL %>%
 ```
 
 ```{r}
+n_x <- length(levels(as.factor(RD_zinc$year_season)))
+```
+
+```{r}
 RD_Zinc_temporal_bp <- RD_zinc %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
-  ggplot(aes(x = as.factor(year_season), y = report_result_value, fill = sample_collection_season)) +
-  geom_boxplot(position = position_dodge(width = 0.75), width = 0.55) +
+  ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
+  geom_boxplot(
+    #position = position_dodge(width = 0.75), 
+               width = 0.55) +
   #scale_y_log10() +
   # annotation_logticks(sides = "l") +
   scale_fill_manual(
     values = c("early" = "#e6bed6", "late" = "#bc5090")
   ) +
-  coord_cartesian(ylim = c(50, 5000)) +
-  scale_y_continuous(breaks = c(0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000), labels = c(0,"",1000,"",2000,"",3000,"",4000,"",5000)) +
+  coord_cartesian(ylim = c(50, 4650)) +
+  scale_y_continuous(breaks = c(0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000), labels = c(0,"",1000,"",2000,"",3000,"",4000,"",5000), expand = expansion(mult = c(0.02, 0.01))) +
+  scale_x_discrete(
+    expand = expansion(mult = c(0.05, 0.05))
+  ) +
   geom_vline(xintercept = 9.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
   labs(
     title = NULL,
@@ -1383,13 +1446,17 @@ RD_Zinc_temporal_bp <- RD_zinc %>%
   ) +
   theme_minimal() +
   temporal_theme +
-  theme(legend.position = "none",
-        #axis.text.x = element_blank(),
-        #axis.text.y = element_blank(),
-        #axis.ticks.x = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        plot.background = element_rect(fill = "transparent", color = NA),
-        panel.background = element_rect(fill = "transparent", color = NA))
+  theme(
+    legend.position = "none",
+    legend.text = element_text(size = 8),       # smaller legend labels
+    legend.title = element_text(size = 8),      # smaller legend title
+    legend.key.size = unit(2, "cm"),
+    axis.text.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    #axis.text.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.background = element_rect(fill = "transparent", color = NA),
+    panel.background = element_rect(fill = "transparent", color = NA))
 
 RD_Zinc_temporal_bp
 
@@ -1399,7 +1466,7 @@ RD_Zinc_temporal_bp
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Final_Zn no ticks.png", RD_Zinc_temporal_bp, width = 4, height = 4.35, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/smaller SI Final_Zn bottom labels.png", RD_Zinc_temporal_bp, width = 3.5, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ## Cadmium

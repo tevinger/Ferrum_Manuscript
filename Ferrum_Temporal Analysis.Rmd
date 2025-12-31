@@ -2222,7 +2222,7 @@ early_shapiro_results_long <- bind_rows(model_results)
 
 View(early_shapiro_results_long)
 
-write_xlsx(early_shapiro_results_long, "C:/Users/tevinger/Downloads/early_shapiro_results_long_12 30 2025.xlsx")
+write_xlsx(early_shapiro_results_long, "C:/Users/tevinger/Downloads/RD early_shapiro_results_long_12 30 2025.xlsx")
 
 ## -- NEW results --
 ## all not normally distributed
@@ -2299,7 +2299,7 @@ view(wilcox_results)
 
 # write_xlsx(wilcox_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/early season wilcox_results.xlsx")
 
-write_xlsx(wilcox_results, "C:/Users/tevinger/Downloads/early wilcox_results_long_12 30 2025.xlsx")
+write_xlsx(wilcox_results, "C:/Users/tevinger/Downloads/RD early wilcox_results_long_12 30 2025.xlsx")
 ```
 
 ### Normally distributed data
@@ -2453,7 +2453,7 @@ View(late_shapiro_results_long)
 
 # write_xlsx(late_shapiro_results_long, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/late_shapiro_results_long.xlsx")
 
-write_xlsx(late_shapiro_results_long, "C:/Users/tevinger/Downloads/LATE shapiro_results_long_12 30 2025.xlsx")
+write_xlsx(late_shapiro_results_long, "C:/Users/tevinger/Downloads/RD LATE shapiro_results_long_12 30 2025.xlsx")
 
 ## Copper and Nickel had only one Temporal status so the model couldn't run for those
 ## Bicarboante Temp are normally distributed and need to be compared with an ANOVA
@@ -2525,7 +2525,7 @@ view(wilcox_results)
 
 # write_xlsx(wilcox_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/late season wilcox_results.xlsx")
 
-write_xlsx(wilcox, "C:/Users/tevinger/Downloads/LATE wilcox_results_long_12 30 2025.xlsx")
+write_xlsx(wilcox_results, "C:/Users/tevinger/Downloads/RD LATE wilcox_results_long_12 30 2025.xlsx")
 ```
 
 ### Normally distributed data
@@ -2589,7 +2589,7 @@ View(t_test_results)
 
 # write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/late season t_test results.xlsx")
 
-write_xlsx(t_test_results, "C:/Users/tevinger/Downloads/LATE t test_results_long_12 30 2025.xlsx")
+write_xlsx(t_test_results, "C:/Users/tevinger/Downloads/RD LATE t test_results_long_12 30 2025.xlsx")
 ```
 
 ## All seasons - pre vs post
@@ -4183,7 +4183,7 @@ view(early_shapiro_results)
 
 #write_xlsx(early_shapiro_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY shapiro_results_long.xlsx")
 
-write_xlsx(early_shapiro_results, "C:/Users/tevinger/Downloads/EARLY shapiro_results_long.xlsx")
+write_xlsx(early_shapiro_results, "C:/Users/tevinger/Downloads/Aggie EARLY shapiro_results_long.xlsx")
 
 ## DOC is normally distributed --> t-test
 ```
@@ -4265,7 +4265,7 @@ View(wilcox_results_wide)
 
 #write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY season wilcox_results.xlsx")
 
-write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Downloads/EARLY Wilcox_results_long.xlsx")
+write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Downloads/Aggie EARLY Wilcox_results_long.xlsx")
 ```
 
 ### Normally distributed data
@@ -4334,7 +4334,7 @@ View(t_test_results)
 
 #write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY season t_test results.xlsx")
 
-write_xlsx(t_test_results, "C:/Users/tevinger/Downloads/EARLY t test_results_long.xlsx")
+write_xlsx(t_test_results, "C:/Users/tevinger/Downloads/Aggie EARLY t test_results_long.xlsx")
 ```
 
 ## Late season
@@ -4409,7 +4409,7 @@ view(late_shapiro_results)
 
 ## pH, Alkalinity, DIC, and Mg are normally distributed --> t-test
 
-write_xlsx(late_shapiro_results, "C:/Users/tevinger/Downloads/LATE Shapiro_results_long.xlsx")
+write_xlsx(late_shapiro_results, "C:/Users/tevinger/Downloads/Aggie LATE Shapiro_results_long.xlsx")
 ```
 
 ### Not-Normally distributed data
@@ -4489,7 +4489,7 @@ View(wilcox_results_wide)
 
 #write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/LATE season wilcox_results.xlsx")
 
-write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Downloads/LATE Wilcox_results_long.xlsx")
+write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Downloads/Aggie LATE Wilcox_results_long.xlsx")
 ```
 
 ### Normally distributed data
@@ -4559,7 +4559,7 @@ View(t_test_results)
 
 #write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/LATE season t_test results.xlsx")
 
-write_xlsx(t_test_results, "C:/Users/tevinger/Downloads/LATE t test_results_long.xlsx")
+write_xlsx(t_test_results, "C:/Users/tevinger/Downloads/Aggie LATE t test_results_long.xlsx")
 ```
 
 ## All seasons - pre vs post

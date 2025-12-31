@@ -304,6 +304,105 @@ discharge_bps
 ggsave("C:/Users/tevinger/Downloads/Onset timing Total Discharge cms.png", discharge_bps, width = 10, height = 5)
 ```
 
+```{r}
+discharge_data_onset <- yearly_onset_discharge %>%
+  filter(onset_timing %in% c("pre", "post")) %>%
+  mutate(onset_timing = factor(onset_timing, levels = c("pre", "post")))
+
+discharge_bps <- discharge_data_onset %>%
+  filter(!is.na(onset_timing)) %>%
+  ggplot(aes(x = onset_timing, y = total_discharge_cms, fill = station_nm)) +
+  geom_boxplot() +
+  facet_wrap(station_nm~., scales = "free", ncol = 4) +
+  labs(x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 12, color = "black", face = "bold"),
+    axis.text.x = element_text(size = 12, color = "black", face = "bold", 
+                               angle = 45, hjust = 0.5, vjust = 0.8),
+    axis.ticks.y = element_line(linewidth = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    axis.ticks.x = element_line(linewidth = 0.9, color = "black"),
+    axis.ticks.length.x = unit(0.15, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    panel.background = element_rect(fill = "transparent"),
+    plot.background = element_rect(fill = "transparent", color = NA),
+    legend.position = "none",
+    strip.text = element_blank(),
+    panel.spacing.x = unit(1.5, "lines"),
+    panel.spacing.y = unit(1.75, "lines")
+  )
+
+discharge_bps
+```
+
+```{r}
+discharge_data <- discharge_data %>%
+  filter(Onset_timing %in% c("pre", "post")) %>%
+  filter(Season %in% c("early", "late")) %>%
+  mutate(onset_season = paste(
+    Onset_timing,
+    Season,
+    sep = "_"
+  )) %>%
+  mutate(
+    station_season = interaction(site_no, Season, sep = "_")
+  ) %>%
+  mutate(onset_season = factor(onset_season, levels = c("pre_early","post_early", "pre_late", "post_late")))
+
+fill_values <- c(
+  "15743850_early" = "#F4A3A3",
+  "15743850_late"  = "#D94B4B",
+  "15564879_early" = "#B6D77A",
+  "15564879_late"  = "#6FA800",
+  "15744500_early" = "#7FD3CF",
+  "15744500_late"  = "#009E9A",
+  "15747000_early" = "#D4A6FF",
+  "15747000_late"  = "#8B5CF6"
+)
+
+
+  # mutate(Onset_timing = factor(Onset_timing, levels = c("pre", "post")))
+```
+
+```{r}
+discharge_bps <- discharge_data %>%
+  filter(!is.na(onset_season)) %>%
+  ggplot(aes(x = onset_season, y = discharge_cms, fill = station_season)) +
+  geom_boxplot() +
+  facet_wrap(station_nm~., scales = "free", ncol = 4) +
+  scale_y_log10() +
+  scale_fill_manual(values = fill_values) +
+  labs(x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 12, color = "black", face = "bold"),
+    axis.text.x = element_text(size = 12, color = "black", face = "bold", 
+                               angle = 45, hjust = 0.55, vjust = 0.5),
+    axis.ticks.y = element_line(linewidth = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    axis.ticks.x = element_line(linewidth = 0.9, color = "black"),
+    axis.ticks.length.x = unit(0.15, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    panel.background = element_rect(fill = "transparent"),
+    plot.background = element_rect(fill = "transparent", color = NA),
+    legend.position = "none",
+    strip.text = element_blank(),
+    panel.spacing.x = unit(1.5, "lines"),
+    panel.spacing.y = unit(1.75, "lines")
+  )
+
+discharge_bps
+
+ggsave("C:/Users/tevinger/Downloads/Raw Discharge by Onset timing and season.png", discharge_bps, width = 10, height = 5)
+```
+
 ## cumulative discharge per year
 ```{r}
 # cumulative_discharge_by_year_stats <- cumulative_discharge_by_year %>%
@@ -328,19 +427,20 @@ discharge_data_for_stats <- discharge_data %>%
 
 ## Shapiro
 ```{r}
+## total_discharge_cms shapiro analysis
 shapiro_station_onset_models <- discharge_data_onset %>%
-  filter(!is.na(total_discharge_cms),
+  filter(!is.na(average_discharge_cms),
          onset_timing %in% c("pre", "post")) %>%
   group_by(station_nm
-           #, onset_timing
+           , onset_timing
            ) %>%
   summarise(
     n = n(),
 
     model = list(
       if (n >= 3) {
-        lm(total_discharge_cms ~ 1,
-           data = pick(total_discharge_cms))
+        lm(average_discharge_cms ~ 1,
+           data = pick(average_discharge_cms))
       } else {
         NULL
       }
@@ -375,10 +475,57 @@ shapiro_station_onset_models <- discharge_data_onset %>%
 
 view(shapiro_station_onset_models)
 
-shapiro_pre_post <- discharge_data %>%
+#write_xlsx(shapiro_results_long, "C:/Users/tevinger/Downloads/total annual discharge Shapiro_12 30 2025.xlsx")
+```
+
+## wilcoxon test
+unpaired Wilcoxon rank-sum test on the raw discharge_cms data because the raw data for each station_onset timing is non parametric
+```{r}
+wilcox_by_station <- discharge_data %>%
   filter(!is.na(discharge_cms),
          Onset_timing %in% c("pre", "post")) %>%
-  group_by(station_nm, Onset_timing) %>%
+  mutate(Onset_timing = factor(Onset_timing, levels = c("pre", "post"))) %>%
+  group_by(station_nm) %>%
+  summarise(
+    n_pre  = sum(Onset_timing == "pre"),
+    n_post = sum(Onset_timing == "post"),
+
+    test_result = list(
+      if (n_pre >= 1 && n_post >= 1) {
+        wilcox.test(
+          discharge_cms ~ Onset_timing,
+          data = pick(discharge_cms, Onset_timing),
+          exact = FALSE
+        )
+      } else {
+        NULL
+      }
+    ),
+
+    W = if (!is.null(test_result[[1]])) unname(test_result[[1]]$statistic) else NA_real_,
+    p_value = if (!is.null(test_result[[1]])) test_result[[1]]$p.value else NA_real_,
+
+    Interpretation = if (!is.null(test_result[[1]]) && test_result[[1]]$p.value > 0.05) {
+      "No evidence of a difference between pre and post."
+    } else if (!is.null(test_result[[1]])) {
+      "Evidence of a difference between pre and post."
+    } else {
+      "Test not performed (insufficient data)."
+    },
+
+    .groups = "drop"
+  )
+
+view(wilcox_by_station)
+```
+
+#Stats used for current figure as of 12/31/25
+```{r}
+## raw discharge_cms data shapiro analysis
+shapiro_pre_post <- discharge_data %>%
+  filter(!is.na(discharge_cms),
+         onset_season %in% c("pre_early", "pre_late", "post_early", "post_late")) %>%
+  group_by(station_nm, onset_season) %>%
   summarise(
     n = n(),
     W = if (n >= 3) shapiro.test(discharge_cms)$statistic else NA_real_,
@@ -395,13 +542,127 @@ shapiro_pre_post <- discharge_data %>%
     .groups = "drop"
   )
 
-shapiro_pre_post
-
-#write_xlsx(shapiro_results_long, "C:/Users/tevinger/Downloads/total annual discharge Shapiro_12 30 2025.xlsx")
+view(shapiro_pre_post)
 ```
 
+### pre_early vs post_early and pre_late vs post_late
+shapiro test results conclude that discharge_cms for each of these groups for each station is non parametric
+```{r}
+early_discharge_data <- discharge_data %>%
+  filter(Season == "early")
 
+late_discharge_data <- discharge_data %>%
+  filter(Season == "late")
+```
 
+```{r}
+wilcox_station_early <- early_discharge_data %>%
+  filter(!is.na(discharge_cms),
+         Onset_timing %in% c("pre", "post")) %>%
+  mutate(Onset_timing = factor(Onset_timing, levels = c("pre", "post"))) %>%
+  group_by(station_nm) %>%
+  summarise(
+    n_pre  = sum(Onset_timing == "pre"),
+    n_post = sum(Onset_timing == "post"),
+
+    test_result = list(
+      if (n_pre >= 1 && n_post >= 1) {
+        wilcox.test(
+          discharge_cms ~ Onset_timing,
+          data = pick(discharge_cms, Onset_timing),
+          exact = FALSE
+        )
+      } else {
+        NULL
+      }
+    ),
+
+    W = if (!is.null(test_result[[1]])) unname(test_result[[1]]$statistic) else NA_real_,
+    p_value = if (!is.null(test_result[[1]])) test_result[[1]]$p.value else NA_real_,
+
+    Interpretation = if (!is.null(test_result[[1]]) && test_result[[1]]$p.value > 0.05) {
+      "No evidence of a difference between pre and post."
+    } else if (!is.null(test_result[[1]])) {
+      "Evidence of a difference between pre and post."
+    } else {
+      "Test not performed (insufficient data)."
+    },
+
+    .groups = "drop"
+  )
+
+view(wilcox_station_early)
+```
+
+```{r}
+wilcox_station_late <- late_discharge_data %>%
+  filter(!is.na(discharge_cms),
+         Onset_timing %in% c("pre", "post")) %>%
+  mutate(Onset_timing = factor(Onset_timing, levels = c("pre", "post"))) %>%
+  group_by(station_nm) %>%
+  summarise(
+    n_pre  = sum(Onset_timing == "pre"),
+    n_post = sum(Onset_timing == "post"),
+
+    test_result = list(
+      if (n_pre >= 1 && n_post >= 1) {
+        wilcox.test(
+          discharge_cms ~ Onset_timing,
+          data = pick(discharge_cms, Onset_timing),
+          exact = FALSE
+        )
+      } else {
+        NULL
+      }
+    ),
+
+    W = if (!is.null(test_result[[1]])) unname(test_result[[1]]$statistic) else NA_real_,
+    p_value = if (!is.null(test_result[[1]])) test_result[[1]]$p.value else NA_real_,
+
+    Interpretation = if (!is.null(test_result[[1]]) && test_result[[1]]$p.value > 0.05) {
+      "No evidence of a difference between pre and post."
+    } else if (!is.null(test_result[[1]])) {
+      "Evidence of a difference between pre and post."
+    } else {
+      "Test not performed (insufficient data)."
+    },
+
+    .groups = "drop"
+  )
+
+view(wilcox_station_late)
+```
+
+```{r}
+direction_by_station <- discharge_data %>%
+  filter(!is.na(discharge_cms),
+         Onset_timing %in% c("pre", "post")) %>%
+  group_by(station_nm, onset_season) %>%
+  summarise(
+    median_discharge = median(discharge_cms, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  tidyr::pivot_wider(
+    names_from = onset_season,
+    values_from = median_discharge
+  ) %>%
+  mutate(
+    Direction_early = case_when(
+      post_early > pre_early ~ "post > pre",
+      post_early < pre_early ~ "post < pre",
+      TRUE       ~ "no difference"
+    )
+  ) %>%
+  mutate(
+    Direction_late = case_when(
+      post_late > pre_late ~ "post > pre",
+      post_late < pre_late ~ "post < pre",
+      TRUE       ~ "no difference"
+    )
+  )
+
+view(direction_by_station)
+```
 
 ## Welch t-test 
 for the total discharge per year because total discharge was normally distributed
@@ -473,46 +734,6 @@ Wulik_Discharge_data_emm <- emmeans(Wulik_Discharge_data_model, ~ onset_timing)
 Wulik_Discharge_data_contrast <- contrast(Wulik_Discharge_data_emm, method = "trt.vs.ctrl",
          ref = "pre")
 print(Wulik_Discharge_data_contrast)
-```
-
-## wilcoxon test
-unpaired Wilcoxon rank-sum test on the raw discharge_cms data because the raw data for each station_onset timing is non parametric
-```{r}
-wilcox_by_station <- discharge_data %>%
-  filter(!is.na(discharge_cms),
-         Onset_timing %in% c("pre", "post")) %>%
-  group_by(station_nm) %>%
-  summarise(
-    n_pre  = sum(Onset_timing == "pre"),
-    n_post = sum(Onset_timing == "post"),
-
-    test_result = list(
-      if (n_pre >= 1 && n_post >= 1) {
-        wilcox.test(
-          discharge_cms ~ Onset_timing,
-          data = pick(discharge_cms, Onset_timing),
-          exact = FALSE
-        )
-      } else {
-        NULL
-      }
-    ),
-
-    W = if (!is.null(test_result[[1]])) unname(test_result[[1]]$statistic) else NA_real_,
-    p_value = if (!is.null(test_result[[1]])) test_result[[1]]$p.value else NA_real_,
-
-    Interpretation = if (!is.null(test_result[[1]]) && test_result[[1]]$p.value > 0.05) {
-      "No evidence of a difference between pre and post."
-    } else if (!is.null(test_result[[1]])) {
-      "Evidence of a difference between pre and post."
-    } else {
-      "Test not performed (insufficient data)."
-    },
-
-    .groups = "drop"
-  )
-
-view(wilcox_by_station)
 ```
 
 Average and SD for pre and post

@@ -878,7 +878,7 @@ RD_sulfate_ALL <- Red_Dog_stn_9_ALL %>%
                              sample_collection_season,
                              sep = "_")) 
 
-write_xlsx(RD_sulfate, "C:/Users/tevinger/Downloads/WulikR Station 9 Sulfate 2015 to 2024.xlsx")
+#write_xlsx(RD_sulfate, "C:/Users/tevinger/Downloads/WulikR Station 9 Sulfate 2015 to 2024.xlsx")
 ```
 
 ```{r}
@@ -933,7 +933,55 @@ RD_Sulfate_temporal_bp
 
 ## dimensions for V3_smaller: w = 3.5, h = 4.25
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Final_SO4 no labels.png", RD_Sulfate_temporal_bp, width = 4, height = 4.35, dpi = 300, bg = "transparent")
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Final_SO4 no labels.png", RD_Sulfate_temporal_bp, width = 4, height = 4.35, dpi = 300, bg = "transparent")
+```
+
+```{r}
+RD_Sulfate_temporal_bp_ALL <- RD_sulfate_ALL %>%
+  filter(sample_collection_season %in% c("early", "late")) %>%
+  ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
+  geom_boxplot(
+    position = position_dodge2(width = 0.75), width = 0.55
+    ) +
+  scale_y_continuous(breaks = c(0,100,200,300,400,500,600,700,800,900,1000,1100,1200), labels = c(0,"",200,"",400,"",600,"",800,"",1000,"",1200), expand = expansion(mult = c(0.02, 0.01))) +
+  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
+  scale_x_discrete(
+    expand = expansion(mult = c(0.025, 0.025))
+  ) +
+  scale_fill_manual(
+    values = c("early" = "#e6bed6", "late" = "#bc5090")
+  ) +
+  coord_cartesian(ylim = c(0, 1100)) +
+   geom_vline(xintercept = 43.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  #geom_vline(xintercept = 22, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  labs(
+    title = NULL,
+    #title = "Station 9 - Sulfate", 
+    #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
+    x = "Year",
+    y = "Sulfate Concentration (mg/L)",
+    fill = "Season"
+  ) +
+  theme_minimal() +
+  temporal_theme +
+  theme(legend.position = "none",
+        # axis.text.y = element_blank(),
+        # axis.ticks.x = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+
+RD_Sulfate_temporal_bp_ALL
+
+# library(plotly)
+# Sulfate_temporal_bp_interactive <- ggplotly(Sulfate_temporal_bp)
+# Sulfate_temporal_bp_interactive
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V1.png", Sulfate_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+
+## dimensions for V3_smaller: w = 3.5, h = 4.25
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/SI Final_SO4 bottom labels.png", RD_Sulfate_temporal_bp_ALL, width = 6.5, height = 5.3, dpi = 300, bg = "transparent")
 ```
 
 ## Alkalinity
@@ -1337,8 +1385,8 @@ RD_Zinc_temporal_bp <- RD_zinc %>%
   temporal_theme +
   theme(legend.position = "none",
         #axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks.x = element_blank(),
+        #axis.text.y = element_blank(),
+        #axis.ticks.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
         plot.background = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA))
@@ -1351,7 +1399,7 @@ RD_Zinc_temporal_bp
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Final_Zn no ticks.png", RD_Zinc_temporal_bp, width = 4, height = 4.35, dpi = 300, bg = "transparent")
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Final_Zn no ticks.png", RD_Zinc_temporal_bp, width = 4, height = 4.35, dpi = 300, bg = "transparent")
 ```
 
 ## Cadmium
@@ -1528,17 +1576,21 @@ print(RD_chloride_counts)
 RD_chloride_temporal_bp <- RD_chloride_ALL %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
   ggplot(aes(x = as.factor(sample_collection_year), y = report_result_value, fill = sample_collection_season)) +
-  geom_boxplot(position = position_dodge(width = 0.95)) +
+  geom_boxplot(
+    position = position_dodge2(width = 0.75), width = 0.55
+    ) +
   #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
-  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
-  #scale_y_log10() +
+  scale_y_continuous(expand = expansion(mult = c(0.02, 0.01))) +
   scale_fill_manual(
-    values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
+    values = c("early" = "#e6bed6", "late" = "#bc5090")
   ) +
-  #coord_cartesian(ylim = c(0, 250)) +
+  scale_x_discrete(
+    expand = expansion(mult = c(0.025, 0.025))
+  ) +
+  coord_cartesian(ylim = c(0, 10.3)) +
   # Add counts as text
-  # geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
-  geom_vline(xintercept = 21.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  geom_vline(xintercept = 43.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  #geom_vline(xintercept = 22, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
   labs(
     title = NULL,
     #title = "Station 9 - Iron", 
@@ -1551,15 +1603,18 @@ RD_chloride_temporal_bp <- RD_chloride_ALL %>%
   temporal_theme +
   theme(legend.position = "none",
         #axis.text.y = element_blank(),
+        # axis.ticks.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
         plot.background = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA))
 
 RD_chloride_temporal_bp
 
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/SI Final_Cl bottom labels.png", RD_chloride_temporal_bp, width = 6.5, height = 5.3, dpi = 300, bg = "transparent")
+
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Chloride with all years.png", RD_chloride_temporal_bp, width = 7, height = 5, dpi = 300, bg = "transparent")
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/Chloride with all years.png", RD_chloride_temporal_bp, width = 7, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ## SO4/Cl
@@ -1694,16 +1749,19 @@ RD_SO4_Cl_temporal_bp <- RD_SO4_Cl_clean_ALL %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
   ggplot(aes(x = as.factor(sample_collection_year), y = SO4_to_Cl_molar, fill = sample_collection_season)) +
   geom_boxplot(position = position_dodge(width = 0.75), width = 0.55) +
-  scale_y_continuous(breaks = c(0,200,400,600,800,1000,1200,1400,1600), labels = c(0, "", 400, "", 800, "", 1200, "", 1600)) +
+  scale_y_continuous(breaks = c(0,200,400,600,800,1000,1200,1400,1600), labels = c(0, "", 400, "", 800, "", 1200, "", 1600), expand = expansion(mult = c(0.02, 0.01))) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   #scale_y_log10() +
   scale_fill_manual(
     values = c("early" = "#e6bed6", "late" = "#bc5090")
   ) +
+  scale_x_discrete(
+    expand = expansion(mult = c(0.025, 0.025))
+  ) +
   coord_cartesian(ylim = c(0, 1600)) +
   # Add counts as text
   # geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
-  geom_vline(xintercept = 21.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  geom_vline(xintercept = 43.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
   labs(
     title = NULL,
     #title = "Station 9 - SO4:Cl, 
@@ -1716,6 +1774,7 @@ RD_SO4_Cl_temporal_bp <- RD_SO4_Cl_clean_ALL %>%
   temporal_theme +
   theme(legend.position = "none",
         #axis.text.y = element_blank(),
+        # axis.ticks.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
         plot.background = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA))
@@ -1724,7 +1783,7 @@ RD_SO4_Cl_temporal_bp
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/SO4_1998 to 2025.png", RD_SO4_Cl_temporal_bp, width = 6.5, height = 5, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Red Dog Temporal/SI Final_SO4 Cl ratio bottom labels.png", RD_SO4_Cl_temporal_bp, width = 6.5, height = 5.3, dpi = 300, bg = "transparent")
 ```
 
 ## Ca:SO4
@@ -3437,18 +3496,19 @@ temporal_filled_2$year_season <- factor(
 ```{r}
 Sulfate_temporal_bp <- temporal_filled_2 %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
-  ggplot(aes(x = as.factor(year_season), y = f_SO4_mg_per_l, fill = sample_collection_season)) +
+  ggplot(aes(x = as.factor(sample_collection_year), y = f_SO4_mg_per_l, fill = sample_collection_season)) +
   #ggplot(aes(x = as.factor(sample_collection_year), y = f_SO4_mg_per_l, fill = sample_collection_season)) +
   geom_boxplot(
     position = position_dodge2(width = 0.75), width = 0.55
     ) +
-  scale_x_discrete(expand = expansion(add = 0.6)) +
-  scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250,275), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250, "")) +
+  #scale_x_discrete(expand = expansion(add = 0.6)) +
+  scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250,275), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250, ""), expand = expansion(mult = c(0.02, 0.01))) +
+  scale_x_discrete(expand = expansion(mult = c(0.05, 0.05))) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   scale_fill_manual(
     values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
   ) +
-  coord_cartesian(ylim = c(0, 250)) +
+  coord_cartesian(ylim = c(0, 240)) +
   # Add counts as text
   geom_vline(xintercept = 9.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
   labs(
@@ -3462,8 +3522,8 @@ Sulfate_temporal_bp <- temporal_filled_2 %>%
   theme_minimal() +
   temporal_theme +
   theme(legend.position = "none",
-        axis.text.y = element_blank(),
-        axis.ticks.x = element_blank(),
+        #axis.text.y = element_blank(),
+        # axis.ticks.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
         plot.background = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA))
@@ -3474,11 +3534,11 @@ Sulfate_temporal_bp
 # Sulfate_temporal_bp_interactive <- ggplotly(Sulfate_temporal_bp)
 # Sulfate_temporal_bp_interactive
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SO4 seasonal temporal bp_V1.png", Sulfate_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SI/SI Final_SO4 bottom labels.png", Sulfate_temporal_bp, width = 3.5, height = 5.3, dpi = 300, bg = "transparent")
 
 ## dimensions for V3_smaller: w = 3.5, h = 4.25
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Final_SO4 no labels.png", Sulfate_temporal_bp, width = 4, height = 4.35, dpi = 300, bg = "transparent")
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Final_SO4 no labels.png", Sulfate_temporal_bp, width = 4, height = 4.35, dpi = 300, bg = "transparent")
 ```
 
 ```{r}
@@ -3622,19 +3682,21 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 
 ## Chloride
 ```{r}
-Chloride_temporal_bp <- temporal_filled %>%
+Chloride_temporal_bp <- temporal_filled_2 %>%
   filter(sample_collection_season %in% c("early", "late")) %>%
   ggplot(aes(x = as.factor(sample_collection_year), y = f_Cl_mg_per_l, fill = sample_collection_season)) +
-  geom_boxplot(position = position_dodge(width = 0.95)) +
-  #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
-  #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
-  scale_y_log10() +
+  geom_boxplot(
+    position = position_dodge2(width = 0.75), width = 0.55
+    ) +
+  # scale_y_log10() +
   scale_fill_manual(
     values = c("early" = "#A1E3F9", "late" = "#0a7ea4")
   ) +
-  #coord_cartesian(ylim = c(0, 250)) +
+  coord_cartesian(ylim = c(0, 8)) +
+  scale_y_continuous(expand = expansion(mult = c(0.02, 0.01))) +
+  scale_x_discrete(expand = expansion(mult = c(0.05, 0.05))) +
   # Add counts as text
-  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  geom_vline(xintercept = 9.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
   labs(
     title = NULL, 
     #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
@@ -3646,20 +3708,21 @@ Chloride_temporal_bp <- temporal_filled %>%
   temporal_theme +
   theme(legend.position = "none",
         #axis.text.y = element_blank(),
+        # axis.ticks.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
         plot.background = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA))
 
 Chloride_temporal_bp
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
-
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V2.png", Chloride_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SI/SI Final_Cl bottom labels.png", Chloride_temporal_bp, width = 3.25, height = 5.3, dpi = 300, bg = "transparent")
+# 
+# ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V2.png", Chloride_temporal_bp, width = 5, height = 5, dpi = 300, bg = "transparent")
 ```
 
 ## SO4:Cl
 ```{r}
-Aggie_SO4_Cl <- temporal_filled %>%
+Aggie_SO4_Cl <- temporal_filled_2 %>%
     mutate(
     # 1. Convert mg/L → mmol/L  (divide by molecular weight in g/mol = mg/mmol)
 
@@ -3692,9 +3755,11 @@ Aggie_SO4_Cl_temporal_bp <- Aggie_SO4_Cl %>%
   #scale_y_continuous(breaks = c(0,25,50,75,100,125,150,175,200,225,250), labels = c(0, "", 50, "", 100, "", 150, "", 200, "", 250)) +
   #scale_x_continuous(expand = expansion(mult = c(0.035, 0.025))) +
   #scale_y_log10() +
-  #coord_cartesian(ylim = c(0, 250)) +
+  coord_cartesian(ylim = c(0, 127)) +
   # Add counts as text
-  geom_vline(xintercept = 4.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  geom_vline(xintercept = 9.5, linetype = "dashed", color = "black", size = 0.8, alpha = 0.7) +
+  scale_y_continuous(expand = expansion(mult = c(0.02, 0.01))) +
+  scale_x_discrete(expand = expansion(mult = c(0.05, 0.05))) +
   labs(
     title = NULL, 
     #title = "Boxplot of Sulfate Concentration\nby Year and Season",  # Add \n for line break
@@ -3706,6 +3771,7 @@ Aggie_SO4_Cl_temporal_bp <- Aggie_SO4_Cl %>%
   temporal_theme +
   theme(legend.position = "none",
         #axis.text.y = element_blank(),
+        # axis.ticks.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
         plot.background = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA))
@@ -3714,7 +3780,7 @@ Aggie_SO4_Cl_temporal_bp
 
 #ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/Cl seasonal temporal bp_V1.png", Chloride_temporal_bp, width = 4, height = 5, dpi = 300, bg = "transparent")
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SI/Aggie SO4 to Cl.png", Aggie_SO4_Cl_temporal_bp, width = 3.5, height = 5, dpi = 300, bg = "transparent")
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/04_Agashashok Temporal Analysis/SI/SI Final_Aggie SO4 to Cl bottom labels.png", Aggie_SO4_Cl_temporal_bp, width = 3.5, height = 5.3, dpi = 300, bg = "transparent")
 ```
 
 ## Sodium

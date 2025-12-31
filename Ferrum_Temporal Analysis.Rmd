@@ -328,51 +328,159 @@ discharge_data_for_stats <- discharge_data %>%
 
 ## Shapiro
 ```{r}
-library(dplyr)
-library(purrr)
-library(broom)
-library(rstatix)
-
-## ~ 1 in the model means there is no predictor variable being fit to the model
-
-shapiro_results <- discharge_data_for_stats %>%
-  group_by(station_nm) %>%
+shapiro_station_onset_models <- discharge_data_onset %>%
+  filter(!is.na(total_discharge_cms),
+         onset_timing %in% c("pre", "post")) %>%
+  group_by(station_nm
+           #, onset_timing
+           ) %>%
   summarise(
-    n = sum(!is.na(discharge_cms)),
+    n = n(),
 
-    test_result = list(
-      if (n >= 3) shapiro.test(resid(lm(discharge_cms ~ 1,
-                                       data = pick(discharge_cms),
-                                       na.action = na.omit)))
-      else NULL
+    model = list(
+      if (n >= 3) {
+        lm(total_discharge_cms ~ 1,
+           data = pick(total_discharge_cms))
+      } else {
+        NULL
+      }
     ),
 
-    W = if (!is.null(test_result[[1]])) unname(test_result[[1]]$statistic) else NA_real_,
-    p_value = if (!is.null(test_result[[1]])) test_result[[1]]$p.value else NA_real_,
+    shapiro = list(
+      if (!is.null(model[[1]])) {
+        shapiro.test(resid(model[[1]]))
+      } else {
+        NULL
+      }
+    ),
 
-    Interpretation = if (!is.null(test_result[[1]]) && test_result[[1]]$p.value > 0.05) {
-      "The residuals are likely normally distributed (fail to reject H0)."
-    } else if (!is.null(test_result[[1]])) {
-      "The residuals are not normally distributed (reject H0) and a non-parametric test may be more appropriate."
+    W = if (!is.null(shapiro[[1]])) {
+      unname(shapiro[[1]]$statistic)
+    } else NA_real_,
+
+    p_value = if (!is.null(shapiro[[1]])) {
+      shapiro[[1]]$p.value
+    } else NA_real_,
+
+    Interpretation = if (!is.null(shapiro[[1]]) && shapiro[[1]]$p.value > 0.05) {
+      "Residuals likely normal (fail to reject H0)."
+    } else if (!is.null(shapiro[[1]])) {
+      "Residuals not normal (reject H0)."
     } else {
-      "Test could not be performed due to insufficient data or errors."
+      "Test not performed (n < 3)."
     },
 
     .groups = "drop"
   )
 
-# Print results
-view(shapiro_results)
+view(shapiro_station_onset_models)
+
+shapiro_pre_post <- discharge_data %>%
+  filter(!is.na(discharge_cms),
+         Onset_timing %in% c("pre", "post")) %>%
+  group_by(station_nm, Onset_timing) %>%
+  summarise(
+    n = n(),
+    W = if (n >= 3) shapiro.test(discharge_cms)$statistic else NA_real_,
+    p_value = if (n >= 3) shapiro.test(discharge_cms)$p.value else NA_real_,
+    Interpretation = if (n > 5000) {
+      "Shapiro not performed (n > 5000; test not appropriate)."
+    } else if (n < 3) {
+      "Shapiro not performed (n < 3)."
+    } else if (p_value > 0.05) {
+      "Fail to reject normality."
+    } else {
+      "Reject normality."
+    },
+    .groups = "drop"
+  )
+
+shapiro_pre_post
+
+#write_xlsx(shapiro_results_long, "C:/Users/tevinger/Downloads/total annual discharge Shapiro_12 30 2025.xlsx")
 ```
 
-## Wilcoxon 
+
+
+
+## Welch t-test 
+for the total discharge per year because total discharge was normally distributed
 ```{r}
 library(dplyr)
 library(rstatix)
 library(purrr)
 
-wilcox_by_station <- discharge_data_for_stats %>%
-  filter(!is.na(discharge_cms), Onset_timing %in% c("pre", "post")) %>%
+ttest_by_station <- discharge_data_onset %>%
+  filter(!is.na(average_discharge_cms),
+         onset_timing %in% c("pre", "post")) %>%
+  group_by(station_nm) %>%
+  summarise(
+    n_pre  = sum(onset_timing == "pre"),
+    n_post = sum(onset_timing == "post"),
+
+    test_result = list(
+      if (n_pre >= 2 && n_post >= 2) {
+        t.test(
+          average_discharge_cms ~ onset_timing,
+          data = pick(average_discharge_cms, onset_timing),
+          var.equal = FALSE   # Welch t-test
+        )
+      } else {
+        NULL
+      }
+    ),
+
+    t_stat  = if (!is.null(test_result[[1]])) unname(test_result[[1]]$statistic) else NA_real_,
+    df      = if (!is.null(test_result[[1]])) unname(test_result[[1]]$parameter) else NA_real_,
+    p_value = if (!is.null(test_result[[1]])) test_result[[1]]$p.value else NA_real_,
+
+    Interpretation = if (!is.null(test_result[[1]]) && test_result[[1]]$p.value > 0.05) {
+      "No evidence of a difference between pre and post."
+    } else if (!is.null(test_result[[1]])) {
+      "Evidence of a difference between pre and post."
+    } else {
+      "Test not performed (insufficient data)."
+    },
+
+    .groups = "drop"
+  )
+
+view(ttest_by_station)
+```
+
+##Emmeans
+```{r}
+Dahl_Discharge_data_model <- lm(average_discharge_cms ~ onset_timing, data = cumulative_discharge_DahlCreek)
+Dahl_Discharge_data_emm <- emmeans(Dahl_Discharge_data_model, ~ onset_timing)
+Dahl_Discharge_data_contrast <- contrast(Dahl_Discharge_data_emm, method = "trt.vs.ctrl",
+         ref = "pre")
+print(Dahl_Discharge_data_contrast)
+
+Kobuk_Discharge_data_model <- lm(average_discharge_cms ~ onset_timing, data = cumulative_discharge_KobukRiver)
+Kobuk_Discharge_data_emm <- emmeans(Kobuk_Discharge_data_model, ~ onset_timing)
+Kobuk_Discharge_data_contrast <- contrast(Kobuk_Discharge_data_emm, method = "trt.vs.ctrl",
+         ref = "pre")
+print(Kobuk_Discharge_data_contrast)
+
+Slate_Discharge_data_model <- lm(average_discharge_cms ~ onset_timing, data = cumulative_discharge_SlateCreek)
+Slate_Discharge_data_emm <- emmeans(Slate_Discharge_data_model, ~ onset_timing)
+Slate_Discharge_data_contrast <- contrast(Slate_Discharge_data_emm, method = "trt.vs.ctrl",
+         ref = "pre")
+print(Slate_Discharge_data_contrast)
+
+Wulik_Discharge_data_model <- lm(average_discharge_cms ~ onset_timing, data = cumulative_discharge_WulikRiver)
+Wulik_Discharge_data_emm <- emmeans(Wulik_Discharge_data_model, ~ onset_timing)
+Wulik_Discharge_data_contrast <- contrast(Wulik_Discharge_data_emm, method = "trt.vs.ctrl",
+         ref = "pre")
+print(Wulik_Discharge_data_contrast)
+```
+
+## wilcoxon test
+unpaired Wilcoxon rank-sum test on the raw discharge_cms data because the raw data for each station_onset timing is non parametric
+```{r}
+wilcox_by_station <- discharge_data %>%
+  filter(!is.na(discharge_cms),
+         Onset_timing %in% c("pre", "post")) %>%
   group_by(station_nm) %>%
   summarise(
     n_pre  = sum(Onset_timing == "pre"),
@@ -380,8 +488,11 @@ wilcox_by_station <- discharge_data_for_stats %>%
 
     test_result = list(
       if (n_pre >= 1 && n_post >= 1) {
-        wilcox.test(discharge_cms ~ Onset_timing, data = pick(discharge_cms, Onset_timing),
-                    exact = FALSE)
+        wilcox.test(
+          discharge_cms ~ Onset_timing,
+          data = pick(discharge_cms, Onset_timing),
+          exact = FALSE
+        )
       } else {
         NULL
       }
@@ -391,207 +502,32 @@ wilcox_by_station <- discharge_data_for_stats %>%
     p_value = if (!is.null(test_result[[1]])) test_result[[1]]$p.value else NA_real_,
 
     Interpretation = if (!is.null(test_result[[1]]) && test_result[[1]]$p.value > 0.05) {
-      "No evidence of a difference between pre and post (fail to reject H0)."
+      "No evidence of a difference between pre and post."
     } else if (!is.null(test_result[[1]])) {
-      "Evidence of a difference between pre and post (reject H0)."
+      "Evidence of a difference between pre and post."
     } else {
-      "Test could not be performed (need at least one pre and one post value)."
+      "Test not performed (insufficient data)."
     },
 
     .groups = "drop"
   )
 
 view(wilcox_by_station)
-
-#write_xlsx(wilcox_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/early season wilcox_results.xlsx")
 ```
 
-##Emmeans
-```{r}
-Dahl_Discharge_data_model <- lm(total_discharge_cms ~ onset_timing, data = cumulative_discharge_DahlCreek)
-Dahl_Discharge_data_emm <- emmeans(Dahl_Discharge_data_model, ~ onset_timing)
-Dahl_Discharge_data_contrast <- contrast(Dahl_Discharge_data_emm, method = "pairwise")
-print(Dahl_Discharge_data_contrast)
-
-Kobuk_Discharge_data_model <- lm(total_discharge_cms ~ onset_timing, data = cumulative_discharge_KobukRiver)
-Kobuk_Discharge_data_emm <- emmeans(Kobuk_Discharge_data_model, ~ onset_timing)
-Kobuk_Discharge_data_contrast <- contrast(Kobuk_Discharge_data_emm, method = "pairwise")
-print(Kobuk_Discharge_data_contrast)
-
-Slate_Discharge_data_model <- lm(total_discharge_cms ~ onset_timing, data = cumulative_discharge_SlateCreek)
-Slate_Discharge_data_emm <- emmeans(Slate_Discharge_data_model, ~ onset_timing)
-Slate_Discharge_data_contrast <- contrast(Slate_Discharge_data_emm, method = "pairwise")
-print(Slate_Discharge_data_contrast)
-
-Wulik_Discharge_data_model <- lm(total_discharge_cms ~ onset_timing, data = cumulative_discharge_WulikRiver)
-Wulik_Discharge_data_emm <- emmeans(Wulik_Discharge_data_model, ~ onset_timing)
-Wulik_Discharge_data_contrast <- contrast(Wulik_Discharge_data_emm, method = "pairwise")
-print(Wulik_Discharge_data_contrast)
-```
-
-## Kruskal
-```{r}
-library(dplyr)
-library(rstatix)
-
-# List of columns to analyze - alkalinity removed from the list because shapiro showed normality
-nonparametric_columns <- c("total_discharge_cms")
-
-# Initialize a results list
-kruskal_results_list <- list()
-
-# Loop through each variable in your list
-for (col in nonparametric_columns) {
-  
-  # Filter out NAs for the current variable
-  df_filtered <- cumulative_discharge_by_year_stats %>%
-    filter(!is.na(.data[[col]]))
-  
-  # Perform Kruskal-Wallis test
-  test_result <- tryCatch(
-    {
-      kruskal_test(as.formula(paste(col, "~ Temporal_status")), data = df_filtered)
-    },
-    error = function(e) {
-      # Return a default result if test fails
-      data.frame(
-        variable = col,
-        statistic = NA,
-        p = NA,
-        df = NA
-      )
-    }
-  )
-  
-  # Create interpretation
-  interpretation <- if (!is.null(test_result$p) && test_result$p < 0.05) {
-    "Significant difference among groups (reject H0)."
-  } else if (!is.null(merged_result$p)) {
-    "No significant difference among groups (fail to reject H0)."
-  } else {
-    "Test could not be performed due to insufficient data or errors."
-  }
-  
-  test_result$Interpretation <- interpretation
-  
-  # Store the result
-  kruskal_results_list[[col]] <- test_result
-}
-
-# Combine all results into a single dataframe
-kruskal_results_df <- bind_rows(kruskal_results_list)
-
-# Print the results
-view(kruskal_results_df)
-
-#write_xlsx(kruskal_results_df, "C:/Users/tevinger/Downloads/Kruskal Wallis results_f_Al.xlsx")
-```
-
-## Dunn
-```{r}
-# List of columns to do the dunn post hoc test for 
-# I removed analytes that did not have any differences identified by the kruskal wallis 
-columns_for_dunn <- c("f_Al_mcg_per_l")
-
-library(dplyr)
-library(rstatix)
-library(multcompView)
-
-# Initialize a results list
-dunn_results_list <- list()
-
-# Loop through each variable in columns_for_dunn
-for (col in columns_for_dunn) {
-  
-  # Filter out NAs for the current variable
-  df_filtered <- Grouped_Ferrum_2022_2023_data %>%
-    filter(!is.na(.data[[col]]))
-  
-  # Try performing Dunn's test with Bonferroni adjustment
-  test_result <- tryCatch(
-    {
-      df_filtered %>%
-        dunn_test(as.formula(paste(col, "~ New_Grouping")), p.adjust.method = "bonferroni")
-    },
-    error = function(e) {
-      # Return a default result if test fails
-      data.frame(
-        Variable = col,
-        group1 = NA,
-        group2 = NA,
-        Z = NA,
-        p = NA,
-        p.adj = NA
-      )
-    }
-  )
-  
-  # Add the variable name to each row
-  test_result$Variable <- col
-  
-  # Store the result
-  dunn_results_list[[col]] <- test_result
-  
-  # If there is at least one valid pairwise comparison, generate the CLD
-  if (!all(is.na(test_result$p.adj))) {
-     # Build a matrix of p-values manually
-    groups <- unique(c(test_result$group1, test_result$group2))
-    pval_matrix <- matrix(1, nrow = length(groups), ncol = length(groups),
-                          dimnames = list(groups, groups))
-    
-    for (i in seq_len(nrow(test_result))) {
-      g1 <- as.character(test_result$group1[i])
-      g2 <- as.character(test_result$group2[i])
-      pval <- test_result$p.adj[i]
-      
-      pval_matrix[g1, g2] <- pval
-      pval_matrix[g2, g1] <- pval  # symmetric
-    }
-    
-    # Generate CLD using multcompView
-    cld <- multcompLetters(pval_matrix)
-    
-    # Convert to a tidy data frame
-    cld_df <- data.frame(
-      Variable = col,
-      Group = names(cld$Letters),
-      Letters = cld$Letters
-    )
-    
-    # Store the CLD result
-    cld_results_list[[col]] <- cld_df
-  }
-}
-
-# Combine all Dunn's test results into a single dataframe
-dunn_results_df <- bind_rows(dunn_results_list)
-
-# Combine all CLD results into a single dataframe
-cld_results_df <- bind_rows(cld_results_list)
-
-# Print the results
-view(dunn_results_df)
-view(cld_results_df)
-
-write_xlsx(dunn_results_df, "C:/Users/tevinger/Downloads/Dunns Test results_updated f_Al.xlsx")
-
-write_xlsx(cld_results_df, "C:/Users/tevinger/Downloads/CLD results_updated f_Al.xlsx")
-```
-
+Average and SD for pre and post
 ```{r}
 str(discharge_data)
 
 discharge_summary <- discharge_data %>%
-  mutate(Period = case_when(
-    Year >= 2000 & Year <= 2018 ~ "2000-2018",
-    Year >= 2019 & Year <= 2024 ~ "2019-2024",
-    TRUE ~ NA_character_  # Assign NA to other years
-  )) %>%
-  filter(!is.na(Period)) %>%  # Filter only for relevant periods
-  group_by(station_nm, Period) %>%
+  filter(!is.na(Onset_timing)) %>%  # Filter only for relevant periods
+  group_by(station_nm, Onset_timing) %>%
   summarise(
-    Mean_Discharge = round(mean(discharge_cfs, na.rm = TRUE), 2),
-    SD_Discharge = round(sd(discharge_cfs, na.rm = TRUE), 2),
+    n        = n(),
+    Mean_Discharge = round(mean(discharge_cms, na.rm = TRUE), 2),
+    SD_Discharge = round(sd(discharge_cms, na.rm = TRUE), 2),
+    median_discharge = round(median(discharge_cms, na.rm = TRUE), 2),
+    SE_discharge = sd(discharge_cms, na.rm = TRUE) / sqrt(n()),
     .groups = "drop"
   )
 
@@ -610,6 +546,7 @@ view(discharge_summary_wide)
 #write_xlsx(discharge_summary_wide, "C:/Users/tayta/Downloads/Brooks Range Pre and Post Discharge Averages.xlsx")
 ```
 
+Individual station data pulls
 ```{r}
 # Download data from Wulik station
 wulik <- "15747000"

@@ -4018,7 +4018,10 @@ temporal_stats <- Agashashok_for_plots %>%
   relocate(temporal_status_season, Temporal_status, .after = SamplingEventID) %>%
   mutate(Temporal_status = factor(Temporal_status, levels = c("pre", "post")))
 
-
+temporal_stats <- temporal_stats %>%
+  mutate(
+    across(all_of(columns_to_model), as.numeric)
+  )
 
 temporal_stats_long <- temporal_stats %>%
   dplyr::select(7:15,17:27)
@@ -4109,7 +4112,7 @@ library(rstatix)
 # Temporal_status is used to do a comparison of pre to post including both seasons
 
 # List of columns to analyze
-columns_to_model <- c("pH", "Alk_mgCaCO3_per_l", "HCO3_mg_L", "DIC_mgC_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
+columns_to_model <- c("pH", "Alk_mgCaCO3_per_l", "DIC_mgC_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
   "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l")
 
 pdf("residuals_plots.pdf")  # Start a new PDF file
@@ -4167,7 +4170,9 @@ view(early_shapiro_results)
 
 #write_xlsx(early_shapiro_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY shapiro_results_long.xlsx")
 
-## HCO3 is normally distributed --> t-test
+write_xlsx(early_shapiro_results, "C:/Users/tevinger/Downloads/EARLY shapiro_results_long.xlsx")
+
+## DOC is normally distributed --> t-test
 ```
 
 ### Not-Normally distributed data
@@ -4179,7 +4184,7 @@ library(purrr)
 data <- early_temporal_stats  # same df
 
 # Variables that FAILED Shapiro (NON-NORMAL)
-non_normal_vars <- c("pH", "Alk_mgCaCO3_per_l", "DIC_mgC_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
+non_normal_vars <- c("pH", "Alk_mgCaCO3_per_l", "DIC_mgC_per_l", "f_Cl_mg_per_l", 
   "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l")
 
 run_wilcox_for_col <- function(var, data) {
@@ -4245,7 +4250,9 @@ View(wilcox_results_wide)
 
 ## no difference for Mg and K
 
-write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY season wilcox_results.xlsx")
+#write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY season wilcox_results.xlsx")
+
+write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Downloads/EARLY Wilcox_results_long.xlsx")
 ```
 
 ### Normally distributed data
@@ -4258,7 +4265,7 @@ library(purrr)
 data <- early_temporal_stats  # <-- your df
 
 # Variables that passed Shapiro (NORMAL)
-normal_vars <- c("HCO3_mg_L")
+normal_vars <- c("DOC_mgC_per_l")
 
 # Function to run a t-test on one wide column
 run_t_for_col <- function(var, data) {
@@ -4312,7 +4319,9 @@ t_test_results <- map_dfr(normal_vars, run_t_for_col, data = data)
 View(t_test_results)
 
 
-write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY season t_test results.xlsx")
+#write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY season t_test results.xlsx")
+
+write_xlsx(t_test_results, "C:/Users/tevinger/Downloads/EARLY t test_results_long.xlsx")
 ```
 
 ## Late season
@@ -4327,7 +4336,7 @@ library(rstatix)
 # Temporal_status is used to do a comparison of pre to post including both seasons
 
 # List of columns to analyze
-columns_to_model <- c("pH", "Alk_mgCaCO3_per_l", "HCO3_mg_L", "DIC_mgC_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
+columns_to_model <- c("pH", "Alk_mgCaCO3_per_l", "DIC_mgC_per_l", "DOC_mgC_per_l", "f_Cl_mg_per_l", 
   "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Mg_mg_l", "f_Na_mg_l", "f_K_mg_l")
 
 pdf("residuals_plots.pdf")  # Start a new PDF file
@@ -4386,6 +4395,8 @@ view(late_shapiro_results)
 #write_xlsx(early_shapiro_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/EARLY shapiro_results_long.xlsx")
 
 ## pH, Alkalinity, DIC, and Mg are normally distributed --> t-test
+
+write_xlsx(late_shapiro_results, "C:/Users/tevinger/Downloads/LATE Shapiro_results_long.xlsx")
 ```
 
 ### Not-Normally distributed data
@@ -4397,7 +4408,7 @@ library(purrr)
 data <- late_temporal_stats  # same df
 
 # Variables that FAILED Shapiro (NON-NORMAL)
-non_normal_vars <- c("DOC_mgC_per_l", "HCO3_mg_L", "f_Cl_mg_per_l", 
+non_normal_vars <- c("DOC_mgC_per_l", "f_Cl_mg_per_l", 
   "f_SO4_mg_per_l", "f_Ca_mg_l", "f_Na_mg_l", "f_K_mg_l")
 
 run_wilcox_for_col <- function(var, data) {
@@ -4461,9 +4472,11 @@ wilcox_results_wide <- map_dfr(non_normal_vars, run_wilcox_for_col, data = data)
 View(wilcox_results_wide)
 
 
-## no difference for HCO3 and Ca
+## no difference for Ca
 
-write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/LATE season wilcox_results.xlsx")
+#write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/LATE season wilcox_results.xlsx")
+
+write_xlsx(wilcox_results_wide, "C:/Users/tevinger/Downloads/LATE Wilcox_results_long.xlsx")
 ```
 
 ### Normally distributed data
@@ -4531,7 +4544,9 @@ View(t_test_results)
 
 # no difference for all
 
-write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/LATE season t_test results.xlsx")
+#write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/LATE season t_test results.xlsx")
+
+write_xlsx(t_test_results, "C:/Users/tevinger/Downloads/LATE t test_results_long.xlsx")
 ```
 
 ## All seasons - pre vs post

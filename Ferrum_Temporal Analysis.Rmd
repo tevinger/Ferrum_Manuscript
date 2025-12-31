@@ -2222,9 +2222,13 @@ early_shapiro_results_long <- bind_rows(model_results)
 
 View(early_shapiro_results_long)
 
-write_xlsx(early_shapiro_results_long, "C:/Users/tevinger/Downloads/early_shapiro_results_long.xlsx")
+write_xlsx(early_shapiro_results_long, "C:/Users/tevinger/Downloads/early_shapiro_results_long_12 30 2025.xlsx")
 
+## -- NEW results --
+## all not normally distributed
 ## Copper and Nickel had only one Temporal status so the model couldn't run for those
+
+## --OLD results--
 ## pH, Alkalinity and Bicarboante are normally distributed and need to be compared with an ANOVA
 ```
 
@@ -2237,7 +2241,8 @@ library(purrr)
 data_long <- RD_early_temporal_stats  # <-- change to your df name
 
 # Variables that failed Shapiro (non-normal)
-non_normal_vars <- c("Aluminum", "Barium", "Cadmium", "Chloride", "Conductivity, Field", "Hardness, Total", "Temperature, Field", "Iron", "Lead", "Sulfate", "Zinc")
+non_normal_vars <- c("pH, Field", "Alkalinity (As CaC03)", "Aluminum", "Barium", 
+  "Bicarbonate (As CaC03)", "Cadmium", "Chloride", "Conductivity, Field", "Copper", "Hardness, Total", "Temperature, Field", "Iron", "Lead", "Nickel", "Sulfate", "Zinc")
 
 # Function to run Wilcoxon test
 run_wilcox_for_var <- function(var, data) {
@@ -2292,7 +2297,9 @@ view(wilcox_results)
 
 ## no difference for Lead, Temp, Chloride and Barium
 
-write_xlsx(wilcox_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/early season wilcox_results.xlsx")
+# write_xlsx(wilcox_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/early season wilcox_results.xlsx")
+
+write_xlsx(wilcox_results, "C:/Users/tevinger/Downloads/early wilcox_results_long_12 30 2025.xlsx")
 ```
 
 ### Normally distributed data
@@ -2444,7 +2451,9 @@ late_shapiro_results_long <- bind_rows(model_results)
 
 View(late_shapiro_results_long)
 
-write_xlsx(late_shapiro_results_long, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/late_shapiro_results_long.xlsx")
+# write_xlsx(late_shapiro_results_long, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/late_shapiro_results_long.xlsx")
+
+write_xlsx(late_shapiro_results_long, "C:/Users/tevinger/Downloads/LATE shapiro_results_long_12 30 2025.xlsx")
 
 ## Copper and Nickel had only one Temporal status so the model couldn't run for those
 ## Bicarboante Temp are normally distributed and need to be compared with an ANOVA
@@ -2514,7 +2523,9 @@ view(wilcox_results)
 
 ## no difference for Lead, Alkalinity, Chloride and Barium
 
-write_xlsx(wilcox_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/late season wilcox_results.xlsx")
+# write_xlsx(wilcox_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/late season wilcox_results.xlsx")
+
+write_xlsx(wilcox, "C:/Users/tevinger/Downloads/LATE wilcox_results_long_12 30 2025.xlsx")
 ```
 
 ### Normally distributed data
@@ -2576,7 +2587,9 @@ View(t_test_results)
 
 ## Significant difference in bicarbonate
 
-write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/late season t_test results.xlsx")
+# write_xlsx(t_test_results, "C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Results and Discussion/Agashashok Temporal Analysis/Red Dog Station 9/late season t_test results.xlsx")
+
+write_xlsx(t_test_results, "C:/Users/tevinger/Downloads/LATE t test_results_long_12 30 2025.xlsx")
 ```
 
 ## All seasons - pre vs post

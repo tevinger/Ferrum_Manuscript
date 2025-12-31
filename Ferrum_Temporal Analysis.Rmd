@@ -546,6 +546,7 @@ view(shapiro_pre_post)
 ```
 
 ### pre_early vs post_early and pre_late vs post_late
+unpaired Wilcoxon rank-sum test 
 shapiro test results conclude that discharge_cms for each of these groups for each station is non parametric
 ```{r}
 early_discharge_data <- discharge_data %>%

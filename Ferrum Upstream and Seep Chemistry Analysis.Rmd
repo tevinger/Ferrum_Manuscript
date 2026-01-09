@@ -2530,6 +2530,14 @@ metals_ordered_pct <- c(
 
 metal_colors_pct <- cb_palette_metals_pct
 #names(metal_colors) <- metals_ordered
+
+Seep_ficklin_percent_long <- Seep_ficklin_percent_long %>%
+  mutate(
+    Field_label = factor(
+      Field_label, 
+      levels = c("ANF_Tseep_source1", "TukC_seep1", "TukC_seep2", "SAT2.5_seep", "NakC_seep_1")
+    )
+  )
 ```
 
 ```{r}
@@ -2538,7 +2546,7 @@ stacked_pct_plot <- ggplot(Seep_ficklin_percent_long,
                                y = Percent,
                                fill = Component)) +
   scale_fill_manual(values= metals_ordered_pct) +
-  geom_col(width = 0.8) +
+  geom_col(width = 0.4) +
   labs(
     x = NULL,
     y = "Percent of Total (%)",
@@ -2549,7 +2557,7 @@ stacked_pct_plot <- ggplot(Seep_ficklin_percent_long,
     axis.text.x = element_text(angle = 90, hjust = 1)
   ) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.03))) +
-  scale_x_discrete(expand = expansion(mult = c(0.13, 0.13))) +
+  scale_x_discrete(expand = expansion(mult = c(0.08, 0.2))) +
   theme(
     panel.grid.minor = element_blank(),
   panel.grid.major = element_blank(),
@@ -2574,7 +2582,7 @@ stacked_pct_plot <- ggplot(Seep_ficklin_percent_long,
 
 stacked_pct_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Ficklin Diagram metal composition no labels wide.png", stacked_pct_plot, width = 4, height = 4, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Ficklin Diagram/Ficklin Diagram metal composition_FINAL.png", stacked_pct_plot, width = 4, height = 4, dpi = 300)
 ```
 
 ```{r}
@@ -3646,7 +3654,7 @@ f_vs_p_by_metal_bp_seep <- pct_df_long %>%
     alpha = 0.85,
     size = 0.5,
     width = 0.6,
-    pattern_density = 0.13,
+    pattern_density = 0.12,
     pattern_spacing = 0.09,
     pattern_angle = 45
   ) +
@@ -3662,16 +3670,16 @@ f_vs_p_by_metal_bp_seep <- pct_df_long %>%
   theme_classic() +
   theme(
     legend.position = "none",
-    #axis.text.x = element_text(angle = 30, hjust = 1),
-    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
+    #axis.text.x = element_text(angle = 30, hjust = 1),
     strip.text.x = element_text(size = 5)  # metals on top
   )
 
 #f_vs_p_by_metal_bp_seep
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase/Seep_2.png", f_vs_p_by_metal_bp_seep, width = 8, height = 5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase/Seep.png", f_vs_p_by_metal_bp_seep, width = 8, height = 5, dpi = 300)
 ```
 
 ```{r}
@@ -3693,8 +3701,8 @@ f_vs_p_by_metal_bp_impaired_trib <- pct_df_long %>%
     alpha = 0.85,
     size = 0.5,
     width = 0.6,
-    pattern_density = 0.13,
-    pattern_spacing = 0.09,
+    pattern_density = 0.2,
+    pattern_spacing = 0.055,
     pattern_angle = 45
   ) +
   scale_fill_manual(values = group_colors) +
@@ -3709,10 +3717,9 @@ f_vs_p_by_metal_bp_impaired_trib <- pct_df_long %>%
   theme_classic() +
   theme(
     legend.position = "none",
-    #axis.text.x = element_text(angle = 30, hjust = 1),
-    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
-    axis.text.x = element_blank(),
     axis.ticks.x = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
+    #axis.text.x = element_text(angle = 30, hjust = 1),
     strip.text.x = element_text(size = 5)  # metals on top
   )
 
@@ -3890,7 +3897,7 @@ f_and_p_summary_stats_metal_specific <- f_and_p_summary_stats_metal_specific %>%
   mutate(
     x_group = factor(
       interaction(New_Grouping, fraction, sep = "_"),
-      levels = c("Unimpaired Tributary_Filtered", "Unimpaired Tributary_Particulate", "Upstream_Filtered", "Upstream_Particulate", "Seep_Filtered", "Seep_Particulate", "Impaired Tributary_Filtered", "Impaired_Particulate", "Downstream MS_Filtered", "Downstream MS_Particulate")
+      levels = c("Unimpaired Tributary_Filtered", "Unimpaired Tributary_Particulate", "Upstream_Filtered", "Upstream_Particulate", "Seep_Filtered", "Seep_Particulate", "Impaired Tributary_Filtered", "Impaired Tributary_Particulate", "Downstream MS_Filtered", "Downstream MS_Particulate")
     )
   )
 
@@ -3898,17 +3905,18 @@ pct_df_long <- pct_df_long %>%
   mutate(
     x_group = factor(
       interaction(New_Grouping, fraction, sep = "_"),
-      levels = c("Unimpaired Tributary_Filtered", "Unimpaired Tributary_Particulate", "Upstream_Filtered", "Upstream_Particulate", "Seep_Filtered", "Seep_Particulate", "Impaired Tributary_Filtered", "Impaired_Particulate", "Downstream MS_Filtered", "Downstream MS_Particulate")
+      levels = c("Unimpaired Tributary_Filtered", "Unimpaired Tributary_Particulate", "Upstream_Filtered", "Upstream_Particulate", "Seep_Filtered", "Seep_Particulate", "Impaired Tributary_Filtered", "Impaired Tributary_Particulate", "Downstream MS_Filtered", "Downstream MS_Particulate")
     )
   )
 ```
 
 ```{r}
-metal_fraction_bp <- ggplot(
-  f_and_p_summary_stats_metal_specific,
-  aes(
+metal_fraction_bp <- f_and_p_summary_stats_metal_specific %>%
+  ggplot(
+    aes(
     x = x_group,
     y = mean,
+    #y = pct_of_unfiltered,
     fill = New_Grouping,          # color by grouping
     pattern = fraction,           # pattern by fraction (filtered / particulate)
     pattern_fill = fraction,
@@ -3946,7 +3954,7 @@ metal_fraction_bp <- ggplot(
   labs(
     x = NULL,
     #x = "Grouping",
-    y = "Metal Phase Percent (% of total)",
+    y = "Average Metal Fraction Percent (% of total metal concentration)",
     fill = "Grouping",
     pattern = "Fraction"
   ) +
@@ -3959,7 +3967,7 @@ metal_fraction_bp <- ggplot(
   #axis.text.x = element_text(color = "white", size = 1),
   axis.ticks.x = element_blank(),
   axis.text.y = element_text(size = 16, color = "black", face = "bold"),
-  axis.title.y = element_text(size = 18, color = "black", face = "bold", vjust = 1.25, margin = margin(r = 0.5)),
+  axis.title.y = element_text(size = 12, color = "black", face = "bold", vjust = 1.25, margin = margin(r = 0.5)),
   legend.position = "none",
   legend.title = element_blank(),
   legend.background = element_rect(fill = NA),
@@ -3974,7 +3982,7 @@ metal_fraction_bp <- ggplot(
 
 metal_fraction_bp
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase/Site classification group_means.png", metal_fraction_bp, width = 6.5, height = 6, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Metal Phase/Site classification group_means of fraction.png", metal_fraction_bp, width = 6.5, height = 6, dpi = 300)
 ```
 
 ##Stacked Barplots

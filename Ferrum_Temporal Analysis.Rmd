@@ -904,6 +904,128 @@ Wulik_q.p <- ggplot(wulik_discharge_data, aes(x = Date, y = X_00060_00003, color
 Wulik_q.p
 ```
 
+# Climate Data
+
+```{r}
+Snow_Kobuk <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Re_ [EXTERNAL] Climate Data for Ferrum Paper/Snow Kobuk Valley.xlsx",
+                                    sheet = "Sheet1")
+
+Temp_Kobuk <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Re_ [EXTERNAL] Climate Data for Ferrum Paper/T2M Kobuk Valley.xlsx",
+                                    sheet = "Sheet1")
+```
+
+```{r}
+Snow_Kobuk <- Snow_Kobuk %>%
+  dplyr::rename(
+    Snowfall_cm = Value,
+    Snowfall_rank = ValueRank
+  ) 
+
+Temp_Kobuk <- Temp_Kobuk %>%
+  dplyr::rename(
+    Temp_C = Value,
+    Temp_rank = ValueRank
+  )
+```
+
+```{r}
+combined_df <- Snow_Kobuk %>%
+  left_join(Temp_Kobuk, by = "Year")
+
+combined_df <- combined_df %>%
+  mutate(
+    year_chr = as.character(Year),
+    year_group = case_when(
+      str_starts(year_chr, "194") | str_starts(year_chr, "195") | str_starts(year_chr, "196") ~ "group1",
+      str_starts(year_chr, "197") | str_starts(year_chr, "198") | str_starts(year_chr, "199") ~ "group2",
+      str_starts(year_chr, "200") ~ "group3",
+      str_starts(year_chr, "201") ~ "group4",
+      str_starts(year_chr, "202") ~ "group5",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  dplyr::select(-year_chr)
+```
+
+##plot
+```{r}
+climate_plot_SI <- ggplot(combined_df, aes(x = Temp_C, y = Snowfall_cm, color = year_group)) +
+  geom_point(size = 2.5, alpha = 0.8) +
+  labs(
+    x = "Temperature (°C)",
+    y = "Snowfall (cm)",
+    color = "Year Group"
+  ) +
+  coord_cartesian(ylim = c(45,175), xlim = c(-10,10)) +
+  scale_y_continuous(
+    breaks = c(40,60,80,100,120,140,160,180),
+    labels = c("40", "", "80", "", "120", "", "160", "")
+  ) +
+  # scale_color_manual(
+  #   values = c(
+  #     group1 = "#0072B2",
+  #     group2 = "#D55E00",
+  #     group3 = "#009E73",
+  #     group4 = "#CC79A7",
+  #     group5 = "#F0E442"
+  #   )
+  # ) +
+  scale_color_manual(
+    values = c(
+      group1 = "#3B7EA1",
+      group2 = "#F18F01",
+      group3 = "#6A994E",
+      group4 = "#BC4B51",
+      group5 = "#9A6FB0"
+    )
+  ) +
+  # scale_color_manual(
+  #   values = c(
+  #     group1 = "#1B9E77",
+  #     group2 = "#D95F02",
+  #     group3 = "#7570B3",
+  #     group4 = "#E7298A",
+  #     group5 = "#66A61E"
+  #   )
+  # ) +
+  geom_text(
+    data = combined_df %>% dplyr::filter(year_group == "group4"),
+    aes(label = Year),
+    vjust = -0.9,
+    size = 3,
+    show.legend = FALSE
+  ) +
+  theme_minimal() + 
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(size = 16, color = "black", face = "bold"),
+    axis.text.x = element_text(size = 16, color = "black", face = "bold"),
+    axis.ticks.y = element_line(linewidth = 0.9, color = "black"),  # Thicker y-axis ticks
+    axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
+    
+    axis.ticks.x = element_line(linewidth = 0.9, color = "black"),  # Thicker y-axis ticks
+    #axis.ticks.length.x = unit(0.15, "cm"),  # Longer tick marks
+    
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "black"),
+    legend.position = "none",
+    legend.text = element_text(size = 15),
+    legend.title = element_text(size = 17, face = "bold", hjust = 0.5),
+    
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    #panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    panel.background = element_rect(fill = "transparent"), # Panel background
+    plot.background = element_rect(fill = "transparent", color = NA) # Plot background
+
+  )
+
+climate_plot_SI
+
+ggsave("C:/Users/tevinger/Downloads/climate data no legend.png", climate_plot_SI, width = 6, height = 6, dpi = 300, bg = "transparent")
+```
+
 # Load Aggie Data
 ```{r}
 Agashashok_River_Data <- read_excel("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Datasheets/Ferrum Manuscript Datasheets/Agashashok_Temporal_Data.xlsx",

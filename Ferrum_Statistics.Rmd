@@ -63,6 +63,7 @@ library(dunn.test)
 library(multcompView)
 library(patchwork)
 library(ggpattern)
+library(openxlsx)
 ```
 
 #Load Data
@@ -353,29 +354,93 @@ summary_combined <- summary_combined %>%
 view(summary_combined)
 #view(summary_df) # grouped by New_Grouping only
 
-summary_combined_watershed <- summary_combined
+# summary_combined_watershed <- summary_combined
+# 
+# view(summary_combined_watershed)
 
-write_xlsx(summary_combined, "C:/Users/tevinger/Downloads/Group summary stats_rstatix_updated Dec 27_2025.xlsx")
+#write_xlsx(summary_combined, "C:/Users/tevinger/Downloads/Group summary stats_rstatix_updated Dec 27_2025.xlsx")
 ```
 
 ```{r}
-stats_Upstream <- summary_combined %>%
+summary_combined_watershed <- summary_combined %>%
+  mutate(
+    Variable = case_when(
+
+      # ---- SiO2 (keep 4 characters) ----
+      str_detect(Variable, "^f_SiO2_(mg|mcg)_per_l$") ~
+        paste0(
+          "Filtered SiO2 (",
+          if_else(str_detect(Variable, "_mg_per_l$"), "mg/L", "\u00B5g/L"),
+          ")"
+        ),
+
+      str_detect(Variable, "^p_SiO2_mcg_per_l$") ~
+        "Particulate SiO2 (\u00B5g/L)",
+
+      # ---- ONE-LETTER elements: U, Y ----
+      str_detect(Variable, "^f_[UY]_(mg|mcg)_per_l$") ~
+        paste0(
+          "Filtered ",
+          str_match(Variable, "^f_([UY])_(mg|mcg)_per_l$")[, 2],
+          " (",
+          if_else(str_detect(Variable, "_mg_per_l$"), "mg/L", "\u00B5g/L"),
+          ")"
+        ),
+
+      str_detect(Variable, "^p_[UY]_mcg_per_l$") ~
+        paste0(
+          "Particulate ",
+          str_match(Variable, "^p_([UY])_mcg_per_l$")[, 2],
+          " (\u00B5g/L)"
+        ),
+
+      # ---- TWO-LETTER elements (default) ----
+      str_detect(Variable, "^f_[A-Za-z]{2}_mg_per_l$") ~
+        paste0(
+          "Filtered ",
+          str_match(Variable, "^f_([A-Za-z]{2})_mg_per_l$")[, 2],
+          " (mg/L)"
+        ),
+
+      str_detect(Variable, "^f_[A-Za-z]{2}_mcg_per_l$") ~
+        paste0(
+          "Filtered ",
+          str_match(Variable, "^f_([A-Za-z]{2})_mcg_per_l$")[, 2],
+          " (\u00B5g/L)"
+        ),
+
+      str_detect(Variable, "^p_[A-Za-z]{2}_mcg_per_l$") ~
+        paste0(
+          "Particulate ",
+          str_match(Variable, "^p_([A-Za-z]{2})_mcg_per_l$")[, 2],
+          " (\u00B5g/L)"
+        ),
+
+      TRUE ~ Variable
+    )
+  )
+
+view(summary_combined_watershed)
+```
+
+```{r}
+stats_Upstream <- summary_combined_watershed %>%
   dplyr::select(New_Grouping, Variable, n, median, sd) %>%   # keep only what you need
  filter(New_Grouping == "Upstream")
 
-stats_UnimpairedTrib <- summary_combined %>%
+stats_UnimpairedTrib <- summary_combined_watershed %>%
   dplyr::select(New_Grouping, Variable, n, median, sd) %>%
   filter(New_Grouping == "Unimpaired Tributary")
 
-stats_Seep <- summary_combined %>%
+stats_Seep <- summary_combined_watershed %>%
   dplyr::select(New_Grouping, Variable, n, median, sd) %>%
   filter(New_Grouping == "Seep")
 
-stats_ImpairedTrib <- summary_combined %>%
+stats_ImpairedTrib <- summary_combined_watershed %>%
   dplyr::select(New_Grouping, Variable, n, median, sd) %>%
   filter(New_Grouping == "Impaired Tributary")
 
-stats_DownstreamMS <- summary_combined %>%
+stats_DownstreamMS <- summary_combined_watershed %>%
   dplyr::select(New_Grouping, Variable, n, median, sd) %>%
   filter(New_Grouping == "Downstream MS")
 

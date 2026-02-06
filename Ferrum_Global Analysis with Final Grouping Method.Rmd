@@ -843,7 +843,7 @@ pH_plot_no_jitter
 
 # saved size: 150x325
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/pH_with labels_presentation.png", pH_plot_no_jitter, width = 2.5, height = 4.2, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/pH_no labels_colloquium.png", pH_plot_no_jitter, width = 2.5, height = 4, dpi = 300)
 ```
 
 ```{r}
@@ -1005,7 +1005,7 @@ f_SO4_mg_per_l_plot <- ggplot(SO4_long, aes(x = New_Groups, y = Conc)) +
 f_SO4_mg_per_l_plot
 
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/SO4_no labels.png", f_SO4_mg_per_l_plot, width = 1.5, height = 3.5, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/SO4_no labels_colloquium.png", f_SO4_mg_per_l_plot, width = 2.5, height = 4, dpi = 300)
 
 ```
 
@@ -1900,7 +1900,7 @@ Fe_plot <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc_plot)) +
 
 Fe_plot
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Fe_V3 no labels.png", Fe_plot, width = 2.75, height = 3.25, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Fe_no labels_colloquium.png", Fe_plot, width = 3.25, height = 4, dpi = 300)
 ```
 
 Extract the legend
@@ -1998,7 +1998,7 @@ Zn_plot <- ggplot(Zn_long, aes(x = x_group, y = Metal_conc_plot)) +
   boxplot_theme +
   theme(
     legend.position = "none",
-    #axis.text.y = element_blank(),
+    axis.text.y = element_blank(),
     axis.title.y = element_blank(),
     #axis.title.y = element_text(margin = margin(r = 1)),
     legend.title = element_text(size = 14),
@@ -2012,7 +2012,7 @@ Zn_plot
 ggplotly(Zn_plot)
 Zn_plotly
 
-#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Zn_V2 no labels.png", Zn_plot, width = 2.75, height = 3.25, dpi = 300)
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Zn_no labels_colloquium.png", Zn_plot, width = 3.25, height = 4, dpi = 300)
 ```
 
 ##Ni

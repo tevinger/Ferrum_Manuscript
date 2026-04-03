@@ -359,6 +359,11 @@ view(summary_combined)
 # view(summary_combined_watershed)
 
 #write_xlsx(summary_combined, "C:/Users/tevinger/Downloads/Group summary stats_rstatix_updated Dec 27_2025.xlsx")
+
+alkalinity_stats <- summary_combined %>%
+  filter(Variable == "Alk_mgCaCO3_per_l")
+
+write_xlsx(alkalinity_stats, "C:/Users/tevinger/Downloads/Group summary stats_ALKALINITY.xlsx")
 ```
 
 ```{r}

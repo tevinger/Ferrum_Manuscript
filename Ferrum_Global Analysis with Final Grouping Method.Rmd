@@ -387,6 +387,15 @@ boxplot_colors <- c(
   
 )
 
+group_shapes <- c(
+  #"1" = 16,
+  "Agashashok River" = 17,
+  "Anaktok River" = 15,
+  "Nakolikurok Creek" = 18,
+  "Kugururok River" = 3,
+  "Salmon River" = 4
+)
+
 ```
 
 ## Labels
@@ -778,31 +787,46 @@ pH_long <- pH_long %>%
 
 ```{r}
 pH_plot_jitter <- ggplot(pH_long, aes(x = New_Groups, y = Conc)) +
-  geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = NA, alpha = 0.5) +
-  geom_jitter(aes(fill = Watershed), 
-              shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.75) +
-  scale_fill_manual(values = boxplot_colors) +
+  geom_boxplot(
+    aes(color = New_Groups),          # outline color
+    fill = NA,                        # no fill (outline-only)
+    width = 0.75,
+    outlier.shape = NA,               # hide default outliers (we'll show all points)
+    linewidth = 0.75
+  ) +
+  geom_point(
+    aes(shape = Watershed),
+    position = position_jitter(width = 0.15, height = 0),
+    color = "black",
+    size = 1.75,
+    alpha = 1
+  ) +
+  scale_color_manual(values = boxplot_colors) +   # boxplot outlines
+  scale_shape_manual(values = group_shapes) +     # point shapes by New_Groups
   labs(
     title = NULL,
     x = NULL,
     y = "pH"
   ) +
-   scale_y_continuous(limits = c(2.5,8.5),
-                     breaks = c(3,4,5,6,7,8)) +
-  annotation_logticks(sides = "l") +
+  scale_y_continuous(
+    limits = c(2.5, 8.5),
+    breaks = c(3, 4, 5, 6, 7, 8)
+  ) +
   theme_minimal() +
   boxplot_theme +
   theme(
-    legend.position = "none",
-    axis.title.y = element_text(margin = margin(r = 10)),
-    #axis.ticks.length = unit(1, "cm"),
-    legend.title = element_text(size = 14),   # legend title size
-    legend.text = element_text(size = 12),    # legend item labels
-    legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
+    legend.position = "right",
+    axis.text.y.left  = element_blank(),
+    axis.title.y = element_blank(),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 14),
+    legend.key.size = unit(1, "lines")
   ) +
-  scale_x_discrete(expand = expansion(mult = c(0.25, 0.15)))
+  scale_x_discrete(expand = expansion(mult = c(0.28, 0.15)))
 
 pH_plot_jitter
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/NEW pH_with jitter points with legend.png", pH_plot_jitter, width = 5, height = 4, dpi = 300)
 ```
 
 ```{r}
@@ -843,7 +867,7 @@ pH_plot_no_jitter
 
 # saved size: 150x325
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/pH_no labels_colloquium.png", pH_plot_no_jitter, width = 2.5, height = 4, dpi = 300)
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/pH_no labels_colloquium.png", pH_plot_no_jitter, width = 2.5, height = 4, dpi = 300)
 ```
 
 ```{r}
@@ -933,6 +957,54 @@ ggsave('C:/Users/tevinger/Downloads/boxpot_legend.png',
        my_legend, width = 5, height = 8, bg = "transparent", dpi = 300)
 ```
 
+###seep and impaired tribs only
+```{r}
+pH_ARD_inputs_df <- pH_long %>%
+  filter(New_Grouping %in% c("Seep", "Impaired Tributary"))
+```
+
+```{r}
+pH_ARD_inputs_bp <- ggplot(pH_ARD_inputs_df, aes(x = New_Groups, y = Conc)) +
+  geom_boxplot(aes(fill = New_Groups), width = 0.75,
+               outlier.shape = 16,
+               outlier.color = "black",
+               outlier.size = 2,
+               alpha = 0.85,
+               size = .75) +
+  #geom_jitter(aes(fill = Watershed), 
+  #            shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.75) +
+  scale_fill_manual(values = boxplot_colors) +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = "pH"
+  ) +
+   scale_y_continuous(limits = c(2.5,7.6),
+                     breaks = c(3,4,5,6,7,8)) +
+  annotation_logticks(sides = "l", size = 1.5) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    axis.text.y.left  = element_blank(),
+    axis.title.y = element_blank(),
+    #axis.title.y = element_text(margin = margin(r = 10)),
+    #axis.ticks.length = unit(1, "cm"),
+    legend.title = element_blank(),   # legend title size
+    legend.text = element_text(size = 14),    # legend item labels
+    legend.key.size = unit(5, "lines")      # size of legend keys (symbols)
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.6, 0.5)))
+
+pH_ARD_inputs_bp
+#pH_plot_no_jitter_with_legend
+
+# saved size: 150x325
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/ETX Seminar Additional Figs/pH_no labels.png", pH_ARD_inputs_bp, width = 2.5, height = 4, dpi = 300)
+```
+
+
 ## Sulfate
 ```{r}
 # Select pH data
@@ -1007,6 +1079,98 @@ f_SO4_mg_per_l_plot
 
 ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/SO4_no labels_colloquium.png", f_SO4_mg_per_l_plot, width = 2.5, height = 4, dpi = 300)
 
+```
+
+```{r}
+SO4_plot_jitter <- ggplot(SO4_long, aes(x = New_Groups, y = Conc)) +
+  geom_boxplot(
+    aes(color = New_Groups),          # outline color
+    fill = NA,                        # no fill (outline-only)
+    width = 0.75,
+    outlier.shape = NA,               # hide default outliers (we'll show all points)
+    linewidth = 0.75
+  ) +
+  geom_point(
+    aes(shape = Watershed),
+    position = position_jitter(width = 0.15, height = 0),
+    color = "black",
+    size = 1.75,
+    alpha = 1
+  ) +
+  scale_color_manual(values = boxplot_colors) +   # boxplot outlines
+  scale_shape_manual(values = group_shapes) +     # point shapes by New_Groups
+  labs(
+    title = NULL,
+    x = NULL,
+    y = "pH"
+  ) +
+  scale_y_log10(limits = c(10, 10000),
+                breaks = c(10, 100, 1000, 10000),
+                labels = scales::comma,
+                minor_breaks = NULL) +
+  annotation_logticks(sides = "l") +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    axis.text.y.left  = element_blank(),
+    axis.title.y = element_blank(),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 14),
+    legend.key.size = unit(5, "lines")
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.28, 0.15)))
+
+SO4_plot_jitter
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/NEW SO4_with jitter points.png", SO4_plot_jitter, width = 2.5, height = 4, dpi = 300)
+```
+
+###seep and impaired tribs only
+```{r}
+SO4_ARD_inputs_df <- SO4_long %>%
+  filter(New_Grouping %in% c("Seep", "Impaired Tributary"))
+```
+
+```{r}
+SO4_ARD_inputs_bp <- ggplot(SO4_ARD_inputs_df, aes(x = New_Groups, y = Conc)) +
+  geom_boxplot(aes(fill = New_Groups), width = 0.75, outlier.shape = 16,
+               outlier.color = "black",
+               outlier.size = 2, alpha = 0.85,
+               size = 0.75) +
+  #geom_jitter(aes(fill = Watershed), 
+  #            shape = 21, color = "black", width = 0.15, alpha = 1, size = 1.75) +
+
+  # Manual fill colors for New Group (Boxplots)
+  scale_fill_manual(name = "Site Group", values = boxplot_colors) +
+  scale_y_log10(limits = c(10, 10000),
+                breaks = c(10, 100, 1000, 10000),
+                labels = scales::comma,
+                minor_breaks = NULL) +
+  annotation_logticks(sides = "l") +
+  labs(
+    #title = "Method 3 - sulfate",red
+    title = NULL,
+    x = "Site Group",
+    y = ylab_Sulfate
+    #y = "Sulfate Concentration (mg/L)"
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.6, 0.5))) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank()
+    #axis.title.y = element_text(margin = margin(r = 1))
+  )
+
+SO4_ARD_inputs_bp
+#pH_plot_no_jitter_with_legend
+
+# saved size: 150x325
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/ETX Seminar Additional Figs/SO4_no labels.png", SO4_ARD_inputs_bp, width = 2.5, height = 4, dpi = 300)
 ```
 
 ## SpC
@@ -1917,6 +2081,68 @@ ggsave('C:/Users/tevinger/Downloads/proximity_metal_plot_legend.png',
        proximity_metal_plot_legend, width = 5, height = 8, bg = "transparent", dpi = 250)
 ```
 
+```{r}
+Fe_plot_jitter <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc_plot)) +
+  geom_boxplot_pattern(
+    aes(
+      color = New_Groups,                 # outline color by group
+      pattern = Metal_type,
+      pattern_fill = Metal_type
+    ),
+    fill = NA,                            # outline-only boxplots
+    outlier.shape = NA,                   # hide boxplot outliers (we'll show points)
+    outlier.color = "black",
+    outlier.size = 2,
+    pattern_density = 0.08,
+    pattern_spacing = 0.015,
+    pattern_angle = 45,
+    pattern_size = 0.2,
+    width = 0.75,
+    alpha = 0.85,
+    linewidth = 0.75
+  ) +
+  geom_point(
+    aes(shape = Watershed),
+    position = position_jitter(width = 0.15, height = 0),
+    color = "black",
+    size = 1.75,
+    alpha = 1
+  ) +
+  scale_color_manual(values = boxplot_colors) +
+  scale_shape_manual(values = group_shapes) +
+  scale_pattern_manual(values = c("f" = "none", "p" = "stripe"), name = "Metal Type") +
+  scale_pattern_fill_manual(values = c("f" = NA, "p" = "grey40")) +
+  scale_y_log10(
+    limits = c(0.7, 1500000),
+    labels = scales::comma,
+    breaks = c(1, 10, 100, 1000, 10000, 100000, 1000000),
+    minor_breaks = NULL
+  ) +
+  annotation_logticks(sides = "l") +
+  labs(
+    title = NULL,
+    x = NULL,
+    y = ylab_Fe
+  ) +
+  theme_minimal() +
+  boxplot_theme +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.11, 0.065)))
+
+Fe_plot_jitter
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/NEW Fe_jitter points.png", Fe_plot_jitter, width = 3.25, height = 4, dpi = 300)
+```
+
+##Seep and impaired tributary only
+
 
 ## Zn 
 ```{r}
@@ -2206,7 +2432,1663 @@ ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (
 
 ```
 
-### Fe Violin
+# Net Difference
+Net difference between upstream and downstream mainstem site groups in each watershed
+if a site group had more than one observation, they were averaged and then used for the net difference calculation
+
+## Alk
+```{r}
+# select only upstream and downstream site groups
+Alk_up_and_down_MS <- Alk_long %>%
+  filter(New_Grouping %in% c("Upstream", "Downstream MS"))
+
+Alk_up_and_down_MS_means <- Alk_up_and_down_MS %>%
+  group_by(Watershed, New_Grouping) %>%
+  summarise(mean_value = mean(Conc, na.rm = TRUE),
+            num_observations = n(),
+            .groups = "drop")
+```
+
+```{r}
+# Calculate the net difference for each watershed
+
+Alk_net_difference <- Alk_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  #filter(Metal_type == "f") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    net_difference = `Downstream MS` - `Upstream`,
+    percent_change  = ((`Downstream MS` - `Upstream`) / `Upstream`) *100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    ),
+    Parameter = "Alk"
+  )
+
+view(Alk_net_difference)
+```
+
+```{r}
+# plot
+Alk_net_diff_p <- Alk_net_difference %>%
+  ggplot(aes(x = Parameter, y = net_difference)) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,
+    color = "black",
+    size = 3.3,
+    stroke = 0.6,
+    position = position_jitter(width = 0.15, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    title = NULL,
+    y = NULL,
+    # y = "Net Difference in Mainstem Upstream to Downstream",
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(size = 16, color = "black", face = "bold",
+                                vjust = 1.25, margin = margin(r = 10)),
+    legend.position = "none",
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 12,
+                              color = "black", face = "bold")
+  )
+
+Alk_net_diff_p
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/sulfate net difference.png", SO4_net_diff_p, width = 3.25, height = 4, dpi = 300)
+```
+
+```{r}
+Alk_net_diff_change <- Alk_net_difference %>%
+  ggplot(aes(x = Parameter, y = percent_change)) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,
+    color = "black",
+    size = 3.3,
+    stroke = 0.6,
+    position = position_jitter(width = 0.15, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    title = NULL,
+    y = NULL,
+    # y = "Percent Change in Mainstem Upstream to Downstream",
+    fill = "Metal Type"
+  ) +
+  coord_cartesian(ylim = c(-100,168000)) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
+                     breaks = c(
+    -10000, -1000, -100,
+     -10,  
+     0, 10, 100, 1000,  10000, 100000
+  ),
+  labels = scales::label_number()) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(size = 16, color = "black", face = "bold",
+                                vjust = 1.25, margin = margin(r = 10)),
+    legend.position = "none",
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 12,
+                              color = "black", face = "bold")
+  )
+
+Alk_net_diff_change
+```
+
+## SO4
+```{r}
+# select only upstream and downstream site groups
+SO4_up_and_down_MS <- SO4_long %>%
+  filter(New_Grouping %in% c("Upstream", "Downstream MS"))
+
+SO4_up_and_down_MS_means <- SO4_up_and_down_MS %>%
+  group_by(Watershed, New_Grouping) %>%
+  summarise(mean_value = mean(Conc, na.rm = TRUE),
+            num_observations = n(),
+            .groups = "drop")
+```
+
+```{r}
+# Calculate the net difference for each watershed
+
+filtered_SO4_net_difference <- SO4_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  #filter(Metal_type == "f") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    net_difference = `Downstream MS` - `Upstream`,
+    percent_change  = ((`Downstream MS` - `Upstream`) / `Upstream`) *100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    ),
+    Parameter = "SO4"
+  )
+
+view(filtered_SO4_net_difference)
+
+SO4_net_difference <- filtered_SO4_net_difference
+```
+
+```{r}
+# plot
+SO4_net_diff_p <- SO4_net_difference %>%
+  ggplot(aes(x = Parameter, y = net_difference)) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,
+    color = "black",
+    size = 3.3,
+    stroke = 0.6,
+    position = position_jitter(width = 0.15, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    title = NULL,
+    y = "Net Difference in Mainstem Upstream to Downstream",
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(size = 16, color = "black", face = "bold",
+                                vjust = 1.25, margin = margin(r = 10)),
+    legend.position = "none",
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 12,
+                              color = "black", face = "bold")
+  )
+
+SO4_net_diff_p
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/sulfate net difference.png", SO4_net_diff_p, width = 3.25, height = 4, dpi = 300)
+```
+
+```{r}
+SO4_net_diff_change <- SO4_net_difference %>%
+  ggplot(aes(x = Parameter, y = percent_change)) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,
+    color = "black",
+    size = 3.3,
+    stroke = 0.6,
+    position = position_jitter(width = 0.15, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    title = NULL,
+    y = NULL,
+    # y = "Percent Change in Mainstem Upstream to Downstream",
+    fill = "Metal Type"
+  ) +
+  coord_cartesian(ylim = c(-100,168000)) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
+                     breaks = c(
+    -10000, -1000, -100,
+     -10,  
+     0, 10, 100, 1000,  10000, 100000
+  ),
+  labels = scales::label_number()) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(size = 16, color = "black", face = "bold",
+                                vjust = 1.25, margin = margin(r = 10)),
+    legend.position = "none",
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 12,
+                              color = "black", face = "bold")
+  )
+
+SO4_net_diff_change
+```
+
+## Fe
+```{r}
+# select only upstream and downstream site groups
+Fe_up_and_down_MS <- Fe_long %>%
+  filter(New_Grouping %in% c("Upstream", "Downstream MS"))
+
+Fe_up_and_down_MS_means <- Fe_up_and_down_MS %>%
+  group_by(Watershed, New_Grouping, Metal_type) %>%
+  summarise(mean_value = mean(Metal_conc, na.rm = TRUE),
+            num_observations = n(),
+    .groups = "drop")
+```
+
+```{r}
+# Calculate the net difference for each watershed
+
+filtered_Fe_net_difference <- Fe_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  filter(Metal_type == "f") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    net_difference = `Downstream MS` - `Upstream`,
+    percent_change  = ((`Downstream MS` - `Upstream`) / `Upstream`) *100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    )
+  )
+  
+# view(filtered_Fe_net_difference)
+
+particulate_Fe_net_difference <- Fe_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  filter(Metal_type == "p") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    upstream_adj = if_else(
+      `Upstream` == 0,
+      sqrt(2) / 2 * 1,
+      `Upstream`
+    ),
+    net_difference = `Downstream MS` - `upstream_adj`,
+    percent_change  = ((`Downstream MS` - `upstream_adj`) / `upstream_adj`) *100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    )
+  )
+  
+view(particulate_Fe_net_difference)
+```
+
+```{r}
+# combine results for filtered and particulate into one df
+Fe_net_difference <- bind_rows(filtered_Fe_net_difference, particulate_Fe_net_difference)
+
+# view(Fe_net_difference)
+```
+
+```{r}
+# plot
+Fe_net_diff_p <- Fe_net_difference %>%
+  ggplot(aes(x = Metal_type, y = net_difference)) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  # geom_boxplot(width = 0.35, outlier.shape = NA) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,          # filled circle
+    color = "black",     # black outline
+    size = 3.3,
+    stroke = 0.6,         # outline thickness
+    position = position_jitter(width = 0.15, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    #title = "Method 3 - Fe",
+    title = NULL,
+    #y = "Concentration (µg/L)",
+    y = "Net Difference in Mainstem Upstream to Downstream",
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  theme(
+  panel.grid.minor = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.background = element_rect(fill = "white"),
+  panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+  axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+  axis.title.x = element_blank(),
+  # axis.ticks.x = element_blank(),
+  axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+  axis.title.y = element_text(size = 16, color = "black", face = "bold", vjust = 1.25, margin = margin(r = 10)),
+  legend.position = "top",
+  legend.title = element_blank(),
+  legend.background = element_rect(fill = NA),
+  legend.text = element_text(size = 12, color = "black", face = "bold"),
+  legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+  axis.ticks.y = element_line(size = 0.9, color = "black"),  # Thicker y-axis ticks
+    axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
+  plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold")
+) +
+  theme(
+    legend.position = "none",
+    # axis.title.y = element_blank(),
+    # axis.text.y = element_blank(),
+    #axis.title.y = element_text(margin = margin(r = 1)),
+    legend.title = element_text(size = 14),   # legend title size
+    legend.text = element_text(size = 12),    # legend item labels
+    legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
+  ) 
+
+Fe_net_diff_p
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Zn_no labels_colloquium.png", Fe_net_diff_p, width = 3.25, height = 4, dpi = 300)
+```
+
+```{r}
+Fe_net_diff_change <- Fe_net_difference %>%
+  ggplot(aes(x = Metal_type, y = percent_change)) +
+  geom_rect(
+  xmin = 1.5, 
+  xmax = Inf,
+  ymin = -Inf,
+  ymax = Inf,
+  fill = "grey93",
+  alpha = 0.4
+) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  # geom_boxplot(width = 0.35, outlier.shape = NA) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,          # filled circle
+    color = "black",     # black outline
+    size = 3.3,
+    stroke = 0.6,         # outline thickness
+    position = position_jitter(width = 0.15, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    #title = "Method 3 - Fe",
+    title = NULL,
+    #y = "Concentration (µg/L)",
+    y = NULL,
+    # y = "Percent Change in Mainstem Upstream to Downstream",
+    fill = "Metal Type"
+  ) +
+  coord_cartesian(ylim = c(-100,168000)) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
+                     breaks = c(
+    -10000, -1000, -100,
+     -10,  
+     0, 10, 100, 1000,  10000, 100000
+  ),
+  labels = scales::label_number()) +
+  theme_minimal() +
+  theme(
+  panel.grid.minor = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.background = element_rect(fill = "white"),
+  panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+  axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+  axis.title.x = element_blank(),
+  # axis.ticks.x = element_blank(),
+  axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+  axis.title.y = element_text(size = 16, color = "black", face = "bold", vjust = 1.25, margin = margin(r = 10)),
+  legend.position = "top",
+  legend.title = element_blank(),
+  legend.background = element_rect(fill = NA),
+  legend.text = element_text(size = 12, color = "black", face = "bold"),
+  legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+  axis.ticks.y = element_line(size = 0.9, color = "black"),  # Thicker y-axis ticks
+    axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
+  plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold")
+) +
+  theme(
+    legend.position = "none",
+    # axis.title.y = element_blank(),
+    # axis.text.y = element_blank(),
+    #axis.title.y = element_text(margin = margin(r = 1)),
+    legend.title = element_text(size = 14),   # legend title size
+    legend.text = element_text(size = 12),    # legend item labels
+    legend.key.size = unit(3, "lines")      # size of legend keys (symbols)
+  ) 
+
+Fe_net_diff_change
+```
+
+## Ni
+```{r}
+# select only upstream and downstream site groups
+Ni_up_and_down_MS <- Ni_long %>%
+  filter(New_Grouping %in% c("Upstream", "Downstream MS"))
+
+Ni_up_and_down_MS_means <- Ni_up_and_down_MS %>%
+  group_by(Watershed, New_Grouping, Metal_type) %>%
+  summarise(mean_value = mean(Metal_conc, na.rm = TRUE),
+            num_observations = n(),
+            .groups = "drop")
+```
+
+```{r}
+# Calculate the net difference for each watershed
+
+filtered_Ni_net_difference <- Ni_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  filter(Metal_type == "f") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    net_difference = `Downstream MS` - `Upstream`,
+    percent_change  = ((`Downstream MS` - `Upstream`) / `Upstream`) *100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    )
+  )
+
+view(filtered_Ni_net_difference)
+
+particulate_Ni_net_difference <- Ni_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  filter(Metal_type == "p") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    upstream_adj = if_else(
+      `Upstream` == 0,
+      sqrt(2) / 2 * .1,
+      `Upstream`
+    ),
+    downstream_adj = if_else(
+      `Downstream MS` == 0,
+      sqrt(2) / 2 * .1,
+      `Downstream MS`
+    ),
+    net_difference = `downstream_adj` - `Upstream`,
+    percent_change  = ((`downstream_adj` - `upstream_adj`) / `upstream_adj`) *100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    )
+  )
+
+view(particulate_Ni_net_difference)
+```
+
+```{r}
+# combine results for filtered and particulate into one df
+Ni_net_difference <- bind_rows(filtered_Ni_net_difference, particulate_Ni_net_difference)
+
+view(Ni_net_difference)
+```
+
+```{r}
+# plot
+Ni_net_diff_p <- Ni_net_difference %>%
+  ggplot(aes(x = Metal_type, y = net_difference)) +
+  geom_rect(
+  xmin = 1.5, 
+  xmax = Inf,
+  ymin = -Inf,
+  ymax = Inf,
+  fill = "grey93",
+  alpha = 0.4
+) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  # geom_boxplot(width = 0.35, outlier.shape = NA) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,          # filled circle
+    color = "black",     # black outline
+    size = 3.3,
+    stroke = 0.6,         # outline thickness
+    position = position_jitter(width = 0.07, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    #title = "Method 3 - Ni",
+    title = NULL,
+    #y = "Concentration (µg/L)",
+    y = NULL,
+    # y = "Net Difference in Mainstem Upstream to Downstream",
+    fill = "Metal Type"
+  ) +
+  coord_cartesian(ylim = c(-60,168000)) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
+                     breaks = c(
+    -10000, -5000, -1000, -500, -100,
+    -50, -10, -5, -1,
+     0,
+     1, 5, 10, 50, 100, 500, 1000, 5000, 10000, 100000, 300000
+  ),
+  labels = scales::label_number()) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    # axis.ticks.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(size = 16, color = "black", face = "bold",
+                                vjust = 1.25, margin = margin(r = 10)),
+    legend.position = "top",
+    legend.title = element_blank(),
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),  # Thicker y-axis ticks
+    axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
+    plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold")
+  ) +
+  theme(
+    legend.position = "none",
+    # axis.title.y = element_blank(),
+    # axis.text.y = element_blank(),
+    #axis.title.y = element_text(margin = margin(r = 1)),
+    legend.title = element_text(size = 14),   # legend title size
+    legend.text = element_text(size = 12),    # legend item labels
+    legend.key.size = unit(3, "lines")        # size of legend keys (symbols)
+  )
+
+Ni_net_diff_p
+```
+
+```{r}
+# plot
+Ni_net_diff_change <- Ni_net_difference %>%
+  ggplot(aes(x = Metal_type, y = percent_change)) +
+  geom_rect(
+  xmin = 1.5, 
+  xmax = Inf,
+  ymin = -Inf,
+  ymax = Inf,
+  fill = "grey93",
+  alpha = 0.4
+) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  # geom_boxplot(width = 0.35, outlier.shape = NA) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,          # filled circle
+    color = "black",     # black outline
+    size = 3.3,
+    stroke = 0.6,         # outline thickness
+    position = position_jitter(width = 0.07, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    #title = "Method 3 - Ni",
+    title = NULL,
+    #y = "Concentration (µg/L)",
+    y = NULL,
+    # y = "Percent Change in Mainstem Upstream to Downstream",
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  coord_cartesian(ylim = c(-100,168000)) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
+                     breaks = c(
+    -10000, -1000, -100,
+     -10,  
+     0, 10, 100, 1000,  10000, 100000
+  ),
+  labels = scales::label_number()) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    # axis.ticks.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(size = 16, color = "black", face = "bold",
+                                vjust = 1.25, margin = margin(r = 10)),
+    legend.position = "top",
+    legend.title = element_blank(),
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),  # Thicker y-axis ticks
+    axis.ticks.length.y = unit(0.1, "cm"),  # Longer tick marks
+    plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold")
+  ) +
+  theme(
+    legend.position = "none",
+    # axis.title.y = element_blank(),
+    # axis.text.y = element_blank(),
+    #axis.title.y = element_text(margin = margin(r = 1)),
+    legend.title = element_text(size = 14),   # legend title size
+    legend.text = element_text(size = 12),    # legend item labels
+    legend.key.size = unit(3, "lines")        # size of legend keys (symbols)
+  )
+
+Ni_net_diff_change
+```
+
+## Zn
+```{r}
+# select only upstream and downstream site groups
+Zn_up_and_down_MS <- Zn_long %>%
+  filter(New_Grouping %in% c("Upstream", "Downstream MS"))
+
+Zn_up_and_down_MS_means <- Zn_up_and_down_MS %>%
+  group_by(Watershed, New_Grouping, Metal_type) %>%
+  summarise(
+    mean_value = mean(Metal_conc, na.rm = TRUE),
+    num_observations = n(),
+    .groups = "drop"
+  )
+```
+
+```{r}
+# Calculate the net difference for each watershed
+
+filtered_Zn_net_difference <- Zn_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  filter(Metal_type == "f") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    net_difference = `Downstream MS` - `Upstream`,
+    percent_change  = ((`Downstream MS` - `Upstream`) / `Upstream`) *100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    )
+  )
+
+view(filtered_Zn_net_difference)
+
+particulate_Zn_net_difference <- Zn_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  filter(Metal_type == "p") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    upstream_adj = if_else(
+      `Upstream` == 0,
+      sqrt(2) / 2 * 0.1,
+      `Upstream`
+    ),
+    net_difference = `Downstream MS` - `Upstream`,
+    percent_change  = ((`Downstream MS` - `upstream_adj`) / `upstream_adj`) *100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    )
+  )
+
+view(particulate_Zn_net_difference)
+```
+
+```{r}
+# combine results for filtered and particulate into one df
+Zn_net_difference <- bind_rows(
+  filtered_Zn_net_difference,
+  particulate_Zn_net_difference
+)
+
+view(Zn_net_difference)
+```
+
+```{r}
+# plot
+Zn_net_diff_p <- Zn_net_difference %>%
+  ggplot(aes(x = Metal_type, y = net_difference)) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  # geom_boxplot(width = 0.35, outlier.shape = NA) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,          # filled circle
+    color = "black",     # black outline
+    size = 3.3,
+    stroke = 0.6,        # outline thickness
+    position = position_jitter(width = 0.07, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    #title = "Method 3 - Zn",
+    title = NULL,
+    y = "Net Difference in Mainstem Upstream to Downstream",
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(
+      size = 16,
+      color = "black",
+      face = "bold",
+      vjust = 1.25,
+      margin = margin(r = 10)
+    ),
+    legend.position = "top",
+    legend.title = element_blank(),
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    plot.title = element_text(
+      hjust = 0.5,
+      size = 12,
+      color = "black",
+      face = "bold"
+    )
+  ) +
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  )
+
+Zn_net_diff_p
+```
+
+```{r}
+# plot
+Zn_net_diff_change <- Zn_net_difference %>%
+  ggplot(aes(x = Metal_type, y = percent_change)) +
+  geom_rect(
+  xmin = 1.5, 
+  xmax = Inf,
+  ymin = -Inf,
+  ymax = Inf,
+  fill = "grey93",
+  alpha = 0.4
+) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  # geom_boxplot(width = 0.35, outlier.shape = NA) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,          # filled circle
+    color = "black",     # black outline
+    size = 3.3,
+    stroke = 0.6,        # outline thickness
+    position = position_jitter(width = 0.07, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    #title = "Method 3 - Zn",
+    title = NULL,
+    y = NULL,
+    # y = "Percent change in Mainstem Upstream to Downstream",
+    fill = "Metal Type"
+  ) +
+  coord_cartesian(ylim = c(-100,168000)) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
+                     breaks = c(
+    -10000, -1000, -100,
+     -10,  
+     0, 10, 100, 1000,  10000, 100000
+  ),
+  labels = scales::label_number()) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(
+      size = 16,
+      color = "black",
+      face = "bold",
+      vjust = 1.25,
+      margin = margin(r = 10)
+    ),
+    legend.position = "top",
+    legend.title = element_blank(),
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    plot.title = element_text(
+      hjust = 0.5,
+      size = 12,
+      color = "black",
+      face = "bold"
+    )
+  ) +
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  )
+
+Zn_net_diff_change
+```
+
+## Cd
+```{r}
+# select only upstream and downstream site groups
+Cd_up_and_down_MS <- Cd_long %>%
+  filter(New_Grouping %in% c("Upstream", "Downstream MS"))
+
+Cd_up_and_down_MS_means <- Cd_up_and_down_MS %>%
+  group_by(Watershed, New_Grouping, Metal_type) %>%
+  summarise(
+    mean_value = mean(Metal_conc, na.rm = TRUE),
+    num_observations = n(),
+    .groups = "drop"
+  )
+```
+
+```{r}
+# Calculate the net difference for each watershed
+
+filtered_Cd_net_difference <- Cd_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  filter(Metal_type == "f") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    net_difference  = `Downstream MS` - `Upstream`,
+    percent_change  = ((`Downstream MS` - `Upstream`) / `Upstream`) * 100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    )
+  )
+
+# view(filtered_Cd_net_difference)
+
+particulate_Cd_net_difference <- Cd_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  filter(Metal_type == "p") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    upstream_adj = if_else(
+      `Upstream` == 0,
+      sqrt(2) / 2 * 0.01,
+      `Upstream`
+    ),
+    net_difference = `Downstream MS` - `upstream_adj`,
+    percent_change = ((`Downstream MS` - `upstream_adj`) / `upstream_adj`) * 100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    )
+  )
+
+view(particulate_Cd_net_difference)
+```
+
+```{r}
+# combine results for filtered and particulate into one df
+Cd_net_difference <- bind_rows(filtered_Cd_net_difference, particulate_Cd_net_difference)
+
+# view(Cd_net_difference)
+```
+
+```{r}
+# plot
+Cd_net_diff_p <- Cd_net_difference %>%
+  ggplot(aes(x = Metal_type, y = net_difference)) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,
+    color = "black",
+    size = 3.3,
+    stroke = 0.6,
+    position = position_jitter(width = 0.15, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    title = NULL,
+    y = "Net Difference in Mainstem Upstream to Downstream",
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(size = 16, color = "black", face = "bold",
+                                vjust = 1.25, margin = margin(r = 10)),
+    legend.position = "top",
+    legend.title = element_blank(),
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold")
+  ) +
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  )
+
+Cd_net_diff_p
+
+#ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Zn_no labels_colloquium.png", Fe_net_diff_p, width = 3.25, height = 4, dpi = 300)
+```
+
+```{r}
+Cd_net_diff_change <- Cd_net_difference %>%
+  ggplot(aes(x = Metal_type, y = percent_change)) +
+  geom_rect(
+    xmin = 1.5,
+    xmax = Inf,
+    ymin = -Inf,
+    ymax = Inf,
+    fill = "grey93",
+    alpha = 0.4
+  ) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,
+    color = "black",
+    size = 3.3,
+    stroke = 0.6,
+    position = position_jitter(width = 0.15, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    title = NULL,
+    y = NULL,
+    fill = "Metal Type"
+  ) +
+  coord_cartesian(ylim = c(-100, 168000)) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
+                     breaks = c(
+    -10000, -1000, -100,
+     -10,  
+     0, 10, 100, 1000,  10000, 100000
+  ),
+  labels = scales::label_number()) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(size = 16, color = "black", face = "bold",
+                                vjust = 1.25, margin = margin(r = 10)),
+    legend.position = "top",
+    legend.title = element_blank(),
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 12, color = "black", face = "bold")
+  ) +
+  theme(
+    legend.position = "none",
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(3, "lines")
+  )
+
+Cd_net_diff_change
+```
+
+##Al
+```{r}
+# select only upstream and downstream site groups
+Al_up_and_down_MS <- Al_long %>%
+  filter(New_Grouping %in% c("Upstream", "Downstream MS"))
+
+Al_up_and_down_MS_means <- Al_up_and_down_MS %>%
+  group_by(Watershed, New_Grouping, Metal_type) %>%
+  summarise(
+    mean_value = mean(Metal_conc, na.rm = TRUE),
+    num_observations = n(),
+    .groups = "drop"
+  )
+```
+
+```{r}
+# Calculate the net difference for each watershed
+
+filtered_Al_net_difference <- Al_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  filter(Metal_type == "f") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    net_difference = `Downstream MS` - `Upstream`,
+    percent_change = ((`Downstream MS` - `Upstream`) / `Upstream`) * 100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    )
+  )
+
+# view(filtered_Al_net_difference)
+
+particulate_Al_net_difference <- Al_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  filter(Metal_type == "p") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    upstream_adj = if_else(
+      `Upstream` == 0,
+      sqrt(2) / 2 * 0.1,
+      `Upstream`
+    ),
+    net_difference = `Downstream MS` - `upstream_adj`,
+    percent_change = ((`Downstream MS` - `upstream_adj`) / `upstream_adj`) * 100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    )
+  )
+
+view(particulate_Al_net_difference)
+```
+
+```{r}
+# combine results for filtered and particulate into one df
+Al_net_difference <- bind_rows(filtered_Al_net_difference,
+                               particulate_Al_net_difference)
+
+# view(Al_net_difference)
+```
+
+```{r}
+# plot (net difference)
+Al_net_diff_p <- Al_net_difference %>%
+  ggplot(aes(x = Metal_type, y = net_difference)) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,
+    color = "black",
+    size = 3.3,
+    stroke = 0.6,
+    position = position_jitter(width = 0.15, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    title = NULL,
+    y = "Net Difference in Mainstem Upstream to Downstream",
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(size = 16, color = "black", face = "bold",
+                                vjust = 1.25, margin = margin(r = 10)),
+    legend.position = "none",
+    legend.title = element_blank(),
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 12,
+                              color = "black", face = "bold")
+  )
+
+Al_net_diff_p
+```
+
+```{r}
+# plot (percent change; pseudo-log)
+Al_net_diff_change <- Al_net_difference %>%
+  ggplot(aes(x = Metal_type, y = percent_change)) +
+  geom_rect(
+    xmin = 1.5,
+    xmax = Inf,
+    ymin = -Inf,
+    ymax = Inf,
+    fill = "grey93",
+    alpha = 0.4
+  ) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,
+    color = "black",
+    size = 3.3,
+    stroke = 0.6,
+    position = position_jitter(width = 0.15, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    title = NULL,
+    y = NULL,
+    fill = "Metal Type"
+  ) +
+  coord_cartesian(ylim = c(-100, 168000)) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
+                     breaks = c(
+    -10000, -1000, -100,
+     -10,  
+     0, 10, 100, 1000,  10000, 100000
+  ),
+  labels = scales::label_number()) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(size = 16, color = "black", face = "bold",
+                                vjust = 1.25, margin = margin(r = 10)),
+    legend.position = "none",
+    legend.title = element_blank(),
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 12,
+                              color = "black", face = "bold")
+  )
+
+Al_net_diff_change
+```
+
+##REE
+```{r}
+# select only upstream and downstream site groups
+REE_up_and_down_MS <- REE_long %>%
+  filter(New_Grouping %in% c("Upstream", "Downstream MS"))
+
+REE_up_and_down_MS_means <- REE_up_and_down_MS %>%
+  group_by(Watershed, New_Grouping, Metal_type) %>%
+  summarise(
+    mean_value = mean(Metal_conc, na.rm = TRUE),
+    num_observations = n(),
+    .groups = "drop"
+  )
+```
+
+```{r}
+# Calculate the net difference for each watershed
+
+filtered_REE_net_difference <- REE_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  filter(Metal_type == "f") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    net_difference = `Downstream MS` - `Upstream`,
+    percent_change = ((`Downstream MS` - `Upstream`) / `Upstream`) * 100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    )
+  )
+
+# view(filtered_REE_net_difference)
+
+particulate_REE_net_difference <- REE_up_and_down_MS_means %>%
+  select(-num_observations) %>%
+  filter(Metal_type == "p") %>%
+  group_by(Watershed) %>%
+  pivot_wider(
+    names_from  = New_Grouping,
+    values_from = mean_value
+  ) %>%
+  mutate(
+    upstream_adj = if_else(
+      `Upstream` == 0,
+      sqrt(2) / 2 * 0.01,
+      `Upstream`
+    ),
+    net_difference = `Downstream MS` - `upstream_adj`,
+    percent_change = ((`Downstream MS` - `upstream_adj`) / `upstream_adj`) * 100
+  ) %>%
+  ungroup() %>%
+  mutate(
+    interpretation = case_when(
+      net_difference < 0  ~ "reduced",
+      net_difference > 0  ~ "enriched",
+      net_difference == 0 ~ "no change",
+      TRUE ~ NA_character_
+    )
+  )
+
+view(particulate_REE_net_difference)
+```
+
+```{r}
+# combine results for filtered and particulate into one df
+REE_net_difference <- bind_rows(filtered_REE_net_difference,
+                                particulate_REE_net_difference)
+
+# view(REE_net_difference)
+```
+
+```{r}
+# plot (net difference)
+REE_net_diff_p <- REE_net_difference %>%
+  ggplot(aes(x = Metal_type, y = net_difference)) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,
+    color = "black",
+    size = 3.3,
+    stroke = 0.6,
+    position = position_jitter(width = 0.15, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    title = NULL,
+    y = "Net Difference in Mainstem Upstream to Downstream",
+    fill = "Metal Type"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(size = 16, color = "black", face = "bold",
+                                vjust = 1.25, margin = margin(r = 10)),
+    legend.position = "none",
+    legend.title = element_blank(),
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 12,
+                              color = "black", face = "bold")
+  )
+
+REE_net_diff_p
+```
+
+```{r}
+# plot (percent change; pseudo-log)
+REE_net_diff_change <- REE_net_difference %>%
+  ggplot(aes(x = Metal_type, y = percent_change)) +
+  geom_rect(
+    xmin = 1.5,
+    xmax = Inf,
+    ymin = -Inf,
+    ymax = Inf,
+    fill = "grey93",
+    alpha = 0.4
+  ) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    color = "darkgrey",
+    linewidth = 0.5
+  ) +
+  geom_point(
+    aes(fill = Watershed),
+    shape = 21,
+    color = "black",
+    size = 3.3,
+    stroke = 0.6,
+    position = position_jitter(width = 0.15, height = 0.05)
+  ) +
+  scale_fill_manual(values = watershed_colors) +
+  labs(
+    title = NULL,
+    y = NULL,
+    fill = "Metal Type"
+  ) +
+  coord_cartesian(ylim = c(-100, 168000)) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
+                     breaks = c(
+    -10000, -1000, -100,
+     -10,  
+     0, 10, 100, 1000,  10000, 100000
+  ),
+  labels = scales::label_number()) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, color = "black", size = 1.25),
+    axis.text.x = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black", face = "bold"),
+    axis.title.y = element_text(size = 16, color = "black", face = "bold",
+                                vjust = 1.25, margin = margin(r = 10)),
+    legend.position = "none",
+    legend.title = element_blank(),
+    legend.background = element_rect(fill = NA),
+    legend.text = element_text(size = 12, color = "black", face = "bold"),
+    legend.box.background = element_rect(fill = NA, color = "black", size = 0.75),
+    axis.ticks.y = element_line(size = 0.9, color = "black"),
+    axis.ticks.length.y = unit(0.1, "cm"),
+    plot.title = element_text(hjust = 0.5, size = 12,
+                              color = "black", face = "bold")
+  )
+
+REE_net_diff_change
+```
+
+## combined plot
+```{r}
+SO4_p <- SO4_net_diff_p + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 15, 5, 35))
+
+Fe_p <- Fe_net_diff_p + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 15, 5, 35))
+# Fe_p
+
+Ni_p <- Ni_net_diff_p + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 15, 5, 35))
+# Ni_p
+
+Zn_p <- Zn_net_diff_p + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 15, 5, 35))
+# Zn_p
+
+Cd_p <- Cd_net_diff_p + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 15, 5, 35))
+
+
+Al_p <- Al_net_diff_p + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 15, 5, 35))
+
+
+REE_p <- REE_net_diff_p + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 15, 5, 35))
+
+```
+
+```{r}
+Alk_p <- Alk_net_diff_change + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 35, 5, 5))
+
+SO4_p <- SO4_net_diff_change + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 35, 5, 5))
+
+Fe_p <- Fe_net_diff_change + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 35, 5, 5))
+# Fe_p
+
+Ni_p <- Ni_net_diff_change + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 35, 5, 5))
+# Ni_p
+
+Zn_p <- Zn_net_diff_change + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 5, 5, 5))
+# Zn_p
+
+Cd_p <- Cd_net_diff_change + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 35, 5, 5))
+
+Al_p <- Al_net_diff_change + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 5, 5, 5))
+
+REE_p <- REE_net_diff_change + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), plot.margin = margin(5, 35, 5, 5))
+```
+
+```{r}
+library(patchwork)
+
+top_net_difference_p <- Alk_p + SO4_p + Fe_p + Al_p +
+  plot_layout(
+    nrow = 1,
+    ncol = 4
+  )
+
+top_net_difference_p
+
+
+bottom_net_difference_p <- REE_p + Ni_p + Cd_p + Zn_p +
+  plot_layout(
+    nrow = 1,
+    ncol = 4
+  )
+
+bottom_net_difference_p
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Percent Change/Alk, SO4, Fe, Al percent change in MS.png", top_net_difference_p, width = 8, height = 4, dpi = 300)
+
+ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/02_Global Analysis/Percent Change/REE, Ni, Cd, Zn percent change in MS.png", bottom_net_difference_p, width = 8, height = 4, dpi = 300)
+```
+
+
+## net difference funciton and plot
+```{r}
+
+```
+
+
+# Fe Violin
 ```{r}
 Fe_plot_violin <- ggplot(Fe_long, aes(x = x_group, y = Metal_conc_plot)) +
   geom_violin(

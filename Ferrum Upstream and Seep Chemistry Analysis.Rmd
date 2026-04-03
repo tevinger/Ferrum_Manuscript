@@ -2508,13 +2508,14 @@ Seep_ficklin_percent_long <- Seep_ficklin_percent %>%
         "f_Zn_mcg_per_l_pct"))
   )
 
-write_xlsx(Seep_ficklin_percent_long, "C:/Users/tevinger/Downloads/Ficklin Diagram percent composition.xlsx")
+# write_xlsx(Seep_ficklin_percent_long, "C:/Users/tevinger/Downloads/Ficklin Diagram percent composition.xlsx")
 ```
 
 ```{r}
 cb_palette_metals_pct <- c(
   #"#D55E00", "#ffce96", "#5d455e", 
-  "#003f5c", "#752c48", "#ffca67", "#80acff", "#fdb5e1","#3a5e9b"
+  "#003f5c", "#752c48", "#ffca67", "#abb3e2", "#fdb5e1","#606fc7"
+  # "#003f5c", "#752c48", "#ffca67", "#80acff", "#fdb5e1","#3a5e9b"
   #"#53B0AE", "#bc5090", "#ff6361", "#01796f",  "#bac4c8",
   #"#bc5259", "#c5e6a1", "#ab694e","#8dbfcb",  "#4eab69", "#6d7a6b"
   
@@ -2525,8 +2526,8 @@ metals_ordered_pct <- c(
   "f_Cd_mcg_per_l_pct" = "#003f5c", 
   "f_Cu_mcg_per_l_pct" = "#ffca67", 
   "f_Co_mcg_per_l_pct" = "#fdb5e1", 
-  "f_Ni_mcg_per_l_pct" = "#80acff", 
-  "f_Zn_mcg_per_l_pct" = "#3a5e9b")
+  "f_Ni_mcg_per_l_pct" = "#abb3e2", 
+  "f_Zn_mcg_per_l_pct" = "#606fc7")
 
 metal_colors_pct <- cb_palette_metals_pct
 #names(metal_colors) <- metals_ordered
@@ -2582,7 +2583,7 @@ stacked_pct_plot <- ggplot(Seep_ficklin_percent_long,
 
 stacked_pct_plot
 
-ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Ficklin Diagram/Ficklin Diagram metal composition_FINAL.png", stacked_pct_plot, width = 4, height = 4, dpi = 300)
+# ggsave("C:/Users/tevinger/Box/Poulin Lab ETOX/Project Folders/Alaska BITE_HEAT (Taylor Evinger)/Evinger Manuscripts/Ferrum Manuscript/Figures/Ficklin Diagram/Ficklin Diagram metal composition_FINAL.png", stacked_pct_plot, width = 4, height = 4, dpi = 300)
 ```
 
 ```{r}
@@ -2773,33 +2774,34 @@ piper_df <- working_Ferrum_data %>%
                 sample_collection_year,
                 sample_collection_month,
                 sample_collection_season, 
-                f_Ca_mg_l, f_Mg_mg_l, f_Na_mg_l, f_Cl_mg_per_l, f_SO4_mg_per_l, HCO3_mg_per_l)
+                f_Ca_mg_l, f_Mg_mg_l, f_Na_mg_l, f_K_mg_l, f_Cl_mg_per_l, f_SO4_mg_per_l, HCO3_mg_per_l)
 
 piper_upstream <- piper_df %>%
   filter(New_Grouping == "Upstream")
 
 # Transform data to milli-equivalents per liter
-PD <- transform(piper_upstream,
+Piper_Diagram_meq <- transform(piper_upstream,
 Ca.meq = conc2meq(f_Ca_mg_l, "calcium"),
 Mg.meq = conc2meq(f_Mg_mg_l, "magnesium"),
 Na.meq = conc2meq(f_Na_mg_l, "sodium"),
+K.meq = conc2meq(f_K_mg_l, "sodium"),
 Cl.meq = conc2meq(f_Cl_mg_per_l, "chloride"),
 SO4.meq = conc2meq(f_SO4_mg_per_l, "sulfate"),
 HCO3.meq = conc2meq(HCO3_mg_per_l, "bicarb"))
 
 
 # set the SS value based on the Watershed
-PD$SS <- as.numeric(factor(PD$Watershed))
+Piper_Diagram_meq$SS <- as.numeric(factor(Piper_Diagram_meq$Watershed))
 
 # assign colors to each row based on the watershed
-PD$color <- watershed_colors[PD$Watershed]
+Piper_Diagram_meq$color <- watershed_colors[Piper_Diagram_meq$Watershed]
 
 # but the axis title spacings require a graph area of at least 6 inches.
 #setSweave("piperplot01", 7, 7)
 
 # For this example, a separate graph area for an explanation is not needed
 # because there are only 4 groups (individuals).
-AA.pl <- with(PD, piperPlot(Ca.meq, Mg.meq, Na.meq,
+AA.pl <- with(Piper_Diagram_meq, piperPlot(Ca.meq, Mg.meq, Na.meq,
                             Cl.meq, HCO3.meq, SO4.meq,
                             Plot=list(name=SS, color=setColor(color)),
                             #ticks = TRUE,
@@ -2807,9 +2809,18 @@ AA.pl <- with(PD, piperPlot(Ca.meq, Mg.meq, Na.meq,
                             xAn.title = "Chloride",
                             yAn.title = "Bicarbonate"))
 
+print(AA.pl)
+
+legend("topright",
+       legend = names(watershed_colors),
+       col = watershed_colors,
+       pch = 16,
+       bty = "n",
+       title = "Site")
+
 # Manually add a legend using the same color mapping
-unique_sites <- unique(PD$SS)
-site_colors <- setColor(unique_sites)  # same color function as above
+# unique_sites <- unique(Piper_Diagram_meq$SS)
+# site_colors <- setColor(unique_sites)  # same color function as above
 
 legend("topright",
        legend = names(watershed_colors),
@@ -2818,10 +2829,10 @@ legend("topright",
        bty = "n",           # no border
        title = "Site")
 
-
 # converts to percent by normalizing each row of data by the total cations and total anions
 # each cation is divided by the total sum of cations for that site and multiplied by 100
-ion_percentage_in_piper <- PD %>% # this currently doesn't include CO3 but can be added
+
+ion_percentage_in_piper <- Piper_Diagram_meq %>% # this currently doesn't include CO3 but can be added
   mutate(
     #NaK = Na + K,
     cat_sum = Ca.meq + Mg.meq + Na.meq,
@@ -2834,6 +2845,32 @@ ion_percentage_in_piper <- PD %>% # this currently doesn't include CO3 but can b
     HCO3_percent = 100 * HCO3.meq / an_sum
   ) %>%
   dplyr::select(Watershed, New_Grouping, sample_collection_year, Ca_percent, Mg_percent, Na_percent, Cl_percent, SO4_percent, HCO3_percent)
+
+```
+
+```{r}
+# set numeric group ID
+Piper_Diagram_meq$SS <- as.numeric(factor(Piper_Diagram_meq$Watershed))
+
+# assign colors by watershed
+Piper_Diagram_meq$color <- watershed_colors[Piper_Diagram_meq$Watershed]
+
+AA.pl <- with(Piper_Diagram_meq,
+              piperPlot(Ca.meq, Mg.meq, Na.meq,
+                        Cl.meq, HCO3.meq, SO4.meq,
+                        Plot = list(name = SS, color = color),
+                        zCat.title = "Sodium",
+                        xAn.title = "Chloride",
+                        yAn.title = "Bicarbonate"))
+
+print(AA.pl)
+
+legend("topright",
+       legend = names(watershed_colors),
+       col = watershed_colors,
+       pch = 16,
+       bty = "n",
+       title = "Site")
 ```
 
 Everything by Group
